@@ -6,7 +6,6 @@ from game_data_view import DataViewFrame
 from memcard_view import MemcardViewFrame
 
 
-SIZE = (960, 640)
 FRAME_STYLE = wx.DEFAULT_FRAME_STYLE & ~(wx.RESIZE_BORDER | wx.MAXIMIZE_BOX)
 
 class OpenFileFrame(wx.Frame):

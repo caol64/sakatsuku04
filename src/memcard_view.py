@@ -1,5 +1,6 @@
 from pathlib import Path
 import wx
+import wx.grid
 
 from bit_stream import InputBitStream
 from const import Const
@@ -71,7 +72,13 @@ class SaveViewPanel(wx.Panel):
         bit_stream = InputBitStream(reader.decoded_data())
         club_reader = ClubReader(bit_stream)
         self.club = club_reader.read()
-        self.club_info_tab.funds_text.SetLabelText(self.club.money_str())
+        self.club_info_tab.fund_input_billion.SetValue(self.club.funds_high)
+        self.club_info_tab.fund_input_ten_thousand.SetValue(self.club.funds_low)
+        self.club_info_tab.year_input.SetLabelText(str(self.club.year.value - 2003))
+        self.club_info_tab.month_input.SetLabelText(str(self.club.month.value))
+        self.club_info_tab.date_input.SetLabelText(str(self.club.date.value))
+        self.club_info_tab.manager_input.SetLabelText(self.club.manager_name.value)
+        self.club_info_tab.club_input.SetLabelText(self.club.club_name.value)
         team_reader = TeamReader(bit_stream)
         self.my_team = team_reader.read()
         oteam_reader = OtherTeamReader(bit_stream)
@@ -83,10 +90,12 @@ class SaveViewPanel(wx.Panel):
         self.update_panel()
 
     def update_panel(self):
+        self.club_info_tab.manager_input.SetLabelText(self.club.manager_name.value)
+        self.club_info_tab.club_input.SetLabelText(self.club.club_name.value)
         self.player_tab.list_box.Clear()
         for player in self.my_team.players:
-            if player.id != 0xFFFF:
-                self.player_tab.list_box.Append(player.saved_name_str(), player)
+            if player.id.value != 0xFFFF:
+                self.player_tab.list_box.Append(player.name.value, player)
         self.other_team_tab.list_box.Clear()
         for team in self.other_teams:
             self.other_team_tab.list_box.Append(team.name, team)
@@ -98,12 +107,44 @@ class ClubInfoTab(wx.Panel):
         # Club Information group
         club_info_box = wx.StaticBox(self, label="Club Information")
         club_info_sizer = wx.StaticBoxSizer(club_info_box, wx.VERTICAL)
-        form_sizer = wx.FlexGridSizer(rows=1, cols=2, vgap=10, hgap=10)
+        form_sizer = wx.FlexGridSizer(rows=4, cols=2, vgap=10, hgap=10)
+
         form_sizer.Add(wx.StaticText(self, label="资金:"), flag=wx.ALIGN_CENTER_VERTICAL)
-        self.funds_text = wx.TextCtrl(self)
-        form_sizer.Add(self.funds_text, flag=wx.EXPAND)
-        # form_sizer.Add(wx.StaticText(self, label="Email:"), flag=wx.ALIGN_CENTER_VERTICAL)
-        # form_sizer.Add(wx.TextCtrl(self), flag=wx.EXPAND)
+        fund_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.fund_input_billion = wx.SpinCtrl(self, min=0, max=9999)  # 亿 input
+        billion_label = wx.StaticText(self, label="亿")
+        self.fund_input_ten_thousand = wx.SpinCtrl(self, min=0, max=9999)  # 万 input
+        ten_thousand_label = wx.StaticText(self, label="万")
+        fund_sizer.Add(self.fund_input_billion, flag=wx.RIGHT, border=5)
+        fund_sizer.Add(billion_label, flag=wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, border=5)
+        fund_sizer.Add(self.fund_input_ten_thousand, flag=wx.RIGHT, border=5)
+        fund_sizer.Add(ten_thousand_label, flag=wx.ALIGN_CENTER_VERTICAL)
+        form_sizer.Add(fund_sizer, flag=wx.EXPAND)
+
+        form_sizer.Add(wx.StaticText(self, label="年份："), flag=wx.ALIGN_CENTER_VERTICAL)
+        year_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.year_input = wx.TextCtrl(self, size=(50, -1))
+        year_label = wx.StaticText(self, label="年")
+        self.month_input = wx.TextCtrl(self, size=(50, -1))
+        month_label = wx.StaticText(self, label="月")
+        self.date_input = wx.TextCtrl(self, size=(50, -1))
+        date_label = wx.StaticText(self, label="日")
+        year_sizer.Add(self.year_input, flag=wx.RIGHT, border=5)
+        year_sizer.Add(year_label, flag=wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, border=5)
+        year_sizer.Add(self.month_input, flag=wx.RIGHT, border=5)
+        year_sizer.Add(month_label, flag=wx.ALIGN_CENTER_VERTICAL)
+        year_sizer.Add(self.date_input, flag=wx.RIGHT, border=5)
+        year_sizer.Add(date_label, flag=wx.ALIGN_CENTER_VERTICAL)
+        form_sizer.Add(year_sizer, flag=wx.EXPAND)
+
+        form_sizer.Add(wx.StaticText(self, label="经理:"), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.manager_input = wx.TextCtrl(self, size=(50, -1))
+        form_sizer.Add(self.manager_input, flag=wx.EXPAND)
+
+        form_sizer.Add(wx.StaticText(self, label="俱乐部:"), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.club_input = wx.TextCtrl(self, size=(50, -1))
+        form_sizer.Add(self.club_input, flag=wx.EXPAND)
+
         club_info_sizer.Add(form_sizer, flag=wx.ALL | wx.EXPAND, border=10)
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(club_info_sizer, flag=wx.ALL, border=10)
@@ -148,13 +189,13 @@ class PlayerTab(wx.Panel):
         self.show_player(player)
 
     def show_player(self, player: MyPlayer):
-        self.player_name_text.SetLabelText(player.name)
-        self.player_age_text.SetLabelText(str(player.age))
+        self.player_name_text.SetLabelText(player.name.value)
+        self.player_age_text.SetLabelText(str(player.age.value))
         for i, abilities in enumerate(player.abilities):
             self.grid.SetCellValue(i, 0, abilities.name)
-            self.grid.SetCellValue(i, 1, str(abilities.current))
-            self.grid.SetCellValue(i, 2, str(abilities.current_max))
-            self.grid.SetCellValue(i, 3, str(abilities.max))
+            self.grid.SetCellValue(i, 1, str(abilities.current.value))
+            self.grid.SetCellValue(i, 2, str(abilities.current_max.value))
+            self.grid.SetCellValue(i, 3, str(abilities.max.value))
 
 class OtherTeamTab(wx.Panel):
     def __init__(self, parent):
@@ -193,10 +234,10 @@ class OtherTeamTab(wx.Panel):
 
     def show_team(self, team: OtherTeam):
         self.team_name_text.SetLabelText(team.name)
-        self.team_friendly_text.SetLabelText(str(team.friendly))
+        self.team_friendly_text.SetLabelText(str(team.friendly.value))
         self.grid.ClearGrid()
-        for i, player in enumerate([player for player in team.players if player.id != 0xFFFF]):
+        for i, player in enumerate([player for player in team.players if player.id.value != 0xffff]):
             self.grid.SetCellValue(i, 0, player.name)
-            self.grid.SetCellValue(i, 1, str(player.age))
-            self.grid.SetCellValue(i, 2, str(player.no))
-            self.grid.SetCellValue(i, 3, str(player.ability_graph))
+            self.grid.SetCellValue(i, 1, str(player.age.value))
+            self.grid.SetCellValue(i, 2, str(player.number.value))
+            self.grid.SetCellValue(i, 3, str(player.ability_graph.value))

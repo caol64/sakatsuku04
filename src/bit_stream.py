@@ -1,15 +1,13 @@
-from utils import ints_to_fixed_bytes
+from utils import decode_bytes_to_str, zero_terminate
 
 
 class InputBitStream:
     def __init__(self, input_data: bytes):
         self.input_data = input_data
         self.bit_offset = 0
-        self.bit_lengths_list = list()
-        self.total_bytes_list = list()
-        self.unpacked_list = list()
+        self.unpacked_bytes = bytearray()
 
-    def read_bits(self, bits_to_read: int) -> int:
+    def read_bits(self, bits_to_read: int) -> tuple[int, int]:
         value = 0  # The value being unpacked.
         sign_extend = False
         if bits_to_read < 0:
@@ -40,125 +38,76 @@ class InputBitStream:
             if value & (1 << (bits_to_read - 1)):
                 value |= ~mask
                 value &= ((1 << ((bits_to_read + 7) // 8 * 8)) - 1)
-        return value
+        byte_length = (bits_to_read + 7) // 8
+        return value, byte_length
 
-    def unpack_bits(self, bit_lengths: list[int], total_bytes: int = 0) -> list[int]:
+    def unpack_bits(self, bit_lengths: list[int], total_bytes: int = 0) -> list['IntBitField']:
         """
         Unpacks a sequence of bits from a byte array based on specified bit lengths.
 
         Parameters:
             bit_lengths (list[int]): A list of integers specifying the number of bits to unpack for each value.
+            total_bytes (int): Optional; the total number of bytes expected (default is auto-calculated).
 
         Returns:
-            list[int]: A list of unpacked integer values.
+            bytes: The unpacked bits as a bytes object.
         """
         if total_bytes == 0:
-            total_bytes = int(sum(bit_lengths) / 8)
-        result = []  # List to store unpacked values.
+            total_bytes = (sum(bit_lengths) + 7) // 8
+
+        result = list()
+        sum_bytes = 0
 
         for bits_to_read in bit_lengths:
-            result.append(self.read_bits(bits_to_read))
-        self.bit_lengths_list.append(bit_lengths)
-        self.total_bytes_list.append(total_bytes)
-        self.unpacked_list.append(result)
+            unpacked_int, byte_length = self.read_bits(bits_to_read)
+            result.append(IntBitField(bits_to_read, unpacked_int))
+            self.unpacked_bytes.extend(unpacked_int.to_bytes(byte_length, 'little'))
+            sum_bytes += byte_length
+
+        if sum_bytes < total_bytes:
+            self.unpacked_bytes.extend([0] * (total_bytes - sum_bytes))
+        
         return result
 
-    def output_buffer(self) -> bytearray:
-        out_buffer = bytearray() # Buffer for storing output
-        for unpacked, bit_lengths, total_bytes in zip(self.unpacked_list, self.bit_lengths_list, self.total_bytes_list):
-            out_buffer += ints_to_fixed_bytes(unpacked, bit_lengths, total_bytes)
-        return out_buffer
+    def unpack_str(self, total_bytes: int) -> 'StrBitField':
+        result = bytearray()
+        for _ in range(total_bytes):
+            unpacked_int, _ = self.read_bits(8)
+            unpacked_bytes = unpacked_int.to_bytes(1, 'little')
+            result.extend(unpacked_bytes)
+        self.unpacked_bytes.extend(result)
+
+        return StrBitField(bytes(result))
 
     def skip(self, bit_offset: int, total_bytes: int):
         self.bit_offset = bit_offset
-        self.bit_lengths_list.append([0])
-        self.total_bytes_list.append(total_bytes)
-        self.unpacked_list.append([0])
+        self.unpacked_bytes.extend([0] * total_bytes)
 
     def align(self, total_bytes: int):
-        self.bit_lengths_list.append([0])
-        self.total_bytes_list.append(total_bytes)
-        self.unpacked_list.append([0])
+        self.unpacked_bytes.extend([0] * total_bytes)
 
     def seek(self, bit_offset: int):
         self.bit_offset = bit_offset
 
     def export(self, path: str):
         with open(path, "wb") as f:
-            f.write(self.output_buffer())
+            f.write(self.unpacked_bytes)
 
 
-class OutputBitStream:
-    def __init__(self, input_data: list[int]):
-        self.input_data = input_data
+class IntBitField:
+    def __init__(self, bit_length: int, value: int):
+        self.bit_length = bit_length
+        self.bit_offset = 0
+        self.value = value
 
-class BitStream:
-    def __init__(self, byte_val: bytes):
-        self.byte_val = byte_val
-        self.mask = 0x80
-        self.offset = 0
-        self.current_byte = 0
-        self.out_buffer = bytearray() # Buffer for storing output
 
-    def batch_read(self, elements: list[int]):
-        for element in elements:
-            self.bit_read(element)
+class StrBitField:
+    def __init__(self, byte_array: bytes):
+        self.byte_length = len(byte_array)
+        self.bit_length = self.byte_length * 8
+        self.bit_offset = 0
+        self.byte_array = byte_array
 
-    def bit_read(self, bit_count: int) -> int:
-        if bit_count == 0:
-            return
-        sign_extend = False
-        if bit_count < 0: # 需要符号扩展
-            bit_count *= -1
-            sign_extend = True
-        bytecount = (bit_count + 7) // 8
-        bits = self.mf_read_bits(bit_count)
-        mask = (1 << bit_count) - 1
-        bits = bits & mask
-        if sign_extend:
-            # 检查最高位是否为 1
-            if bits & (1 << (bit_count - 1)):
-                # 扩展高位为 1
-                bits |= ~mask
-                bits &= ((1 << (bytecount * 8)) - 1)
-        self.out_buffer += bits.to_bytes(bytecount, byteorder="little")
-        return bits
-
-    def bit_read_str(self, bit_count: int) -> bytearray:
-        if bit_count > 0:
-            start = len(self.out_buffer)
-            while bit_count > 0:
-                self.bit_read(8)
-                bit_count -= 1
-            return self.out_buffer[start:len(self.out_buffer)]
-
-    def mf_read_bits(self, bit_count: int) -> int:
-        result = 0
-        while bit_count > 0:
-            if self.mask == 0x80:
-                self.current_byte = self.byte_val[self.offset]
-                self.offset += 1
-            if self.current_byte & self.mask:
-                result = (result << 1) | 1
-            else:
-                result <<= 1
-            self.mask >>= 1
-            bit_count -= 1
-            if self.mask == 0:
-                self.mask = 0x80
-        return result
-
-    def align(self, bit_count: int):
-        size = len(self.out_buffer)
-        bytecount = (bit_count + 7) // 8
-        if size % bytecount > 0:
-            self.out_buffer.extend(b'\x00' * (bytecount - size % bytecount))
-
-    def alloc(self, n: int):
-        self.out_buffer.extend(b'\x00' * n)
-
-    def skip(self, offset: int, mask: int):
-        self.offset = offset
-        if offset > 0:
-            self.current_byte = self.byte_val[offset - 1]
-        self.mask = mask
+    @property
+    def value(self) -> str:
+        return zero_terminate(decode_bytes_to_str(self.byte_array))
