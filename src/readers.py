@@ -6,22 +6,6 @@ class BaseReader:
     def __init__(self, bit_stream: InputBitStream):
         self.bit_stream = bit_stream
 
-class RandomReader(BaseReader):
-    start_offset = 0x703D50
-    money_address = (26, 0x20)
-    def read(self):
-        bit_offset, bit_length = RandomReader.money_address
-        self.bit_stream.seek(bit_offset)
-        money = self.bit_stream.read_bits(bit_length)
-        print(money)
-
-    def write(self, money: int):
-        bit_offset, bit_length = RandomReader.money_address
-        byte_index = bit_offset // 8
-        bit_index = bit_offset % 8
-        current_byte = self.bit_stream.input_data[byte_index]
-        print(byte_index, bit_index, current_byte)
-
 class ClubReader(BaseReader):
     start_bytes = 0
     block_bytes = 5044
@@ -34,7 +18,7 @@ class ClubReader(BaseReader):
     def read(self) -> Club:
         club = Club()
         club.year, club.month, club.date, club.day = self.bit_stream.unpack_bits([0xE, 4, 5, 3], 8)
-        club.funds, = self.bit_stream.unpack_bits([0x20])
+        club.funds = self.bit_stream.unpack_bits(0x20)
         club.manager_name = self.bit_stream.unpack_str(0x10) # 00703D5C
         self.bit_stream.unpack_str(0x10)
         club.club_name = self.bit_stream.unpack_str(0x15)
@@ -136,7 +120,7 @@ class TeamReader(BaseReader):
     def read(self) -> MyTeam:
         team = MyTeam()
         self.bit_stream.unpack_bits([8, 1, 1], 4)
-        self.bit_stream.unpack_bits([16])
+        self.bit_stream.unpack_bits(16)
         self.bit_stream.unpack_bits([8] * 40)
         team.english_name = self.bit_stream.unpack_str(0x20)
         self.bit_stream.unpack_bits([8] * 57)
@@ -157,11 +141,10 @@ class TeamReader(BaseReader):
         self.bit_stream.unpack_bits([-6] * 0x19, 0x19 + 2) # 7051E0
         for i in range(0x19): #0x19
             players[i].id, _, players[i].age = self.bit_stream.unpack_bits([-0x10, 4, 7], 4) # 7051E4
-            # players[i].name = Const.PLAYER_DICT.get(f"{players[i].id:04X}")
             for l in range(0x40):
                 current, current_max, max = self.bit_stream.unpack_bits([0x10, 0x10, 0x10])
                 players[i].abilities.append(PlayerAbility(Const.ABILITY_LIST[l], current, current_max, max)) # 705364
-            self.bit_stream.unpack_bits([0xb], 2)
+            self.bit_stream.unpack_bits(0xb, 2)
             players[i].name = self.bit_stream.unpack_str(0xd) # 705373
             self.bit_stream.unpack_bits([8, 8, 4, 4, 7, 8, 4, 7, 3, 7], 11) # 70537E
             self.bit_stream.unpack_bits([0x10, 0x10])# 705382
@@ -176,10 +159,10 @@ class TeamReader(BaseReader):
             self.bit_stream.unpack_bits([-8] * 9, 9)
             self.bit_stream.unpack_bits([0x10, 0x10, 8, -8, 5, 5, 6], 12)
             self.bit_stream.unpack_bits([0x20, 0x20, 0x20, 0x20, 0x10], 20) # 705420
-        self.bit_stream.unpack_bits([0x10])
+        self.bit_stream.unpack_bits(0x10)
         for _ in range(10):
             self.bit_stream.unpack_bits([-6], 2)
-            self.bit_stream.unpack_bits([0x10]) # 708A4A
+            self.bit_stream.unpack_bits(0x10) # 708A4A
         self.bit_stream.unpack_bits([-6, -6, 5, -6, -6, -6, -6, -6, 2], 9)
         self.bit_stream.unpack_bits([5, 3, 2, 2, 2, 2, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 3] * 3, 60)
         self.bit_stream.align(1)
@@ -192,7 +175,7 @@ class TeamReader(BaseReader):
         self.bit_stream.unpack_bits([7] * 0x35, 0x35)
         self.bit_stream.unpack_bits([8, 8, 5, 5, 5, 5, 5, 5, 3, 0x10, 3, 3, 3], 15)
         self.bit_stream.unpack_bits([0x10] * 9)
-        self.bit_stream.unpack_bits([1], 2)
+        self.bit_stream.unpack_bits(1, 2)
         self.bit_stream.unpack_bits([3, 1], 2)
         for _ in range(0xc):
             self.bit_stream.unpack_bits([8, 8, 1, 1], 4)
@@ -200,11 +183,11 @@ class TeamReader(BaseReader):
             self.bit_stream.unpack_bits([8, 5, 5, 8, 3] * 12, 5 * 12)
         self.bit_stream.unpack_bits([8, 3] * (0x19 * 0xc), 2 * (0x19 * 0xc))
         for _ in range(7):
-            self.bit_stream.unpack_bits([8])
+            self.bit_stream.unpack_bits(8)
             for _ in range(3):
                 self.bit_stream.unpack_bits([-6, 8], 2)
                 self.bit_stream.unpack_bits([8] * 0xa)
-        self.bit_stream.unpack_bits([8])
+        self.bit_stream.unpack_bits(8)
         return players
 
 
@@ -221,7 +204,7 @@ class OtherTeamReader(BaseReader):
         teams: list[OtherTeam] = list()
         for i in range(0x109): # loop the teams
             other_team = OtherTeam()
-            other_team.id, = self.bit_stream.unpack_bits([0x10])
+            other_team.id = self.bit_stream.unpack_bits(0x10)
             players: list[Player] = list()
             for _ in range(0x19): # loop the playes
                 player = Player()
@@ -233,7 +216,7 @@ class OtherTeamReader(BaseReader):
             teams.append(other_team)
         for i in range(0x109):
             for j in range(0x19):
-                teams[i].players[j].number, = self.bit_stream.unpack_bits([8]) # 背番号
+                teams[i].players[j].number = self.bit_stream.unpack_bits(8) # 背番号
         self.bit_stream.unpack_bits([8, 8])
         return teams
 

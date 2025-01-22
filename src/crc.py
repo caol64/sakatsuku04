@@ -1,11 +1,13 @@
 import struct
 
+from utils import get_resource_path
+
 
 class CrcCaculator:
 
     __MASK1 = 0x9255AE41
     __MASK2 = 0xEFCFBFEA
-    with open("resource/crc_table.bin", "rb") as f:
+    with open(get_resource_path("resource/crc_table.bin"), "rb") as f:
         __CRC_TABLE = struct.unpack('<256H', f.read())
 
     def calc(self, data: bytes) -> tuple[int, int]:

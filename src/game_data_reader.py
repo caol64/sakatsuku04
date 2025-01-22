@@ -4,6 +4,13 @@ from utils import decode_bytes_to_str, zero_terminate
 
 
 class PlayerDataReader:
+    """
+    {52633600, 1028791, 0x45, 3, },	// data/etc/bpdata.bin
+    """
+    START_OFFSET = 0x3232000
+    DATA_SIZE = 1028791
+    PLAYER_COUNT = 0x2EC7
+
     def __init__(self, file_path: Path):
         self.file_path = file_path
         self.file = None
@@ -11,8 +18,21 @@ class PlayerDataReader:
     def load(self):
         self.file = open(self.file_path, "rb")
 
+    def read(self) -> list['PlayerData']:
+        read_length = 0
+        read_count = 0
+        result = list()
+        while read_count <= PlayerDataReader.PLAYER_COUNT:
+            self.file.seek(PlayerDataReader.START_OFFSET + read_length)
+            player = PlayerData(self.file.read(PlayerData.BLOCK_SIZE))
+            player.id = f"{read_count:04X}"
+            result.append(player)
+            read_length += PlayerData.BLOCK_SIZE
+            read_count += 1
+        return result
+
     def read_player(self, uid: int) -> 'PlayerData':
-        self.file.seek(PlayerData.START_OFFSET + uid * PlayerData.BLOCK_SIZE)
+        self.file.seek(PlayerDataReader.START_OFFSET + uid * PlayerData.BLOCK_SIZE)
         return PlayerData(self.file.read(PlayerData.BLOCK_SIZE))
     
     def close(self):
@@ -22,7 +42,6 @@ class PlayerDataReader:
 
 class PlayerData:
 
-    START_OFFSET = 0x3232000
     BLOCK_SIZE = 0x48
     NAME_SIZE = 0xc
 

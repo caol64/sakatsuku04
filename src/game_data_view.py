@@ -43,10 +43,7 @@ class DataViewFrame(wx.Frame):
         reader = PlayerDataReader(self.file_path)
         try:
             reader.load()
-            for i in range(0x2EC8):
-                player = reader.read_player(i)
-                player.id = f"{i:04X}"
-                self.players.append(player)
+            self.players = reader.read()
         finally:
             reader.close()
 

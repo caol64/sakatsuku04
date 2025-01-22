@@ -40,9 +40,13 @@ class SaveReader:
             self.read_offset += 8
         self.data_start = int.from_bytes(self.decode_buffer[:4], 'little') + 16
 
+    def decoded_data(self):
+        return self.decode_buffer[self.data_start:]
+
     def export_decode_buffer(self, path: str):
         with open(path, "wb") as f:
             f.write(self.decode_buffer)
 
-    def decoded_data(self):
-        return self.decode_buffer[self.data_start:]
+    def export_decode_data(self, path: str):
+        with open(path, "wb") as f:
+            f.write(self.decoded_data())

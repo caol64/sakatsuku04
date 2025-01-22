@@ -3,11 +3,11 @@ import wx
 import wx.grid
 
 from bit_stream import InputBitStream
-from const import Const
 from memcard_reader import MemcardReader, Saka04SaveEntry
 from models import MyPlayer, OtherTeam
 from readers import ClubReader, OtherTeamReader, TeamReader
 from save_reader import SaveReader
+from utils import CnVersion
 
 
 class MemcardViewFrame(wx.Frame):
@@ -58,9 +58,14 @@ class SaveViewPanel(wx.Panel):
         notebook.AddPage(self.other_team_tab, "其它球队")
         self.checkbox = wx.CheckBox(self, label="汉化版")
         self.checkbox.Bind(wx.EVT_CHECKBOX, self.on_checkbox_click)
+        self.submit_btn = wx.Button(self, label="保存")
+        footer_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        footer_sizer.Add((0, 0), 1, wx.EXPAND)
+        footer_sizer.Add(self.checkbox, 0, wx.ALL, 5)
+        footer_sizer.Add(self.submit_btn, 0, wx.ALL, 5)
         sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(self.checkbox, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.TOP, border=5)
-        sizer.Add(notebook, 1, wx.EXPAND | wx.TOP, border=5)
+        sizer.Add(notebook, 1, wx.EXPAND | wx.ALL, 5)
+        sizer.Add(footer_sizer, 0, wx.EXPAND | wx.ALL, 5)
         self.SetSizer(sizer)
         self.Centre()
         self.club, self.my_team, self.other_teams = None, None, None
@@ -86,7 +91,7 @@ class SaveViewPanel(wx.Panel):
         self.update_panel()
 
     def on_checkbox_click(self, evt: wx.Event):
-        Const.CN_VER = self.checkbox.IsChecked()
+        CnVersion.CN_VER = self.checkbox.IsChecked()
         self.update_panel()
 
     def update_panel(self):

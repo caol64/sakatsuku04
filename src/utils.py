@@ -1,23 +1,40 @@
 import codecs
+import csv
+from pathlib import Path
+import sys
 
-from const import Const
 
 def decode_bytes_to_str(byte_array: bytes) -> str:
-    if Const.CN_VER:
+    if CnVersion.CN_VER:
         return decode_cn(byte_array)
     else:
         return decode_sjis(byte_array)
 
+def encode_str_to_bytes(string: str) -> bytes:
+    if CnVersion.CN_VER:
+        return encode_cn(string)
+    else:
+        return encode_sjis(string)
 
-def zero_terminate(s: str) -> str:
+
+def zero_terminate(data: str) -> str:
     """
     Truncate a string at the first NUL ('\0') character, if any.
     """
-    i = s.find('\0')
+    i = data.find('\0')
     if i == -1:
-        return s
-    return s[:i]
+        return data
+    return data[:i]
 
+def zero_pad(data: bytes, target_length: int) -> bytes:
+    padding_length = target_length - len(data)
+    if padding_length > 0:
+        padding = b'\x00' * padding_length  # 创建填充的零字节
+        return data + padding # 拼接原始数据和填充
+    elif padding_length == 0:
+        return data # 长度相等，无需填充
+    else:
+        return data[:target_length] # 长度超出，进行截断
 
 def decode_name(byte_array: bytes) -> str:
     """Decode bytes to a string."""
@@ -32,13 +49,21 @@ def decode_sjis(s: bytes) -> str:
         print(ex)
         return "\uFFFD" * 3
 
+def encode_sjis(s: str) -> bytes:
+    """Encode a string to bytes using the Shift-JIS encoding."""
+    try:
+        return codecs.encode(s, "shift-jis", "replace")
+    except Exception as ex:
+        print(ex)
+        return b""
+
 def decode_cn(s: bytes) -> str:
     """
     Decode a byte sequence using a custom code map (Const.CN_DICT).
     Bytes not in the code map are treated as ASCII characters.
     """
     decoded_str = []
-    code_map = Const.CN_DICT
+    code_map = CnVersion.CN_DICT
     i = 0
     length = len(s)
     
@@ -56,3 +81,42 @@ def decode_cn(s: bytes) -> str:
         i += 1
     
     return ''.join(decoded_str)
+
+def encode_cn(s: str) -> bytes:
+    """
+    Encode a string using a custom code map (Const.CN_DICT).
+    Characters not in the code map are encoded as their ASCII values.
+    """
+    encoded_bytes = bytearray()
+    code_map_reversed = {v: k for k, v in CnVersion.CN_DICT.items()} # 反转字典，方便查找
+    for char in s:
+        if char in code_map_reversed:
+            encoded_bytes.extend(bytes.fromhex(code_map_reversed[char]))
+        elif ord(char) < 128: # 只处理ASCII字符，其他字符忽略或者抛出异常
+            encoded_bytes.append(ord(char))
+        else:
+            print(f"Character {char} not in code map, ignored.")
+            #raise ValueError(f"Character {char} not in code map") # 也可以抛出异常
+    return bytes(encoded_bytes)
+
+
+def get_resource_path(relative_path) -> str:
+    if hasattr(sys, "_MEIPASS"):
+        # 打包环境：资源文件位于 _MEIPASS 指定的临时目录
+        return Path(sys._MEIPASS).resolve() / relative_path
+    else:
+        # 开发环境：资源文件位于当前脚本所在的目录
+        return Path(__file__).resolve().parent.parent / relative_path
+
+
+class CnVersion:
+    CN_VER = False
+
+    CN_DICT = dict()
+
+    with open(get_resource_path('resource/cn.csv'), 'r', encoding='utf8', newline='') as csvfile:
+        reader = csv.reader(csvfile)
+        for row in reader:
+            if len(row) == 2:
+                key, value = row
+                CN_DICT[key] = value

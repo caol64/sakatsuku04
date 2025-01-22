@@ -1,5 +1,7 @@
 import struct
 
+from utils import get_resource_path
+
 class Blowfish:
 
     P_ARRAY = struct.unpack('<18I', bytes([
@@ -10,7 +12,7 @@ class Blowfish:
         0x02, 0xD5, 0xC5, 0x02, 0x55, 0xA6, 0xE7, 0xF0
     ]))
 
-    with open("resource/s_boxes.bin", "rb") as f:
+    with open(get_resource_path("resource/s_boxes.bin"), "rb") as f:
         S_BOXES = struct.unpack('<1024I', f.read())
 
     def en(self, param_1, param_2) -> tuple[int, int]:

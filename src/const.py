@@ -1,12 +1,12 @@
 import csv
 
-class Const:
+from utils import get_resource_path
 
-    CN_VER = False
+class Const:
 
     PLAYER_DICT = dict()
 
-    with open('resource/players.csv', 'r', encoding='utf8', newline='') as csvfile:
+    with open(get_resource_path('resource/players.csv'), 'r', encoding='utf8', newline='') as csvfile:
         reader = csv.reader(csvfile)
         for row in reader:
             if len(row) == 2:
@@ -15,24 +15,15 @@ class Const:
 
     TEAM_LIST = list()
 
-    with open('resource/teams.csv', 'r', encoding='utf8', newline='') as csvfile:
+    with open(get_resource_path('resource/teams.csv'), 'r', encoding='utf8', newline='') as csvfile:
         reader = csv.reader(csvfile)
         for row in reader:
             if len(row) == 1:
                 TEAM_LIST.append(row[0])
 
-    CN_DICT = dict()
-
-    with open('resource/cn.csv', 'r', encoding='utf8', newline='') as csvfile:
-        reader = csv.reader(csvfile)
-        for row in reader:
-            if len(row) == 2:
-                key, value = row
-                CN_DICT[key] = value
-
     ABILITY_LIST = list()
 
-    with open('resource/ability.csv', 'r', encoding='utf8', newline='') as csvfile:
+    with open(get_resource_path('resource/ability.csv'), 'r', encoding='utf8', newline='') as csvfile:
         reader = csv.reader(csvfile)
         for row in reader:
             if len(row) == 1:
@@ -40,7 +31,7 @@ class Const:
 
     ABILITY_LIST1 = list()
 
-    with open('resource/ability1.csv', 'r', encoding='utf8', newline='') as csvfile:
+    with open(get_resource_path('resource/ability1.csv'), 'r', encoding='utf8', newline='') as csvfile:
         reader = csv.reader(csvfile)
         for row in reader:
             if len(row) == 1:
