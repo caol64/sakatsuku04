@@ -1,5 +1,4 @@
 from bit_stream import InputBitStream
-from const import Const
 from models import Club, MyPlayer, MyTeam, OtherTeam, Player, PlayerAbility
 
 class BaseReader:
@@ -143,7 +142,7 @@ class TeamReader(BaseReader):
             players[i].id, _, players[i].age = self.bit_stream.unpack_bits([-0x10, 4, 7], 4) # 7051E4
             for l in range(0x40):
                 current, current_max, max = self.bit_stream.unpack_bits([0x10, 0x10, 0x10])
-                players[i].abilities.append(PlayerAbility(Const.ABILITY_LIST[l], current, current_max, max)) # 705364
+                players[i].abilities.append(PlayerAbility(l, current, current_max, max)) # 705364
             self.bit_stream.unpack_bits(0xb, 2)
             players[i].name = self.bit_stream.unpack_str(0xd) # 705373
             self.bit_stream.unpack_bits([8, 8, 4, 4, 7, 8, 4, 7, 3, 7], 11) # 70537E
@@ -203,16 +202,14 @@ class OtherTeamReader(BaseReader):
     def read(self) -> list[OtherTeam]:
         teams: list[OtherTeam] = list()
         for i in range(0x109): # loop the teams
-            other_team = OtherTeam()
-            other_team.id = self.bit_stream.unpack_bits(0x10)
+            id = self.bit_stream.unpack_bits(0x10)
             players: list[Player] = list()
             for _ in range(0x19): # loop the playes
-                player = Player()
-                player.id, player.age, player.ability_graph = self.bit_stream.unpack_bits([0x10, 7, 8], 4)
+                pid, age, ability_graph = self.bit_stream.unpack_bits([0x10, 7, 8], 4)
+                player = Player(pid, age, ability_graph)
                 players.append(player)
-            other_team.unknown1, other_team.unknown2, other_team.friendly = self.bit_stream.unpack_bits([0x10, 0x10, 7], 6) # 72c85b
-            other_team.name = Const.TEAM_LIST[i]
-            other_team.players = players
+            unknown1, unknown2, friendly = self.bit_stream.unpack_bits([0x10, 0x10, 7], 6) # 72c85b
+            other_team = OtherTeam(i, id, friendly, unknown1, unknown2, players)
             teams.append(other_team)
         for i in range(0x109):
             for j in range(0x19):

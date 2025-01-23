@@ -69,6 +69,12 @@ class MemcardReader:
             save_entries.append(Saka04SaveEntry(entry.name, main_save_entry, save_head_entry, sys_icon_entry, main_save_offset, save_head_offset, sys_icon_offset))
         return save_entries
 
+    def write_save_entry(self, save_entry: 'Saka04SaveEntry', byte_array: bytes):
+        pass
+        # with open(self.file_path, "r+b") as f:
+        #     f.seek(save_entry.main_save_offset)
+        #     f.write(save_entry.main_save_entry)
+
     def calc_save_entry_offset(self, entry: 'Entry') -> int:
         chain_start = entry.cluster
         page_index = chain_start + self.super_block.alloc_offset * self.super_block.pages_per_cluster

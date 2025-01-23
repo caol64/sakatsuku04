@@ -2,7 +2,7 @@ from pathlib import Path
 import wx
 import wx.grid
 
-from game_data_reader import PlayerDataReader, PlayerData
+from game_data_reader import DataPacReader, PlayerData
 
 
 class DataViewFrame(wx.Frame):
@@ -40,7 +40,7 @@ class DataViewFrame(wx.Frame):
         evt.Skip()
 
     def on_load(self):
-        reader = PlayerDataReader(self.file_path)
+        reader = DataPacReader(self.file_path)
         try:
             reader.load()
             self.players = reader.read()

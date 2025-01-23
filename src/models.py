@@ -1,7 +1,7 @@
+import csv
 from dataclasses import dataclass
 
-from const import Const
-from utils import decode_bytes_to_str, encode_str_to_bytes, zero_pad, zero_terminate
+from utils import decode_bytes_to_str, encode_str_to_bytes, get_resource_path, zero_pad, zero_terminate
 
 class IntBitField:
     def __init__(self, bit_length: int, value: int, bit_offset: int):
@@ -88,12 +88,29 @@ class Club:
     def print_info(self):
         print(self)
 
+
 @dataclass
 class PlayerAbility:
-    name: str
+    index: int
     current: IntBitField
     current_max: IntBitField
     max: IntBitField
+    _ablility_list = None
+
+    @classmethod
+    def ablility_list(cls) -> list[str]:
+        if cls._ablility_list is None:
+            cls._ablility_list = list()
+            with open(get_resource_path('resource/ability.csv'), 'r', encoding='utf8', newline='') as csvfile:
+                reader = csv.reader(csvfile)
+                for row in reader:
+                    if len(row) == 1:
+                        cls._ablility_list.append(row[0])
+        return cls._ablility_list
+
+    @property
+    def name(self) -> str:
+        return PlayerAbility.ablility_list()[self.index]
 
     def __repr__(self):
         return f"{self.name}: {self.current.value}|{self.current_max.value}|{self.max.value}"
@@ -137,30 +154,58 @@ class MyTeam:
     def print_info(self):
         print(self)
 
+@dataclass
 class Player:
     id: IntBitField
     age: IntBitField
     ability_graph: IntBitField
-    number: IntBitField
+    number: IntBitField = None
+    _player_dict = None
+
+    @classmethod
+    def player_dict(cls) -> list[str]:
+        if cls._player_dict is None:
+            cls._player_dict = dict()
+            with open(get_resource_path('resource/players.csv'), 'r', encoding='utf8', newline='') as csvfile:
+                reader = csv.reader(csvfile)
+                for row in reader:
+                    if len(row) == 2:
+                        key, value = row
+                        cls._player_dict[key] = value
+        return cls._player_dict
 
     @property
     def name(self) -> str:
         if self.id.value is None:
             return ''
         hex_id = f"{self.id.value:04X}"
-        if hex_id not in Const.PLAYER_DICT:
+        if hex_id not in Player.player_dict():
             return hex_id
         else:
-            return Const.PLAYER_DICT[hex_id]
+            return Player.player_dict()[hex_id]
 
 
+@dataclass
 class OtherTeam:
+    index: int
     id: IntBitField
-    name: str
-    players: list[Player]
-    unknown1: IntBitField
     friendly: IntBitField
+    unknown1: IntBitField
     unknown2: IntBitField
+    players: list[Player]
+    _team_list = None
 
-    def __init__(self):
-        self.players = list()
+    @classmethod
+    def team_list(cls) -> list[str]:
+        if cls._team_list is None:
+            cls._team_list = list()
+            with open(get_resource_path('resource/teams.csv'), 'r', encoding='utf8', newline='') as csvfile:
+                reader = csv.reader(csvfile)
+                for row in reader:
+                    if len(row) == 1:
+                        cls._team_list.append(row[0])
+        return cls._team_list
+
+    @property
+    def name(self) -> str:
+        return OtherTeam.team_list()[self.index]

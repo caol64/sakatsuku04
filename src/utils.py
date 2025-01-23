@@ -58,12 +58,8 @@ def encode_sjis(s: str) -> bytes:
         return b""
 
 def decode_cn(s: bytes) -> str:
-    """
-    Decode a byte sequence using a custom code map (Const.CN_DICT).
-    Bytes not in the code map are treated as ASCII characters.
-    """
     decoded_str = []
-    code_map = CnVersion.CN_DICT
+    code_map = CnVersion.get_char_dict()
     i = 0
     length = len(s)
     
@@ -83,12 +79,8 @@ def decode_cn(s: bytes) -> str:
     return ''.join(decoded_str)
 
 def encode_cn(s: str) -> bytes:
-    """
-    Encode a string using a custom code map (Const.CN_DICT).
-    Characters not in the code map are encoded as their ASCII values.
-    """
     encoded_bytes = bytearray()
-    code_map_reversed = {v: k for k, v in CnVersion.CN_DICT.items()} # 反转字典，方便查找
+    code_map_reversed = {v: k for k, v in CnVersion.get_char_dict.items()} # 反转字典，方便查找
     for char in s:
         if char in code_map_reversed:
             encoded_bytes.extend(bytes.fromhex(code_map_reversed[char]))
@@ -111,12 +103,16 @@ def get_resource_path(relative_path) -> str:
 
 class CnVersion:
     CN_VER = False
+    _cn_char_dict = None
 
-    CN_DICT = dict()
-
-    with open(get_resource_path('resource/cn.csv'), 'r', encoding='utf8', newline='') as csvfile:
-        reader = csv.reader(csvfile)
-        for row in reader:
-            if len(row) == 2:
-                key, value = row
-                CN_DICT[key] = value
+    @classmethod
+    def get_char_dict(cls) -> dict[str, str]:
+        if cls._cn_char_dict is None:
+            cls._cn_char_dict = {}
+            with open(get_resource_path('resource/cn.csv'), 'r', encoding='utf8', newline='') as csvfile:
+                reader = csv.reader(csvfile)
+                for row in reader:
+                    if len(row) == 2:
+                        key, value = row
+                        cls._cn_char_dict[key] = value
+        return cls._cn_char_dict
