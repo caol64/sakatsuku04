@@ -90,6 +90,9 @@ class InputBitStream:
         with open(path, "wb") as f:
             f.write(self.unpacked_bytes)
 
+    def padding(self, data: bytes):
+        self.unpacked_bytes.extend(data)
+
 class OutputBitStream:
     def __init__(self, input_data: bytes):
         self.input_data = input_data

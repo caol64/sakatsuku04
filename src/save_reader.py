@@ -6,6 +6,7 @@ from enc_dec import Blowfish
 class SaveReader:
     FILE_SIZE = 523276
     DECODED_SIZE = FILE_SIZE - 12
+    HALF_SIZE = DECODED_SIZE // 2
     DATA_STRUCT = struct.Struct("<I261632sQ261632s") # (523276 - 12) / 2 = 261632
     DATA_SIZE = 0x0005EA10
 
@@ -81,7 +82,7 @@ class SaveReader:
         crc = self.build_crc(byte_array)
         head = b'\x00\xfc\x07\x00'
         result = bytearray(head)
-        result += byte_array[:261632]
+        result += byte_array[:SaveReader.HALF_SIZE]
         result += crc
-        result += byte_array[261632:]
+        result += byte_array[SaveReader.HALF_SIZE:]
         return bytes(result)

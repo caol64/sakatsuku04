@@ -121,7 +121,14 @@ class MyPlayer:
     number: IntBitField
     name: StrBitField
     abilities: list[PlayerAbility]
-    index: int
+    born: IntBitField
+    abroad_times: IntBitField
+    height: IntBitField
+    foot: IntBitField
+    grow_type: IntBitField
+    tone_type: IntBitField
+    skill: IntBitField
+    test: IntBitField = IntBitField(0, 0, 0)
 
     def __init__(self):
         self.abilities = list()
@@ -132,7 +139,14 @@ class MyPlayer:
             id='{self.id.value}',
             age='{self.age.value}',
             name='{self.name.value}',
-            abilities='{self.abilities}',
+            born='{self.born.value}',
+            abroad_times='{self.abroad_times.value}',
+            height='{self.height.value}',
+            number='{self.number.value}',
+            foot='{self.foot.value}',
+            tone_type='{self.tone_type.value}',
+            skill='{self.skill.value}',
+            test='{self.test.value}',
         )"""
 
     def print_info(self):

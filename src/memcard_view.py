@@ -1,10 +1,12 @@
 from pathlib import Path
 import wx
 import wx.grid
+import wx.lib.agw.pygauge as PG
 
 from bit_stream import InputBitStream, OutputBitStream
+from error import Error
 from memcard_reader import MemcardReader
-from models import Club, MyPlayer, MyTeam, OtherTeam
+from models import Club, MyPlayer, MyTeam, OtherTeam, PlayerAbility
 from readers import ClubReader, OtherTeamReader, TeamReader
 from save_reader import SaveReader
 from utils import CnVersion
@@ -12,12 +14,17 @@ from utils import CnVersion
 
 class MemcardViewFrame(wx.Frame):
     def __init__(self, *args, file_path: Path, parent: wx.Frame, **kw):
-        super(MemcardViewFrame, self).__init__(*args, **kw, size=(960, 640))
         self.parent = parent
-        panel = wx.Panel(self)
-        self.create_layout(panel)
-        self.bind_events()
-        self.on_load(file_path)
+        self.error = self.check_file(file_path)
+        if self.error:
+            wx.MessageBox(self.error.message, "Error", wx.OK | wx.ICON_ERROR)
+            self.parent.create_instance()
+        else:
+            super(MemcardViewFrame, self).__init__(*args, **kw, size=(960, 640))
+            panel = wx.Panel(self)
+            self.create_layout(panel)
+            self.bind_events()
+            self.on_load()
 
     def create_layout(self, panel: wx.Panel):
         self.save_entries_list_box = wx.ListBox(panel, size=(200, 640))
@@ -35,13 +42,18 @@ class MemcardViewFrame(wx.Frame):
         self.parent.create_instance()
         evt.Skip()
 
-    def on_load(self, file_path: Path):
-        self.reader = MemcardReader(file_path)
+    def check_file(self, file_path: Path) -> Error:
         try:
+            self.reader = MemcardReader(file_path)
             self.reader.load()
             self.save_entries = self.reader.read_save_entries()
+            return None
+        except Error as e:
+            return e
         finally:
             self.reader.close()
+
+    def on_load(self):
         for entry in self.save_entries:
             self.save_entries_list_box.Append(entry.name, entry)
         if self.save_entries:
@@ -204,33 +216,28 @@ class PlayerTab(wx.Panel):
         self.team = None
 
     def create_layout(self, panel: wx.Panel):
+        # player list box
         self.list_box = wx.ListBox(panel, size=(200, 480))
         # Player Information group
         info_box = wx.StaticBox(panel, label="球员信息")
         info_sizer = wx.StaticBoxSizer(info_box, wx.VERTICAL)
-        form_sizer = wx.FlexGridSizer(rows=2, cols=2, vgap=10, hgap=10)
+        form_sizer = wx.FlexGridSizer(rows=3, cols=2, vgap=10, hgap=10)
         form_sizer.Add(wx.StaticText(panel, label="姓名:"), flag=wx.ALIGN_CENTER_VERTICAL)
         self.player_name_text = wx.TextCtrl(panel)
         form_sizer.Add(self.player_name_text, flag=wx.EXPAND)
         form_sizer.Add(wx.StaticText(panel, label="年龄:"), flag=wx.ALIGN_CENTER_VERTICAL)
         self.player_age_text = wx.TextCtrl(panel)
         form_sizer.Add(self.player_age_text, flag=wx.EXPAND)
+        form_sizer.Add(wx.StaticText(panel, label="出生:"), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.player_born_text = wx.TextCtrl(panel)
+        form_sizer.Add(self.player_born_text, flag=wx.EXPAND)
         info_sizer.Add(form_sizer, flag=wx.ALL | wx.EXPAND, border=10)
-        self.grid = wx.grid.Grid(panel)
-        self.grid.CreateGrid(64, 4)
-        self.grid.SetColLabelValue(0, "")
-        self.grid.SetColLabelValue(1, "当前")
-        self.grid.SetColLabelValue(2, "当前上限")
-        self.grid.SetColLabelValue(3, "最高上限")
-        for i in range(4):
-            self.grid.SetColSize(i, 70)
-        self.grid.SetSize(300, 640)
-        self.grid.SetMinSize((300, 640))
-        self.grid.HideRowLabels()
+        # player ability panel
+        self.ability_panel = PlayerAbilPanel(self)
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         sizer.Add(self.list_box)
         sizer.Add(info_sizer)
-        sizer.Add(self.grid)
+        sizer.Add(self.ability_panel)
         panel.SetSizerAndFit(sizer)
 
     def bind_events(self):
@@ -252,11 +259,9 @@ class PlayerTab(wx.Panel):
     def show_player(self, player: MyPlayer):
         self.player_name_text.SetLabelText(player.name.value)
         self.player_age_text.SetLabelText(str(player.age.value))
-        for i, abilities in enumerate(player.abilities):
-            self.grid.SetCellValue(i, 0, abilities.name)
-            self.grid.SetCellValue(i, 1, str(abilities.current.value))
-            self.grid.SetCellValue(i, 2, str(abilities.current_max.value))
-            self.grid.SetCellValue(i, 3, str(abilities.max.value))
+        self.player_born_text.SetLabelText(str(player.born.value))
+        self.ability_panel.update(player.abilities)
+
 
 class OtherTeamTab(wx.Panel):
     def __init__(self, parent):
@@ -317,3 +322,45 @@ class OtherTeamTab(wx.Panel):
             self.grid.SetCellValue(i, 1, str(player.age.value))
             self.grid.SetCellValue(i, 2, str(player.number.value))
             self.grid.SetCellValue(i, 3, str(player.ability_graph.value))
+
+
+class PlayerAbilPanel(wx.Panel):
+    def __init__(self, parent):
+        super().__init__(parent, size=(400, 640))
+        self.create_layout(self)
+
+    def create_layout(self, panel: wx.Panel):
+        scrolled_window = wx.ScrolledWindow(panel, style=wx.VSCROLL | wx.HSCROLL)
+        scrolled_window.SetScrollRate(10, 10)
+        form_sizer = wx.FlexGridSizer(rows=64, cols=3, vgap=10, hgap=10)
+        self.gauge_list: list[PG.PyGauge] = list()
+        self.text_list: list[wx.StaticText] = list()
+        for ability_name in PlayerAbility.ablility_list():
+            form_sizer.Add(wx.StaticText(scrolled_window, label=ability_name), flag=wx.ALIGN_CENTER_VERTICAL)
+            gauge = PG.PyGauge(scrolled_window, -1, size=(100, 20), style=wx.GA_HORIZONTAL)
+            gauge.SetValue([0, 0, 0])
+            gauge.SetBarColor([wx.Colour(162, 255, 178), wx.Colour(255, 224, 130), wx.Colour(159, 176, 255)])
+            gauge.SetBackgroundColour(wx.WHITE)
+            gauge.SetBorderColor(wx.BLACK)
+            gauge.SetBorderPadding(2)
+            self.gauge_list.append(gauge)
+            form_sizer.Add(gauge, flag=wx.ALIGN_CENTER_VERTICAL)
+            ability_text = wx.StaticText(scrolled_window, label="")
+            form_sizer.Add(ability_text, flag=wx.ALIGN_CENTER_VERTICAL)
+            self.text_list.append(ability_text)
+        scrolled_window.SetSizer(form_sizer)
+        form_sizer.FitInside(scrolled_window)
+        form_sizer.SetFlexibleDirection(wx.BOTH)
+        form_sizer.SetNonFlexibleGrowMode(wx.FLEX_GROWMODE_NONE)
+        main_sizer = wx.BoxSizer(wx.VERTICAL)
+        main_sizer.Add(scrolled_window, proportion=1, flag=wx.EXPAND)
+        panel.SetSizer(main_sizer)
+
+    def update(self, abilities: list[PlayerAbility]):
+        for i, abilitiy in enumerate(abilities):
+            self.gauge_list[i].SetValue([0, 0, 0])
+            self.gauge_list[i].Update([self.calc_perce(abilitiy.current.value), self.calc_perce(abilitiy.current_max.value), self.calc_perce(abilitiy.max.value)], 100)
+            self.text_list[i].SetLabelText(f"{abilitiy.current.value}/{abilitiy.current_max.value}/{abilitiy.max.value}")
+
+    def calc_perce(self, n: int) -> int:
+        return int(n / 65535 * 100)

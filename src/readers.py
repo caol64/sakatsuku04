@@ -2,17 +2,22 @@ from bit_stream import InputBitStream
 from models import Club, MyPlayer, MyTeam, OtherTeam, Player, PlayerAbility
 
 class BaseReader:
+    base_offset = 0x703D50
+
     def __init__(self, bit_stream: InputBitStream):
         self.bit_stream = bit_stream
 
+    def print_mem_offset(self):
+        print(hex(len(self.bit_stream.unpacked_bytes) + ClubReader.start + BaseReader.base_offset))
+
 class ClubReader(BaseReader):
-    start_bytes = 0
-    block_bytes = 5044
-    total_bytes = 5044
-    start_offset = 0x703D50
+    start = 0 # 0x703D50
+    size = 0x13B4
+    total_size = size
     consume_bytes = 0x127D
     consume_bits = 0x93E5
     remain_mask = 0x4
+    tail_padding = b'\xec\x76\x13\x89' * 4
 
     def read(self) -> Club:
         club = Club()
@@ -21,100 +26,41 @@ class ClubReader(BaseReader):
         club.manager_name = self.bit_stream.unpack_str(0x10) # 00703D5C
         self.bit_stream.unpack_str(0x10)
         club.club_name = self.bit_stream.unpack_str(0x15)
-        self.bit_stream.unpack_str(0x1CB) #  - 00703F5C
-        self.bit_stream.skip(ClubReader.consume_bits, ClubReader.total_bytes - len(self.bit_stream.unpacked_bytes))
+        self.bit_stream.unpack_str(0x1CB) #  - 00703F5B
+        self.bit_stream.unpack_bits(3, 2)
+        self.bit_stream.unpack_bits([0x10, 0x10], 6)
+        self.bit_stream.unpack_bits([0x20, 0xb, 1, 1, 1, 8, 8, 8, 8, 0xb, 0xb, 0xb, 0xb, 0xb, 0xb, 0xb, 0xb], 30) # 0x703f82
+        self.bit_stream.unpack_bits([8, 8, 8, 8, 8, 8, 8, 8, 8, 4], 14) # 0x703f90
+        self.bit_stream.unpack_bits([0x20] * 0x20) # 0x704010
+        for i in range(0x32):
+            self.bit_stream.unpack_bits([0x10, 8, 8, 8], 8)
+            self.bit_stream.unpack_bits([0x20] * 0x10)
+        self.bit_stream.unpack_bits([0x20] * 0x30)
+        for i in range(0x72):
+            self.bit_stream.unpack_bits([0x10, 8], 4) # 0x7050a8
+        self.bit_stream.unpack_bits([0x10, 8, 8, 8, 8, 8, 8, 0x10, 8, 8, 8, 8, 8, 8, 0x10, 8, 8, 0x10, 0x10])
+        # 0x7050c0
+        self.bit_stream.unpack_bits([0x10, 0x10, 0x10, 0x10, 0x10], 12)
+        # 0x7050cc
+        self.bit_stream.unpack_bits([0x20, 0x20, 8, 5, 0x10, 1], 16)
+        self.bit_stream.unpack_bits([0x20, 0x20, 0x20, 8, 8], 16)
+        self.bit_stream.unpack_bits([0x20, 8, 8, 8], 8)
+        # 0x7050f4
+        self.bit_stream.padding(self.tail_padding)
+        # 0x705104
+        # self.bit_stream.skip(ClubReader.consume_bits, ClubReader.total_size - len(self.bit_stream.unpacked_bytes))
         return club
-        # self.club.club_info = self.bit_stream.bit_read_str(0x200) # 00703D5C - 00703F5C
 
-        # self.bit_stream.alloc(ClubReader.total_bytes - len(self.bit_stream.out_buffer))
-        # self.bit_stream.skip(ClubReader.consume_bytes, ClubReader.remain_mask)
-        # elements = [
-        #     3, -0x10, -0x10, -0x20, 0xb, 1, 1, 1, 8, 8, 8, 8, (0xb, 0x222), 0xb, 0xb, 0xb, 0xb, 0xb, 0xb, 0xb,
-        #     8, 8, 8, 8, 8, 8, 8, 8, 8, (4, 0x23c)
-        # ]
-        # self.bit_stream.batch_read(elements)
-        # self.bit_stream.align(32)
-        # for i in range(0x20):
-        #     self.bit_stream.bit_read(0x20)
-
-        # for i in range(0x32):
-        #     # self.bit_stream.align(32)
-        #     # self.bit_stream.bit_read(0x10)
-        #     # self.bit_stream.bit_read(8)
-        #     # self.bit_stream.bit_read(8)
-        #     # self.bit_stream.bit_read(8)
-        #     # for j in range(0x10):
-        #     #     self.bit_stream.bit_read(0x20)
-        #     self.bit_stream.bit_read(0x10, i * 0x24 + 0x2c0)
-        #     self.bit_stream.bit_read(8, i * 0x24 + 0x2c2)
-        #     if i % 2 == 0:
-        #         self.bit_stream.bit_read(8, i * 0x48 + 0x2c3)
-        #     self.bit_stream.bit_read(8, i * 0x24 + 0x2c4)
-        #     for j in range(0x10):
-        #         self.bit_stream.bit_read(0x20, i * 0x24 + j * 4 + 0x2c8)
-        # # self.bit_stream.align(32)
-        # for i in range(0x30):
-        #     # self.bit_stream.bit_read(0x20)
-        #     self.bit_stream.bit_read(0x20, i * 2 + 0x868)
-        # for i in range(0x20):
-        #     # self.bit_stream.bit_read(0x10)
-        #     # self.bit_stream.bit_read(8)
-        #     self.bit_stream.bit_read(0x10, i * 2 + 0x8c8)
-        #     self.bit_stream.bit_read(8, i * 2 + 0x8c9)
-        # for i in range(0x20):
-        #     # self.bit_stream.bit_read(0x10)
-        #     # self.bit_stream.bit_read(8)
-        #     self.bit_stream.bit_read(0x10, i * 2 + 0x908)
-        #     self.bit_stream.bit_read(8, i * 2 + 0x909)
-        # for i in range(0x20):
-        #     # self.bit_stream.bit_read(0x10)
-        #     # self.bit_stream.bit_read(8)
-        #     self.bit_stream.bit_read(0x10, i * 2 + 0x948)
-        #     self.bit_stream.bit_read(8, i * 2 + 0x949)
-        # for i in range(0x20):
-        #     # self.bit_stream.bit_read(0x10)
-        #     # self.bit_stream.bit_read(8)
-        #     self.bit_stream.bit_read(0x10, i * 2 + 0x988)
-        #     self.bit_stream.bit_read(8, i * 2 + 0x989)
-        # self.bit_stream.bit_read(0x10, 0x9ac)
-        # for i in range(2):
-        #     self.bit_stream.bit_read(8, i * 4 + 0x9ad)
-        #     self.bit_stream.bit_read(8, i * 8 + 0x135b)
-        #     self.bit_stream.bit_read(8, i * 4 + 0x9ae)
-        #     self.bit_stream.bit_read(8, i * 8 + 0x135d)
-        #     self.bit_stream.bit_read(8, i * 4 + 0x9af)
-        #     self.bit_stream.bit_read(8, i * 8 + 0x135f)
-        #     self.bit_stream.bit_read(0x10, i * 4 + 0x9b0)
-        # self.bit_stream.bit_read(8, 0x9b5)
-        # self.bit_stream.bit_read(8, 0x136b)
-        # self.bit_stream.bit_read(0x10, 0x9b6)
-        # self.bit_stream.bit_read(0x10, 0x9b7)
-        # for i in range(5):
-        #     self.bit_stream.bit_read(0x10, i + 0x9b8)
-        # self.bit_stream.bit_read(0x20, 0x9be)
-        # self.bit_stream.bit_read(0x20, 0x9c0)
-        # self.bit_stream.bit_read(8, 0x9c2)
-        # self.bit_stream.bit_read(5, 0x1385)
-        # self.bit_stream.bit_read(0x10, 0x9c3)
-        # self.bit_stream.bit_read(1, 0x9c4)
-        # self.bit_stream.bit_read(0x20, 0x9c6)
-        # for i in range(2):
-        #     self.bit_stream.bit_read(0x20, i * 2 + 0x9c8)
-        # self.bit_stream.bit_read(8, 0x9cc)
-        # self.bit_stream.bit_read(8, 0x1399)
-        # self.bit_stream.bit_read(0x20, 0x9ce)
-        # for i in range(3):
-        #     self.bit_stream.bit_read(8, i)
 
 
 class TeamReader(BaseReader):
-    start_bytes = 0x13B4
-    block_bytes = 161516
-    total_bytes = 166560
-    start_offset = 0x705104
+    start = ClubReader.start + ClubReader.size # 0x705104
+    size = 0x276EC
+    total_size = ClubReader.total_size + size
     consume_bytes = 0x1836C
     consume_bits = 0xC1B5C
     remain_mask = 0x8
+    tail_padding = b'\xc0\x89\x3f\x76' * 4
 
     def read(self) -> MyTeam:
         team = MyTeam()
@@ -131,33 +77,40 @@ class TeamReader(BaseReader):
 
         # 643 0070DD78
 
-        self.bit_stream.skip(TeamReader.consume_bits, TeamReader.total_bytes - len(self.bit_stream.unpacked_bytes))
+        self.bit_stream.skip(TeamReader.consume_bits, TeamReader.total_size - len(self.bit_stream.unpacked_bytes))
         return team
 
     def read_players(self) -> list[MyPlayer]:
         players: list[MyPlayer] = [MyPlayer() for _ in range(0x19)]
         self.bit_stream.unpack_bits([16, 16, 1], 5)
         self.bit_stream.unpack_bits([-6] * 0x19, 0x19 + 2) # 7051E0
+        # each player produce 0x240 bytes
         for i in range(0x19): #0x19
             players[i].id, _, players[i].age = self.bit_stream.unpack_bits([-0x10, 4, 7], 4) # 7051E4
             for l in range(0x40):
                 current, current_max, max = self.bit_stream.unpack_bits([0x10, 0x10, 0x10])
                 players[i].abilities.append(PlayerAbility(l, current, current_max, max)) # 705364
-            self.bit_stream.unpack_bits(0xb, 2)
-            players[i].name = self.bit_stream.unpack_str(0xd) # 705373
-            self.bit_stream.unpack_bits([8, 8, 4, 4, 7, 8, 4, 7, 3, 7], 11) # 70537E
+            self.bit_stream.unpack_bits(0xb)
+            players[i].name = self.bit_stream.unpack_str(0xd)
+            # 705373
+            players[i].born = self.bit_stream.unpack_bits(8)
+            _, _, _, _, players[i].height, _, players[i].number, players[i].foot, _ = self.bit_stream.unpack_bits([8, 4, 4, 7, 8, 4, 7, 3, 7], 10) # 70537E
             self.bit_stream.unpack_bits([0x10, 0x10])# 705382
-            self.bit_stream.unpack_bits([4, 4, 4, 4, 1, 2, 4, 4, 4, 4, 7, 7, 7, 7, 7, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4], 28) # 70539E
-            self.bit_stream.unpack_bits([4, 7, 4, 7, 3, 3, 7, 5, 1, 3, 4], 14) # 7053AC
-            self.bit_stream.unpack_bits([0x20, 2], 6)
-            self.bit_stream.unpack_bits([0xa, 8, 8, 0x10], 6) # 7053B8
-            self.bit_stream.unpack_bits([8, 3, 3, 8, 8, 8], 6)
+            _, _, _, _, _, _, _, _, _, _, players[i].grow_type, _, _, _, _, players[i].tone_type, _, _, _, _, _, _, _, _, _, _, _, _ = self.bit_stream.unpack_bits([4, 4, 4, 4, 1, 2, 4, 4, 4, 4, 7, 7, 7, 7, 7, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4], 28) # 70539E
+            _, _, _, _, _, _, _, players[i].skill, _, _, _ = self.bit_stream.unpack_bits([4, 7, 4, 7, 3, 3, 7, 5, 1, 3, 4], 14) # 7053AC
+            _, _ = self.bit_stream.unpack_bits([0x20, 2], 6)
+            _, _, _, _ = self.bit_stream.unpack_bits([0xa, 8, 8, 0x10], 6) # 7053B8
+            _, _, _, _, _, _ = self.bit_stream.unpack_bits([8, 3, 3, 8, 8, 8], 6)
             self.bit_stream.unpack_bits([0x10] * 14, 30) # 7053DC
-            self.bit_stream.unpack_bits([0x20, -0x10, 0x10, 0x10, 0x10, 0x10], 14)
-            self.bit_stream.unpack_bits([4, 7, 4, 7, 6, 4, 8, 4, 0x10, 0x10, 7], 13)
+            # self.print_mem_offset()
+            _, _, _, _, _, _ = self.bit_stream.unpack_bits([0x20, -0x10, 0x10, 0x10, 0x10, 0x10])
+            # 0x7053ea
+            self.bit_stream.unpack_bits([4, 7, 4, 7, 6, 4, 8])
+            players[i].abroad_times = self.bit_stream.unpack_bits(4) # 007053F1
+            self.bit_stream.unpack_bits([0x10, 0x10, 7])
             self.bit_stream.unpack_bits([-8] * 9, 9)
             self.bit_stream.unpack_bits([0x10, 0x10, 8, -8, 5, 5, 6], 12)
-            self.bit_stream.unpack_bits([0x20, 0x20, 0x20, 0x20, 0x10], 20) # 705420
+            _, _, _, _, _ = self.bit_stream.unpack_bits([0x20, 0x20, 0x20, 0x20, 0x10], 20) # 705420
         self.bit_stream.unpack_bits(0x10)
         for _ in range(10):
             self.bit_stream.unpack_bits([-6], 2)
@@ -191,12 +144,13 @@ class TeamReader(BaseReader):
 
 
 class OtherTeamReader(BaseReader):
-    start_bytes = 0x28AA0
-    block_bytes = 35264
-    total_bytes = 201824
-    start_offset = 0x72C7F0
+    start = TeamReader.start + TeamReader.size # 0x72c7f0
+    size = 0x89C0
+    total_size = TeamReader.total_size + size
     consume_bytes = 0x208B5
+    consume_bits = 0x1045A2
     remain_mask = 0x20
+    tail_padding = b'\x40\x03\xbf\xfc' * 4
 
 
     def read(self) -> list[OtherTeam]:
@@ -208,91 +162,89 @@ class OtherTeamReader(BaseReader):
                 pid, age, ability_graph = self.bit_stream.unpack_bits([0x10, 7, 8], 4)
                 player = Player(pid, age, ability_graph)
                 players.append(player)
-            unknown1, unknown2, friendly = self.bit_stream.unpack_bits([0x10, 0x10, 7], 6) # 72c85b
+            unknown1, unknown2, friendly = self.bit_stream.unpack_bits([0x10, 0x10, 7], 6) # 72c856 - 72c85b
             other_team = OtherTeam(i, id, friendly, unknown1, unknown2, players)
             teams.append(other_team)
+        # 7337bc
         for i in range(0x109):
             for j in range(0x19):
                 teams[i].players[j].number = self.bit_stream.unpack_bits(8) # 背番号
-        self.bit_stream.unpack_bits([8, 8])
+        # 73519d
+        self.bit_stream.unpack_bits([8, 8], 3)
+        # 0x7351a0
+        self.bit_stream.padding(self.tail_padding)
+        # self.bit_stream.skip(OtherTeamReader.consume_bits, OtherTeamReader.total_size - len(self.bit_stream.unpacked_bytes))
         return teams
 
 
 class LeagueReader(BaseReader):
-    start_bytes = 0x31460
-    block_bytes = 832
-    total_bytes = 202656
-    start_offset = 0x7351B0
+    start = OtherTeamReader.start + OtherTeamReader.size # 0x7351b0
+    size = 0x340
+    total_size = OtherTeamReader.total_size + size
     consume_bytes = 0x20AEA
+    consume_bits = 0x105750
     remain_mask = 0x80
 
     def read(self):
-        elements = [
-            0x10, 0x10, 7, 8
-        ]
-        self.bit_stream.batch_read(elements)
+        self.bit_stream.unpack_bits(0x20)
+        self.bit_stream.skip(LeagueReader.consume_bits, LeagueReader.total_size - len(self.bit_stream.unpacked_bytes))
 
 class TownReader(BaseReader):
-    start_bytes = 0x317A0
-    block_bytes = 380
-    total_bytes = 203036
-    start_offset = 0x7354F0
+    start = LeagueReader.start + LeagueReader.size
+    size = 0x17C
+    total_size = LeagueReader.total_size + size
     consume_bytes = 0x20B72
+    consume_bits = 0x105B8D
     remain_mask = 0x4
 
     def read(self):
-        elements = [
-            0x10, 0x10, 7, 8
-        ]
-        self.bit_stream.batch_read(elements)
+        self.bit_stream.unpack_bits(3, 1)
+        self.bit_stream.skip(TownReader.consume_bits, TownReader.total_size - len(self.bit_stream.unpacked_bytes))
 
 class RecordReader(BaseReader):
-    start_bytes = 0x33191C
-    block_bytes = 189200
-    total_bytes = 392236
-    start_offset = 0x73566C
+    start = TownReader.start + TownReader.size
+    size = 0x2E310
+    total_size = TownReader.total_size + size
     consume_bytes = 0x41B1F
+    consume_bits = 0x20D8F6
     remain_mask = 0x2
 
     def read(self):
-        elements = [
-            0x10, 0x10, 7, 8
-        ]
-        self.bit_stream.batch_read(elements)
+        self.bit_stream.unpack_bits(0x10)
+        self.bit_stream.skip(RecordReader.consume_bits, RecordReader.total_size - len(self.bit_stream.unpacked_bytes))
 
 class ScheReader(BaseReader):
-    start_bytes = 0x5FC2C
-    block_bytes = 2580
-    total_bytes = 394816
-    start_offset = 0x76397C
+    start = RecordReader.start + RecordReader.size
+    size = 0xA14
+    total_size = RecordReader.total_size + size
     consume_bytes = 0x4221F
+    consume_bits = 0x2110F8
     remain_mask = 0x2
 
     def read(self):
-        elements = [
-            0x10, 0x10, 7, 8
-        ]
-        self.bit_stream.batch_read(elements)
+        for _ in range(11):
+            self.bit_stream.unpack_bits(5)
+        self.bit_stream.skip(ScheReader.consume_bits, ScheReader.total_size - len(self.bit_stream.unpacked_bytes))
 
 class OptionReader(BaseReader):
-    start_bytes = 0x60640
-    block_bytes = 56
-    total_bytes = 394872
-    start_offset = 0x764390
+    start = ScheReader.start + ScheReader.size
+    size = 0x38
+    total_size = ScheReader.total_size + size
     consume_bytes = 0x42237
+    consume_bits = 0x2111B8
     remain_mask = 0x40
 
     def read(self):
-        elements = [
-            0x10, 0x10, 7, 8
-        ]
-        self.bit_stream.batch_read(elements)
+        self.bit_stream.unpack_bits(0x20)
+        for _ in range(0xd):
+            self.bit_stream.unpack_bits(1, 4)
+            
+        # self.bit_stream.skip(OptionReader.consume_bits, OptionReader.total_size - len(self.bit_stream.unpacked_bytes))
 
 class MailReader(BaseReader):
-    start_bytes = 0x60678
-    block_bytes = 0
-    total_bytes = 0
-    start_offset = 0x7643C8
+    start = OptionReader.start + OptionReader.size
+    size = 0x1
+    total_size = OptionReader.total_size + size
     consume_bytes = 0
     remain_mask = 0
 

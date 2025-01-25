@@ -53,36 +53,35 @@ class MemcardReader:
         root_entries = self.list_root_dir()
         for entry in [e for e in root_entries if e.name.startswith("BISLPM-65530Saka_G")]:
             sub_entries = self.lookup_entry_by_name(entry.name)
-            main_save_entry, save_head_entry, sys_icon_entry = None, None, None
-            main_save_offset, save_head_offset, sys_icon_offset = 0, 0, 0
             for sub_entry in sub_entries:
                 if sub_entry.is_file():
                     if sub_entry.name == entry.name:
-                        main_save_offset = self.calc_save_entry_offset(sub_entry)
                         main_save_entry = self.read_data_cluster(sub_entry)
                     if sub_entry.name == 'head.dat':
-                        save_head_offset = self.calc_save_entry_offset(sub_entry)
                         save_head_entry = self.read_data_cluster(sub_entry)
                     if sub_entry.name == 'icon.sys':
-                        sys_icon_offset = self.calc_save_entry_offset(sub_entry)
                         sys_icon_entry = self.read_data_cluster(sub_entry)
-            save_entries.append(Saka04SaveEntry(entry.name, main_save_entry, save_head_entry, sys_icon_entry, main_save_offset, save_head_offset, sys_icon_offset))
+            save_entries.append(Saka04SaveEntry(entry.name, main_save_entry, save_head_entry, sys_icon_entry))
         return save_entries
 
     def write_save_entry(self, save_entry: 'Saka04SaveEntry', byte_array: bytes):
-        pass
-        # with open(self.file_path, "r+b") as f:
-        #     f.seek(save_entry.main_save_offset)
-        #     f.write(save_entry.main_save_entry)
-
-    def calc_save_entry_offset(self, entry: 'Entry') -> int:
-        chain_start = entry.cluster
-        page_index = chain_start + self.super_block.alloc_offset * self.super_block.pages_per_cluster
-        return self.raw_page_size * page_index
+        self.offset = 0
+        try:
+            self.file = open(self.file_path, "r+b")
+            mc_entries = self.lookup_entry_by_name(save_entry.name)
+            if mc_entries:
+                mc_entrie = mc_entries[0]
+                self.write_data_cluster(mc_entrie, byte_array)
+        finally:
+            self.close()
 
     def read_bytes(self, size: int) -> bytes:
         self.file.seek(self.offset)
         return self.file.read(size)
+
+    def write_bytes(self, data: bytes):
+        self.file.seek(self.offset)
+        return self.file.write(data)
 
     def close(self):
         if self.file:
@@ -101,6 +100,11 @@ class MemcardReader:
         self.offset = self.raw_page_size * n
         return self.read_bytes(self.super_block.page_len)
 
+    def write_page(self, n: int, data: bytes):
+        end = min(self.super_block.page_len, len(data))
+        self.offset = self.raw_page_size * n
+        self.write_bytes(data[:end])
+
     def read_cluster(self, n: int) -> bytes:
         """
         Read the byte data of a cluster from the memory card.
@@ -116,6 +120,12 @@ class MemcardReader:
         for i in range(self.super_block.pages_per_cluster):
             byte_buffer += self.read_page(page_index + i)
         return bytes(byte_buffer)
+
+    def write_cluster(self, n: int, data: bytes):
+        page_index = n * self.super_block.pages_per_cluster
+        for i in range(self.super_block.pages_per_cluster):
+            start = i * self.super_block.page_len
+            self.write_page(page_index + i, data[start:])
 
     def get_fat_value(self, n: int) -> int:
         """
@@ -194,6 +204,15 @@ class MemcardReader:
             bytes_read += to_read
             chain_start = self.get_fat_value(chain_start)
         return bytes(byte_buffer)
+
+    def write_data_cluster(self, entry: 'Entry', data: bytes):
+        chain_start = entry.cluster
+        bytes_write = 0
+        while chain_start != Fat.CHAIN_END:
+            to_write = min(entry.length - bytes_write, self.cluster_size)
+            self.write_cluster(chain_start + self.super_block.alloc_offset, data[bytes_write: bytes_write + to_write])
+            bytes_write += to_write
+            chain_start = self.get_fat_value(chain_start)
 
     def __build_matrix(self, cluster_list: list[int]) -> np.ndarray:
         """
@@ -298,9 +317,9 @@ class SuperBlock:
     def __init__(self, byte_val: bytes):
         """Initialize the SuperBlock instance."""
         if len(byte_val) < SuperBlock.SIZE:
-            raise Error("SuperBlock length invalid.")
+            raise Error("PCSX2 save length invalid.")
         if not byte_val.startswith(SuperBlock.MAGIC):
-            raise Error("Not a valid SuperBlock.")
+            raise Error("Not a valid PCSX2 save.")
         (
             self.magic,
             self.version,
@@ -410,6 +429,3 @@ class Saka04SaveEntry:
     main_save_entry: bytes
     save_head_entry: bytes
     sys_icon_entry: bytes
-    main_save_offset: int
-    save_head_offset: int
-    sys_icon_offset: int

@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Callable, Type
 import wx
+import wx.adv
 
 from game_data_view import DataViewFrame
 from memcard_view import MemcardViewFrame
@@ -12,19 +13,23 @@ class OpenFileFrame(wx.Frame):
     def __init__(self, *args, **kw):
         super(OpenFileFrame, self).__init__(*args, **kw, style=FRAME_STYLE)
         panel = wx.Panel(self)
+        self.create_layout(panel)
+        self.setup_menu()
+        file_drop_target = WxFileDropTarget(self.on_drag_file)
+        self.SetDropTarget(file_drop_target)
+        self.bind_events()
+
+    def create_layout(self, panel: wx.Panel):
         st = wx.StaticText(panel, label="Drag Me")
         font = st.GetFont()
         font.PointSize += 10
         font = font.Bold()
         st.SetFont(font)
-        btn = wx.Button(panel, label="Choose File")
+        self.btn = wx.Button(panel, label="Choose File")
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(st, flag=wx.ALIGN_CENTER_HORIZONTAL | wx.TOP, border=10)
-        sizer.Add(btn, flag=wx.ALIGN_CENTER_HORIZONTAL | wx.TOP, border=10)
+        sizer.Add(self.btn, flag=wx.ALIGN_CENTER_HORIZONTAL | wx.TOP, border=10)
         panel.SetSizer(sizer)
-        self.setup_menu()
-        file_drop_target = WxFileDropTarget(self.on_drag_file)
-        self.SetDropTarget(file_drop_target)
 
     def setup_menu(self):
         menubar = wx.MenuBar()
@@ -32,15 +37,37 @@ class OpenFileFrame(wx.Frame):
         menubar.Append(menu, "&File")
         menu.Append(wx.ID_OPEN)
         menu.Append(wx.ID_EXIT)
+        help_menu = wx.Menu()
+        self.about_item = help_menu.Append(wx.ID_ABOUT, "About", "Show About Page")
+        menubar.Append(help_menu, "&Help")
         self.SetMenuBar(menubar)
+
+    def bind_events(self):
         self.Bind(wx.EVT_MENU, self.on_open_file, id=wx.ID_OPEN)
         self.Bind(wx.EVT_MENU, self.on_exit, id=wx.ID_EXIT)
         self.Bind(wx.EVT_CLOSE, self.on_exit)
+        self.Bind(wx.EVT_MENU, self.show_about_dialog, self.about_item)
+        self.btn.Bind(wx.EVT_BUTTON, self.on_open_file)
+
+    def show_about_dialog(self, event):
+        info = wx.adv.AboutDialogInfo()
+        info.SetName("创造球会04存档编辑器")
+        info.SetVersion("1.0.0")
+        info.SetDescription("made by caol64(阿不) with ❤️")
+        info.SetCopyright("(C) 2025 Lei Cao")
+        # info.SetWebSite("https://yuzhi.tech")
+        wx.adv.AboutBox(info)
 
     def on_open_file(self, evt: wx.Event):
         """
         Open a file dialog to select a PS2 memory card file.
         """
+        file_dialog = wx.FileDialog(
+            self, "Open", "", "", "PS2 Memory Card Files (*.ps2)|*.ps2", wx.FD_OPEN | wx.FD_FILE_MUST_EXIST
+        )
+        if file_dialog.ShowModal() == wx.ID_OK:
+            self._open_frame(MemcardViewFrame, file_path=file_dialog.GetPath(), parent=self, title="Sakatsuku04 Save Tool")
+            file_dialog.Destroy()
 
     def on_exit(self, evt: wx.Event):
         self.Destroy()
@@ -73,7 +100,8 @@ class OpenFileFrame(wx.Frame):
         """Helper to close current frame and open a new one."""
         self.Close()
         frame = frame_class(None, **kwargs)
-        frame.Show()
+        if not frame.error:
+            frame.Show()
 
     @classmethod
     def create_instance(cls):
