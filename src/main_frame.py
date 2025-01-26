@@ -66,7 +66,7 @@ class OpenFileFrame(wx.Frame):
             self, "Open", "", "", "PS2 Memory Card Files (*.ps2)|*.ps2", wx.FD_OPEN | wx.FD_FILE_MUST_EXIST
         )
         if file_dialog.ShowModal() == wx.ID_OK:
-            self._open_frame(MemcardViewFrame, file_path=file_dialog.GetPath(), parent=self, title="Sakatsuku04 Save Tool")
+            self._open_frame(MemcardViewFrame, file_path=file_dialog.GetPath(), parent=self, title="Sakatsuku04 Save Editor")
             file_dialog.Destroy()
 
     def on_exit(self, evt: wx.Event):

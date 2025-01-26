@@ -99,6 +99,7 @@ class SaveViewPanel(wx.Panel):
         sizer.Add(footer_sizer, 0, wx.EXPAND | wx.ALL, 5)
         panel.SetSizer(sizer)
         panel.Centre()
+        self.notebook = notebook
 
     def bind_events(self):
         self.checkbox.Bind(wx.EVT_CHECKBOX, self.on_checkbox_click)
@@ -121,17 +122,19 @@ class SaveViewPanel(wx.Panel):
         other_teams = oteam_reader.read()
         self.other_team_tab.load(other_teams)
         self.update_panels()
+        self.notebook.SetSelection(0)
 
     def on_checkbox_click(self, evt: wx.Event):
         CnVersion.CN_VER = self.checkbox.IsChecked()
         self.update_panels()
 
     def on_submit_click(self, evt: wx.Event):
-        self.club_info_tab.submit(self.out_bit_stream)
-        self.reader.update_decode_buffer(self.out_bit_stream.input_data)
-        encode_buffer = self.reader.enc()
-        save_bin = self.reader.build_save_bytes(encode_buffer)
-        self.root.write_file(save_bin)
+        wx.MessageBox('', '敬请期待', style=wx.OK | wx.ICON_INFORMATION)
+        # self.club_info_tab.submit(self.out_bit_stream)
+        # self.reader.update_decode_buffer(self.out_bit_stream.input_data)
+        # encode_buffer = self.reader.enc()
+        # save_bin = self.reader.build_save_bytes(encode_buffer)
+        # self.root.write_file(save_bin)
 
     def update_panels(self):
         self.club_info_tab.update()
@@ -217,27 +220,57 @@ class PlayerTab(wx.Panel):
 
     def create_layout(self, panel: wx.Panel):
         # player list box
-        self.list_box = wx.ListBox(panel, size=(200, 480))
+        self.list_box = wx.ListBox(panel, size=(150, 480))
         # Player Information group
         info_box = wx.StaticBox(panel, label="球员信息")
         info_sizer = wx.StaticBoxSizer(info_box, wx.VERTICAL)
-        form_sizer = wx.FlexGridSizer(rows=3, cols=2, vgap=10, hgap=10)
+        form_sizer = wx.FlexGridSizer(rows=12, cols=2, vgap=5, hgap=5)
         form_sizer.Add(wx.StaticText(panel, label="姓名:"), flag=wx.ALIGN_CENTER_VERTICAL)
         self.player_name_text = wx.TextCtrl(panel)
         form_sizer.Add(self.player_name_text, flag=wx.EXPAND)
         form_sizer.Add(wx.StaticText(panel, label="年龄:"), flag=wx.ALIGN_CENTER_VERTICAL)
         self.player_age_text = wx.TextCtrl(panel)
         form_sizer.Add(self.player_age_text, flag=wx.EXPAND)
-        form_sizer.Add(wx.StaticText(panel, label="出生:"), flag=wx.ALIGN_CENTER_VERTICAL)
-        self.player_born_text = wx.TextCtrl(panel)
-        form_sizer.Add(self.player_born_text, flag=wx.EXPAND)
-        info_sizer.Add(form_sizer, flag=wx.ALL | wx.EXPAND, border=10)
+        form_sizer.Add(wx.StaticText(panel, label="号码:"), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.player_number_text = wx.TextCtrl(panel)
+        form_sizer.Add(self.player_number_text, flag=wx.EXPAND)
+        # form_sizer.Add(wx.StaticText(panel, label="出生:"), flag=wx.ALIGN_CENTER_VERTICAL)
+        # self.player_born_text = wx.TextCtrl(panel)
+        # form_sizer.Add(self.player_born_text, flag=wx.EXPAND)
+        form_sizer.Add(wx.StaticText(panel, label="惯用脚:"), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.player_foot_text = wx.TextCtrl(panel)
+        form_sizer.Add(self.player_foot_text, flag=wx.EXPAND)
+        form_sizer.Add(wx.StaticText(panel, label="留学次数:"), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.player_aboard_times_text = wx.TextCtrl(panel)
+        form_sizer.Add(self.player_aboard_times_text, flag=wx.EXPAND)
+        form_sizer.Add(wx.StaticText(panel, label="位置:"), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.player_pos_text = wx.TextCtrl(panel)
+        form_sizer.Add(self.player_pos_text, flag=wx.EXPAND)
+        form_sizer.Add(wx.StaticText(panel, label="等级:"), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.player_rank_text = wx.TextCtrl(panel)
+        form_sizer.Add(self.player_rank_text, flag=wx.EXPAND)
+        form_sizer.Add(wx.StaticText(panel, label="连携:"), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.player_teamwork_text = wx.TextCtrl(panel)
+        form_sizer.Add(self.player_teamwork_text, flag=wx.EXPAND)
+        form_sizer.Add(wx.StaticText(panel, label="口调:"), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.player_tone_type_text = wx.TextCtrl(panel)
+        form_sizer.Add(self.player_tone_type_text, flag=wx.EXPAND)
+        form_sizer.Add(wx.StaticText(panel, label="身体:"), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.player_grow_type_phy_text = wx.TextCtrl(panel)
+        form_sizer.Add(self.player_grow_type_phy_text, flag=wx.EXPAND)
+        form_sizer.Add(wx.StaticText(panel, label="技术:"), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.player_grow_type_tech_text = wx.TextCtrl(panel)
+        form_sizer.Add(self.player_grow_type_tech_text, flag=wx.EXPAND)
+        form_sizer.Add(wx.StaticText(panel, label="头脑:"), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.player_grow_type_sys_text = wx.TextCtrl(panel)
+        form_sizer.Add(self.player_grow_type_sys_text, flag=wx.EXPAND)
+        info_sizer.Add(form_sizer, flag=wx.ALL | wx.EXPAND, border=5)
         # player ability panel
         self.ability_panel = PlayerAbilPanel(self)
         sizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer.Add(self.list_box)
-        sizer.Add(info_sizer)
-        sizer.Add(self.ability_panel)
+        sizer.Add(self.list_box, 0, wx.ALL, border=5)
+        sizer.Add(info_sizer, 0, wx.ALL, border=5)
+        sizer.Add(self.ability_panel, 0, wx.ALL, border=5)
         panel.SetSizerAndFit(sizer)
 
     def bind_events(self):
@@ -251,6 +284,9 @@ class PlayerTab(wx.Panel):
         for player in self.team.players:
             if player.id.value != 0xFFFF:
                 self.list_box.Append(player.name.value, player)
+        self.list_box.SetSelection(0)
+        player = self.list_box.GetClientData(self.list_box.GetSelection())
+        self.show_player(player)
 
     def on_select(self, evt: wx.Event):
         player = self.list_box.GetClientData(self.list_box.GetSelection())
@@ -259,7 +295,17 @@ class PlayerTab(wx.Panel):
     def show_player(self, player: MyPlayer):
         self.player_name_text.SetLabelText(player.name.value)
         self.player_age_text.SetLabelText(str(player.age.value))
-        self.player_born_text.SetLabelText(str(player.born.value))
+        # self.player_born_text.SetLabelText(str(player.born.value))
+        self.player_foot_text.SetLabelText(player.prefer_foot)
+        self.player_number_text.SetLabelText(str(player.number.value))
+        self.player_aboard_times_text.SetLabelText(str(player.abroad_times.value))
+        self.player_pos_text.SetLabelText(player.player.pos)
+        self.player_rank_text.SetLabelText(player.player.rank)
+        self.player_teamwork_text.SetLabelText(player.player.team_work)
+        self.player_tone_type_text.SetLabelText(player.player.tone_type)
+        self.player_grow_type_phy_text.SetLabelText(player.player.grow_type_phy)
+        self.player_grow_type_tech_text.SetLabelText(player.player.grow_type_tech)
+        self.player_grow_type_sys_text.SetLabelText(player.player.grow_type_sys)
         self.ability_panel.update(player.abilities)
 
 
@@ -271,31 +317,50 @@ class OtherTeamTab(wx.Panel):
         self.teams = None
 
     def create_layout(self, panel: wx.Panel):
-        self.list_box = wx.ListBox(self, size=(250, 640))
+        self.list_box = wx.ListBox(self, size=(200, 400))
         # Team Information group
-        info_box = wx.StaticBox(panel, label="球队信息")
+        info_box = wx.StaticBox(panel, label="球队信息", size=(200, 200))
         info_sizer = wx.StaticBoxSizer(info_box, wx.VERTICAL)
-        form_sizer = wx.FlexGridSizer(rows=2, cols=2, vgap=10, hgap=10)
-        form_sizer.Add(wx.StaticText(panel, label="球队名称:"), flag=wx.ALIGN_CENTER_VERTICAL)
+        form_sizer = wx.FlexGridSizer(rows=2, cols=2, vgap=5, hgap=5)
+        form_sizer.Add(wx.StaticText(panel, label="队名:"), flag=wx.ALIGN_CENTER_VERTICAL)
         self.team_name_text = wx.TextCtrl(panel)
-        form_sizer.Add(self.team_name_text, flag=wx.EXPAND)
+        form_sizer.Add(self.team_name_text, flag=wx.ALL)
         form_sizer.Add(wx.StaticText(panel, label="友好度:"), flag=wx.ALIGN_CENTER_VERTICAL)
         self.team_friendly_text = wx.TextCtrl(panel)
-        form_sizer.Add(self.team_friendly_text, flag=wx.EXPAND)
-        info_sizer.Add(form_sizer, flag=wx.ALL | wx.EXPAND, border=10)
-        self.grid = wx.grid.Grid(panel)
-        self.grid.CreateGrid(25, 4)
+        form_sizer.Add(self.team_friendly_text, flag=wx.ALL)
+        info_sizer.Add(form_sizer, flag=wx.ALL | wx.EXPAND, border=5)
+
+        left_sizer = wx.BoxSizer(wx.VERTICAL)
+        left_sizer.Add(self.list_box, 0, wx.ALL, border=5)
+        left_sizer.Add(info_sizer, 0, wx.ALL, border=5)
+
+        self.grid = wx.grid.Grid(panel, size=(500, -1))
+        self.grid.CreateGrid(25, 10)
         self.grid.SetColLabelValue(0, "姓名")
+        self.grid.SetColSize(0, 75)
         self.grid.SetColLabelValue(1, "年龄")
+        self.grid.SetColSize(1, 40)
         self.grid.SetColLabelValue(2, "号码")
-        self.grid.SetColLabelValue(3, "球探标识")
-        for i in range(4):
-            self.grid.SetColSize(i, 75)
+        self.grid.SetColSize(2, 40)
+        self.grid.SetColLabelValue(3, "位置")
+        self.grid.SetColSize(3, 50)
+        self.grid.SetColLabelValue(4, "等级")
+        self.grid.SetColSize(4, 40)
+        self.grid.SetColLabelValue(5, "连携")
+        self.grid.SetColSize(5, 50)
+        self.grid.SetColLabelValue(6, "口调")
+        self.grid.SetColSize(6, 50)
+        self.grid.SetColLabelValue(7, "身体")
+        self.grid.SetColSize(7, 50)
+        self.grid.SetColLabelValue(8, "技术")
+        self.grid.SetColSize(8, 50)
+        self.grid.SetColLabelValue(9, "头脑")
+        self.grid.SetColSize(9, 50)
         self.grid.HideRowLabels()
+        self.grid.SetColLabelSize(20)
         sizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer.Add(self.list_box)
-        sizer.Add(info_sizer)
-        sizer.Add(self.grid)
+        sizer.Add(left_sizer, 0, wx.ALL, border=5)
+        sizer.Add(self.grid, 0, wx.ALL, border=5)
         panel.SetSizer(sizer)
 
     def bind_events(self):
@@ -308,6 +373,9 @@ class OtherTeamTab(wx.Panel):
         self.list_box.Clear()
         for team in self.teams:
             self.list_box.Append(team.name, team)
+        self.list_box.SetSelection(0)
+        team = self.list_box.GetClientData(self.list_box.GetSelection())
+        self.show_team(team)
 
     def on_select(self, evt: wx.Event):
         team = self.list_box.GetClientData(self.list_box.GetSelection())
@@ -318,10 +386,16 @@ class OtherTeamTab(wx.Panel):
         self.team_friendly_text.SetLabelText(str(team.friendly.value))
         self.grid.ClearGrid()
         for i, player in enumerate([player for player in team.players if player.id.value != 0xffff]):
-            self.grid.SetCellValue(i, 0, player.name)
+            self.grid.SetCellValue(i, 0, player.player.name)
             self.grid.SetCellValue(i, 1, str(player.age.value))
             self.grid.SetCellValue(i, 2, str(player.number.value))
-            self.grid.SetCellValue(i, 3, str(player.ability_graph.value))
+            self.grid.SetCellValue(i, 3, player.player.pos)
+            self.grid.SetCellValue(i, 4, player.player.rank)
+            self.grid.SetCellValue(i, 5, player.player.team_work)
+            self.grid.SetCellValue(i, 6, player.player.tone_type)
+            self.grid.SetCellValue(i, 7, player.player.grow_type_phy)
+            self.grid.SetCellValue(i, 8, player.player.grow_type_tech)
+            self.grid.SetCellValue(i, 9, player.player.grow_type_sys)
 
 
 class PlayerAbilPanel(wx.Panel):
@@ -337,7 +411,7 @@ class PlayerAbilPanel(wx.Panel):
         self.text_list: list[wx.StaticText] = list()
         for ability_name in PlayerAbility.ablility_list():
             form_sizer.Add(wx.StaticText(scrolled_window, label=ability_name), flag=wx.ALIGN_CENTER_VERTICAL)
-            gauge = PG.PyGauge(scrolled_window, -1, size=(100, 20), style=wx.GA_HORIZONTAL)
+            gauge = PG.PyGauge(scrolled_window, -1, size=(100, 15), style=wx.GA_HORIZONTAL)
             gauge.SetValue([0, 0, 0])
             gauge.SetBarColor([wx.Colour(162, 255, 178), wx.Colour(255, 224, 130), wx.Colour(159, 176, 255)])
             gauge.SetBackgroundColour(wx.WHITE)
@@ -363,4 +437,5 @@ class PlayerAbilPanel(wx.Panel):
             self.text_list[i].SetLabelText(f"{abilitiy.current.value}/{abilitiy.current_max.value}/{abilitiy.max.value}")
 
     def calc_perce(self, n: int) -> int:
-        return int(n / 65535 * 100)
+        r = int(n / 65535 * 100)
+        return r or 1

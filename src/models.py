@@ -43,6 +43,59 @@ class Header:
             club_name1='{zero_terminate(decode_bytes_to_str(self.club_name1))}'
         )"""
 
+class Player:
+    _player_dict = None
+
+    def __init__(self, id: int):
+        self.id = id
+        hex_id = f"{self.id:04X}"
+        if hex_id in Player.player_dict():
+            self._player_properties = Player.player_dict()[hex_id]
+        else:
+            self._player_properties = {}
+
+    @classmethod
+    def player_dict(cls) -> dict[str, list[str]]:
+        if cls._player_dict is None:
+            cls._player_dict = dict()
+            with open(get_resource_path('resource/players.csv'), 'r', encoding='utf8', newline='') as csvfile:
+                reader = csv.reader(csvfile)
+                for row in reader:
+                    cls._player_dict[row[0]] = row
+        return cls._player_dict
+
+    @property
+    def name(self) -> str:
+        return self._player_properties[2] if self._player_properties else ''
+
+    @property
+    def rank(self) -> str:
+        return self._player_properties[1] if self._player_properties else ''
+
+    @property
+    def pos(self) -> str:
+        return self._player_properties[3] if self._player_properties else ''
+
+    @property
+    def team_work(self) -> str:
+        return self._player_properties[4] if self._player_properties else ''
+
+    @property
+    def tone_type(self) -> str:
+        return self._player_properties[5] if self._player_properties else ''
+
+    @property
+    def grow_type_phy(self) -> str:
+        return self._player_properties[6] if self._player_properties else ''
+
+    @property
+    def grow_type_tech(self) -> str:
+        return self._player_properties[7] if self._player_properties else ''
+
+    @property
+    def grow_type_sys(self) -> str:
+        return self._player_properties[8] if self._player_properties else ''
+
 class Club:
     year: IntBitField
     month: IntBitField
@@ -123,15 +176,31 @@ class MyPlayer:
     abilities: list[PlayerAbility]
     born: IntBitField
     abroad_times: IntBitField
+    abroad_days: IntBitField
     height: IntBitField
     foot: IntBitField
     grow_type: IntBitField
     tone_type: IntBitField
     skill: IntBitField
     test: IntBitField = IntBitField(0, 0, 0)
+    un: list[int]
+    player: Player
+
+    @property
+    def prefer_foot(self) -> int:
+        if self.foot.value == 0:
+            return '左脚'
+        elif self.foot.value == 1:
+            return '右脚'
+        else:
+            return '双脚'
 
     def __init__(self):
         self.abilities = list()
+        self.un = list()
+
+    def set_player(self):
+        self.player = Player(self.id.value)
 
     def __repr__(self):
         return f"""
@@ -141,12 +210,14 @@ class MyPlayer:
             name='{self.name.value}',
             born='{self.born.value}',
             abroad_times='{self.abroad_times.value}',
+            abroad_days='{self.abroad_days.value}',
             height='{self.height.value}',
             number='{self.number.value}',
             foot='{self.foot.value}',
             tone_type='{self.tone_type.value}',
             skill='{self.skill.value}',
             test='{self.test.value}',
+            un='{self.un}',
         )"""
 
     def print_info(self):
@@ -169,34 +240,15 @@ class MyTeam:
         print(self)
 
 @dataclass
-class Player:
+class OtherPlayer:
     id: IntBitField
     age: IntBitField
     ability_graph: IntBitField
     number: IntBitField = None
-    _player_dict = None
 
-    @classmethod
-    def player_dict(cls) -> list[str]:
-        if cls._player_dict is None:
-            cls._player_dict = dict()
-            with open(get_resource_path('resource/players.csv'), 'r', encoding='utf8', newline='') as csvfile:
-                reader = csv.reader(csvfile)
-                for row in reader:
-                    if len(row) == 2:
-                        key, value = row
-                        cls._player_dict[key] = value
-        return cls._player_dict
-
-    @property
-    def name(self) -> str:
-        if self.id.value is None:
-            return ''
-        hex_id = f"{self.id.value:04X}"
-        if hex_id not in Player.player_dict():
-            return hex_id
-        else:
-            return Player.player_dict()[hex_id]
+    def __post_init__(self):
+        if self.id.value is not None:
+            self.player = Player(self.id.value)
 
 
 @dataclass
@@ -206,7 +258,7 @@ class OtherTeam:
     friendly: IntBitField
     unknown1: IntBitField
     unknown2: IntBitField
-    players: list[Player]
+    players: list[OtherPlayer]
     _team_list = None
 
     @classmethod
