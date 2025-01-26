@@ -20,14 +20,14 @@ class MemcardViewFrame(wx.Frame):
             wx.MessageBox(self.error.message, "Error", wx.OK | wx.ICON_ERROR)
             self.parent.create_instance()
         else:
-            super(MemcardViewFrame, self).__init__(*args, **kw, size=(960, 640))
+            super(MemcardViewFrame, self).__init__(*args, **kw, size=(960, 680))
             panel = wx.Panel(self)
             self.create_layout(panel)
             self.bind_events()
             self.on_load()
 
     def create_layout(self, panel: wx.Panel):
-        self.save_entries_list_box = wx.ListBox(panel, size=(200, 640))
+        self.save_entries_list_box = wx.ListBox(panel, size=(200, 680))
         self.save_view_panel = SaveViewPanel(panel, self)
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         sizer.Add(self.save_entries_list_box)
@@ -89,11 +89,11 @@ class SaveViewPanel(wx.Panel):
         notebook.AddPage(self.other_team_tab, "其它球队")
         self.checkbox = wx.CheckBox(panel, label="汉化版")
         self.checkbox.SetValue(CnVersion.CN_VER)
-        self.submit_btn = wx.Button(panel, label="保存")
+        # self.submit_btn = wx.Button(panel, label="保存")
         footer_sizer = wx.BoxSizer(wx.HORIZONTAL)
         footer_sizer.Add((0, 0), 1, wx.EXPAND)
         footer_sizer.Add(self.checkbox, 0, wx.ALL, 5)
-        footer_sizer.Add(self.submit_btn, 0, wx.ALL, 5)
+        # footer_sizer.Add(self.submit_btn, 0, wx.ALL, 5)
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(notebook, 1, wx.EXPAND | wx.ALL, 5)
         sizer.Add(footer_sizer, 0, wx.EXPAND | wx.ALL, 5)
@@ -103,7 +103,7 @@ class SaveViewPanel(wx.Panel):
 
     def bind_events(self):
         self.checkbox.Bind(wx.EVT_CHECKBOX, self.on_checkbox_click)
-        self.submit_btn.Bind(wx.EVT_BUTTON, self.on_submit_click)
+        # self.submit_btn.Bind(wx.EVT_BUTTON, self.on_submit_click)
 
     def load(self, byte_array: bytes):
         self.reader = SaveReader(byte_array)
@@ -317,7 +317,7 @@ class OtherTeamTab(wx.Panel):
         self.teams = None
 
     def create_layout(self, panel: wx.Panel):
-        self.list_box = wx.ListBox(self, size=(200, 400))
+        self.list_box = wx.ListBox(self, size=(200, 440))
         # Team Information group
         info_box = wx.StaticBox(panel, label="球队信息", size=(200, 200))
         info_sizer = wx.StaticBoxSizer(info_box, wx.VERTICAL)
@@ -334,7 +334,7 @@ class OtherTeamTab(wx.Panel):
         left_sizer.Add(self.list_box, 0, wx.ALL, border=5)
         left_sizer.Add(info_sizer, 0, wx.ALL, border=5)
 
-        self.grid = wx.grid.Grid(panel, size=(500, -1))
+        self.grid = wx.grid.Grid(panel, size=(520, -1))
         self.grid.CreateGrid(25, 10)
         self.grid.SetColLabelValue(0, "姓名")
         self.grid.SetColSize(0, 75)
@@ -400,7 +400,7 @@ class OtherTeamTab(wx.Panel):
 
 class PlayerAbilPanel(wx.Panel):
     def __init__(self, parent):
-        super().__init__(parent, size=(400, 640))
+        super().__init__(parent, size=(400, 680))
         self.create_layout(self)
 
     def create_layout(self, panel: wx.Panel):
