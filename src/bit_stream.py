@@ -2,10 +2,13 @@ from models import IntBitField, StrBitField
 
 
 class InputBitStream:
-    def __init__(self, input_data: bytes):
+    def __init__(self, input_data: bytes, debug_mode: bool = False):
         self.input_data = input_data
         self.bit_offset = 0
-        self.unpacked_bytes = bytearray()
+        self.unpacked_bytes_length = 0
+        self.debug_mode = debug_mode
+        if debug_mode:
+            self.unpacked_bytes = bytearray()
 
     def read_bits(self, bits_to_read: int, sign_extend: bool = False) -> int:
         value = 0  # The value being unpacked.
@@ -57,11 +60,14 @@ class InputBitStream:
             bit_offset = self.bit_offset
             unpacked_int = self.read_bits(bits_to_read, sign_extend)
             result.append(IntBitField(bits_to_read, unpacked_int, bit_offset))
-            self.unpacked_bytes.extend(unpacked_int.to_bytes(byte_length, 'little'))
-            sum_bytes += byte_length
+            if self.debug_mode:
+                self.unpacked_bytes.extend(unpacked_int.to_bytes(byte_length, 'little'))
+                sum_bytes += byte_length
 
-        if sum_bytes < total_bytes:
-            self.unpacked_bytes.extend([0] * (total_bytes - sum_bytes))
+        if self.debug_mode:
+            if sum_bytes < total_bytes:
+                self.unpacked_bytes.extend([0] * (total_bytes - sum_bytes))
+        self.unpacked_bytes_length += total_bytes
 
         return result if not result_is_int else result[0]
 
@@ -72,26 +78,35 @@ class InputBitStream:
             unpacked_int = self.read_bits(8)
             unpacked_bytes = unpacked_int.to_bytes(1, 'little')
             result.extend(unpacked_bytes)
-        self.unpacked_bytes.extend(result)
+        if self.debug_mode:
+            self.unpacked_bytes.extend(result)
+        self.unpacked_bytes_length += total_bytes
 
         return StrBitField(bytes(result), bit_offset)
 
     def skip(self, bit_offset: int, total_bytes: int):
         self.bit_offset = bit_offset
-        self.unpacked_bytes.extend([0] * total_bytes)
+        if self.debug_mode:
+            self.unpacked_bytes.extend([0] * total_bytes)
+        self.unpacked_bytes_length += total_bytes
 
     def align(self, total_bytes: int):
-        self.unpacked_bytes.extend([0] * total_bytes)
+        if self.debug_mode:
+            self.unpacked_bytes.extend([0] * total_bytes)
+        self.unpacked_bytes_length += total_bytes
 
     def seek(self, bit_offset: int):
         self.bit_offset = bit_offset
 
     def export(self, path: str):
-        with open(path, "wb") as f:
-            f.write(self.unpacked_bytes)
+        if self.debug_mode:
+            with open(path, "wb") as f:
+                f.write(self.unpacked_bytes)
 
     def padding(self, data: bytes):
-        self.unpacked_bytes.extend(data)
+        if self.debug_mode:
+            self.unpacked_bytes.extend(data)
+        self.unpacked_bytes_length += len(data)
 
 class OutputBitStream:
     def __init__(self, input_data: bytes):

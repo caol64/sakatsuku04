@@ -1,4 +1,5 @@
 from pathlib import Path
+import threading
 import wx
 import wx.grid
 import wx.lib.agw.pygauge as PG
@@ -78,6 +79,9 @@ class SaveViewPanel(wx.Panel):
         self.reader = None
         self.in_bit_stream = None
         self.out_bit_stream = None
+        self.club = None
+        self.my_team = None
+        self.other_teams = None
 
     def create_layout(self, panel: wx.Panel):
         notebook = wx.Notebook(panel)
@@ -89,11 +93,11 @@ class SaveViewPanel(wx.Panel):
         notebook.AddPage(self.other_team_tab, "其它球队")
         self.checkbox = wx.CheckBox(panel, label="汉化版")
         self.checkbox.SetValue(CnVersion.CN_VER)
-        # self.submit_btn = wx.Button(panel, label="保存")
+        self.submit_btn = wx.Button(panel, label="保存")
         footer_sizer = wx.BoxSizer(wx.HORIZONTAL)
         footer_sizer.Add((0, 0), 1, wx.EXPAND)
         footer_sizer.Add(self.checkbox, 0, wx.ALL, 5)
-        # footer_sizer.Add(self.submit_btn, 0, wx.ALL, 5)
+        footer_sizer.Add(self.submit_btn, 0, wx.ALL, 5)
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(notebook, 1, wx.EXPAND | wx.ALL, 5)
         sizer.Add(footer_sizer, 0, wx.EXPAND | wx.ALL, 5)
@@ -103,9 +107,12 @@ class SaveViewPanel(wx.Panel):
 
     def bind_events(self):
         self.checkbox.Bind(wx.EVT_CHECKBOX, self.on_checkbox_click)
-        # self.submit_btn.Bind(wx.EVT_BUTTON, self.on_submit_click)
+        self.submit_btn.Bind(wx.EVT_BUTTON, self.on_submit_click)
 
     def load(self, byte_array: bytes):
+        threading.Thread(target=self._load_task, args=(byte_array,)).start()
+
+    def _load_task(self, byte_array: bytes):
         self.reader = SaveReader(byte_array)
         self.reader.check_crc()
         self.reader.dec()
@@ -113,14 +120,17 @@ class SaveViewPanel(wx.Panel):
         self.in_bit_stream = InputBitStream(decoded_byte_array)
         self.out_bit_stream = OutputBitStream(decoded_byte_array)
         club_reader = ClubReader(self.in_bit_stream)
-        club = club_reader.read()
-        self.club_info_tab.load(club)
+        self.club = club_reader.read()
         team_reader = TeamReader(self.in_bit_stream)
-        my_team = team_reader.read()
-        self.player_tab.load(my_team)
+        self.my_team = team_reader.read()
         oteam_reader = OtherTeamReader(self.in_bit_stream)
-        other_teams = oteam_reader.read()
-        self.other_team_tab.load(other_teams)
+        self.other_teams = oteam_reader.read()
+        wx.CallAfter(self._update_ui)
+
+    def _update_ui(self):
+        self.club_info_tab.load(self.club)
+        self.player_tab.load(self.my_team)
+        self.other_team_tab.load(self.other_teams)
         self.update_panels()
         self.notebook.SetSelection(0)
 
@@ -129,12 +139,12 @@ class SaveViewPanel(wx.Panel):
         self.update_panels()
 
     def on_submit_click(self, evt: wx.Event):
-        wx.MessageBox('', '敬请期待', style=wx.OK | wx.ICON_INFORMATION)
-        # self.club_info_tab.submit(self.out_bit_stream)
-        # self.reader.update_decode_buffer(self.out_bit_stream.input_data)
-        # encode_buffer = self.reader.enc()
-        # save_bin = self.reader.build_save_bytes(encode_buffer)
-        # self.root.write_file(save_bin)
+        # wx.MessageBox('', '敬请期待', style=wx.OK | wx.ICON_INFORMATION)
+        self.club_info_tab.submit(self.out_bit_stream)
+        self.reader.update_decode_buffer(self.out_bit_stream.input_data)
+        encode_buffer = self.reader.enc()
+        save_bin = self.reader.build_save_bytes(encode_buffer)
+        self.root.write_file(save_bin)
 
     def update_panels(self):
         self.club_info_tab.update()
@@ -315,9 +325,27 @@ class OtherTeamTab(wx.Panel):
         self.create_layout(self)
         self.bind_events()
         self.teams = None
+        self.group_index = {
+            "日本": 0,
+            "亚太": 30,
+            "东欧": 54,
+            "英国": 69,
+            "法国": 93,
+            "西班牙": 115,
+            "葡萄牙": 134,
+            "比利时": 152,
+            "荷兰": 154,
+            "意大利": 172,
+            "德国": 190,
+            "欧洲": 208,
+            "非洲": 214,
+            "巴西": 221,
+            "阿根廷": 245,
+            "美洲": 248,
+        }
 
     def create_layout(self, panel: wx.Panel):
-        self.list_box = wx.ListBox(self, size=(200, 440))
+        self.tree = wx.TreeCtrl(self, style=wx.TR_DEFAULT_STYLE, size=(200, 440))
         # Team Information group
         info_box = wx.StaticBox(panel, label="球队信息", size=(200, 200))
         info_sizer = wx.StaticBoxSizer(info_box, wx.VERTICAL)
@@ -331,7 +359,7 @@ class OtherTeamTab(wx.Panel):
         info_sizer.Add(form_sizer, flag=wx.ALL | wx.EXPAND, border=5)
 
         left_sizer = wx.BoxSizer(wx.VERTICAL)
-        left_sizer.Add(self.list_box, 0, wx.ALL, border=5)
+        left_sizer.Add(self.tree, 0, wx.ALL, border=5)
         left_sizer.Add(info_sizer, 0, wx.ALL, border=5)
 
         self.grid = wx.grid.Grid(panel, size=(520, -1))
@@ -364,28 +392,44 @@ class OtherTeamTab(wx.Panel):
         panel.SetSizer(sizer)
 
     def bind_events(self):
-        self.Bind(wx.EVT_LISTBOX, self.on_select, self.list_box)
+        self.tree.Bind(wx.EVT_TREE_SEL_CHANGED, self.on_select)
 
     def load(self, teams: list[OtherTeam]):
         self.teams = teams
 
     def update(self):
-        self.list_box.Clear()
-        for team in self.teams:
-            self.list_box.Append(team.name, team)
-        self.list_box.SetSelection(0)
-        team = self.list_box.GetClientData(self.list_box.GetSelection())
-        self.show_team(team)
+        self.tree.DeleteAllItems()
+        root = self.tree.AddRoot("Teams")
+        group_names = sorted(self.group_index.keys(), key=lambda k: self.group_index[k])
+        for i, group_name in enumerate(group_names):
+            start_index = self.group_index[group_name]
+            end_index = self.group_index[group_names[i + 1]] if i + 1 < len(group_names) else len(self.teams)
+            group_node = self.tree.AppendItem(root, group_name)
+            for team in self.teams[start_index:end_index]:
+                team_item = self.tree.AppendItem(group_node, team.name)
+                self.tree.SetItemData(team_item, team)
+        self.tree.Expand(root)
+
+        if self.tree.ItemHasChildren(root):
+            first_group, _ = self.tree.GetFirstChild(root)
+            first_team, _ = self.tree.GetFirstChild(first_group)
+            if first_team:
+                self.tree.SelectItem(first_team)
+                team = self.tree.GetItemData(first_team)
+                self.show_team(team)
 
     def on_select(self, evt: wx.Event):
-        team = self.list_box.GetClientData(self.list_box.GetSelection())
-        self.show_team(team)
+        item = evt.GetItem()
+        if item.IsOk():
+            team = self.tree.GetItemData(item)
+            if team:
+                self.show_team(team)
 
     def show_team(self, team: OtherTeam):
         self.team_name_text.SetLabelText(team.name)
         self.team_friendly_text.SetLabelText(str(team.friendly.value))
         self.grid.ClearGrid()
-        for i, player in enumerate([player for player in team.players if player.id.value != 0xffff]):
+        for i, player in enumerate([player for player in team.sorted_players if player.id.value != 0xffff]):
             self.grid.SetCellValue(i, 0, player.player.name)
             self.grid.SetCellValue(i, 1, str(player.age.value))
             self.grid.SetCellValue(i, 2, str(player.number.value))

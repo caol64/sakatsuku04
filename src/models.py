@@ -260,6 +260,7 @@ class OtherTeam:
     unknown2: IntBitField
     players: list[OtherPlayer]
     _team_list = None
+    order_list = ["GK", "CDF", "SDF", "DMF", "SMF", "OMF", "FW"]
 
     @classmethod
     def team_list(cls) -> list[str]:
@@ -275,3 +276,13 @@ class OtherTeam:
     @property
     def name(self) -> str:
         return OtherTeam.team_list()[self.index]
+
+    @property
+    def sorted_players(self) -> list[OtherPlayer]:
+        return sorted(self.players, key=self.sort_key)
+
+    def sort_key(self, player: OtherPlayer):
+        if player.player and player.player.pos:
+            return self.order_list.index(player.player.pos)
+        else:
+            return -1

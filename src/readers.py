@@ -8,7 +8,7 @@ class BaseReader:
         self.bit_stream = bit_stream
 
     def print_mem_offset(self):
-        print(hex(len(self.bit_stream.unpacked_bytes) + ClubReader.start + BaseReader.base_offset))
+        print(hex(self.bit_stream.unpacked_bytes_length + ClubReader.start + BaseReader.base_offset))
 
 class ClubReader(BaseReader):
     start = 0 # 0x703D50
@@ -41,19 +41,17 @@ class ClubReader(BaseReader):
         # 0x7050a8
         self.bit_stream.unpack_bits([0x10, 8, 8, 8, 8, 8, 8, 0x10, 8, 8, 8, 8, 8, 8, 0x10, 8, 8, 0x10, 0x10])
         # 0x7050c0
-        _, _, _, _, _ = self.bit_stream.unpack_bits([0x10, 0x10, 0x10, 0x10, 0x10], 12)
+        self.bit_stream.unpack_bits([0x10, 0x10, 0x10, 0x10, 0x10], 12)
         # 0x7050cc
         seed = self.bit_stream.unpack_bits(0x20) # maybe random seed?
         # 0x7050d0
         self.bit_stream.unpack_bits([0x20, 8, 5, 0x10, 1], 12)
         self.bit_stream.unpack_bits([0x20, 0x20, 0x20, 8, 8], 16)
-        _, _, _, _ = self.bit_stream.unpack_bits([0x20, 8, 8, 8], 8)
+        self.bit_stream.unpack_bits([0x20, 8, 8, 8], 8)
         # 0x7050f4
         self.bit_stream.padding(self.tail_padding)
         # 0x705104
-        # self.bit_stream.skip(ClubReader.consume_bits, ClubReader.total_size - len(self.bit_stream.unpacked_bytes))
         return club
-
 
 
 class TeamReader(BaseReader):
@@ -77,13 +75,25 @@ class TeamReader(BaseReader):
         self.bit_stream.unpack_bits([16, 16, 8, 8]) # 7051BF
         team.players = self.read_players()
         self.read_players()
-
-        # 643 0070DD78
-
-        self.bit_stream.skip(TeamReader.consume_bits, TeamReader.total_size - len(self.bit_stream.unpacked_bytes))
+        # 0070DD78
+        for _ in range(20):
+            self.bit_stream.unpack_bits(0x10)
+            a = self.bit_stream.unpack_str(0xd)
+            self.bit_stream.unpack_bits([8] * 0x15, 0x16)
+            self.bit_stream.unpack_bits([8] * 0x2b)
+            self.bit_stream.unpack_bits(0x10)
+        self.bit_stream.unpack_bits([0x10, 4, 7], 4)
+        for _ in range(0x40):
+            a = self.bit_stream.unpack_bits([0x10, 0x10, 0x10])
+        self.bit_stream.unpack_bits(0xb)
+        a = self.bit_stream.unpack_str(0xd)
+        self.bit_stream.unpack_bits([8, 8, 4, 4, 7, 8, 4, 7, 3, 7, 0x10, 0x10, 4, 4, 4, 4], 18)
+        # 0070E584 708
+        self.bit_stream.skip(TeamReader.consume_bits, TeamReader.total_size - self.bit_stream.unpacked_bytes_length)
         return team
 
     def read_players(self) -> list[MyPlayer]:
+        # 0x7051c0
         players: list[MyPlayer] = [MyPlayer() for _ in range(0x19)]
         self.bit_stream.unpack_bits([16, 16, 1], 5)
         self.bit_stream.unpack_bits([-6] * 0x19, 0x19 + 2) # 7051E0
@@ -96,12 +106,12 @@ class TeamReader(BaseReader):
                 players[i].abilities.append(PlayerAbility(l, current, current_max, max)) # 705364
             self.bit_stream.unpack_bits(0xb) # unknown
             players[i].name = self.bit_stream.unpack_str(0xd)
-            # 705373
-            players[i].born, born2 = self.bit_stream.unpack_bits([8, 8])
-            a = self.bit_stream.unpack_bits([4, 4, 7, 8, 4, 7, 3, 7], 9) # 70537E
-            players[i].height = a[3]
-            players[i].number = a[5]
-            players[i].foot = a[6]
+            a = self.bit_stream.unpack_bits([8, 8, 4, 4, 7, 8, 4, 7, 3, 7], 11) # 70537E
+            players[i].born = a[0] # 705373
+            born2 = a[1] # 705374
+            players[i].height = a[5] # 705378
+            players[i].number = a[7] # 70537A
+            players[i].foot = a[8] # 70537B
             a = self.bit_stream.unpack_bits([0x10, 0x10]) # 705382
             a = self.bit_stream.unpack_bits([4, 4, 4, 4, 1, 2, 4, 4, 4, 4, 7, 7, 7, 7, 7, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4], 28) # 70539E
             players[i].grow_type = a[10]
@@ -109,13 +119,15 @@ class TeamReader(BaseReader):
             a = self.bit_stream.unpack_bits([4, 7, 4, 7, 3, 3, 7, 5, 1, 3, 4], 14) # 7053AC
             players[i].skill = a[7]
             a = self.bit_stream.unpack_bits([0x20, 2], 6)
+            injured = a[0] # 7053AC
+            # print(bin(injured.value))
             a = self.bit_stream.unpack_bits([0xa, 8, 8, 0x10], 6) # 7053B8
+            # print([z.value for z in a ])
             a = self.bit_stream.unpack_bits([8, 3, 3, 8, 8, 8], 6)
             a = self.bit_stream.unpack_bits([0x10] * 14, 30) # 7053DC
-            a = self.bit_stream.unpack_bits([0x20, -0x10, 0x10, 0x10, 0x10, 0x10, 4, 7, 4, 7, 6, 4, 8, 4])
-            # 0x7053ea
-            players[i].abroad_days = a[5]
-            players[i].abroad_times = a[13]
+            a = self.bit_stream.unpack_bits([0x20, 0x10, 0x10, 0x10, 0x10, 0x10, 4, 7, 4, 7, 6, 4, 8, 4], 22)
+            players[i].abroad_days = a[5] # 7053E8
+            players[i].abroad_times = a[13] # 7053F1
             a = self.bit_stream.unpack_bits([0x10, 0x10, 7])
             a = self.bit_stream.unpack_bits([-8] * 9, 9)
             a = self.bit_stream.unpack_bits([0x10, 0x10, 8, -8, 5, 5, 6], 12)
@@ -130,7 +142,7 @@ class TeamReader(BaseReader):
         a = self.bit_stream.unpack_bits([0x10] * (0x19 * 0x19)) # 708F72
         self.bit_stream.unpack_bits([8] * 3)
         a = self.bit_stream.unpack_bits([8] * 0x19)
-        self.bit_stream.unpack_bits([3], 2)
+        self.bit_stream.unpack_bits(3, 2)
         coach_name = self.bit_stream.unpack_str(0xd) # coach name
         a = self.bit_stream.unpack_bits([8, 4, 3, 8, 7, 0x10, 4, 4, 4, 4, 7, 7, 7, 1, -0x10, 3, 3, 3, 3, 2, 3, 4, 8, 4, 4, 3, 2], 29) # 708FBA
         a = self.bit_stream.unpack_bits([7] * 0x35, 0x35)
@@ -183,7 +195,6 @@ class OtherTeamReader(BaseReader):
         self.bit_stream.unpack_bits([8, 8], 3)
         # 0x7351a0
         self.bit_stream.padding(self.tail_padding)
-        # self.bit_stream.skip(OtherTeamReader.consume_bits, OtherTeamReader.total_size - len(self.bit_stream.unpacked_bytes))
         return teams
 
 
@@ -197,7 +208,7 @@ class LeagueReader(BaseReader):
 
     def read(self):
         self.bit_stream.unpack_bits(0x20)
-        self.bit_stream.skip(LeagueReader.consume_bits, LeagueReader.total_size - len(self.bit_stream.unpacked_bytes))
+        self.bit_stream.skip(LeagueReader.consume_bits, LeagueReader.total_size - self.bit_stream.unpacked_bytes_length)
 
 class TownReader(BaseReader):
     start = LeagueReader.start + LeagueReader.size
@@ -209,7 +220,7 @@ class TownReader(BaseReader):
 
     def read(self):
         self.bit_stream.unpack_bits(3, 1)
-        self.bit_stream.skip(TownReader.consume_bits, TownReader.total_size - len(self.bit_stream.unpacked_bytes))
+        self.bit_stream.skip(TownReader.consume_bits, TownReader.total_size - self.bit_stream.unpacked_bytes_length)
 
 class RecordReader(BaseReader):
     start = TownReader.start + TownReader.size
@@ -221,7 +232,7 @@ class RecordReader(BaseReader):
 
     def read(self):
         self.bit_stream.unpack_bits(0x10)
-        self.bit_stream.skip(RecordReader.consume_bits, RecordReader.total_size - len(self.bit_stream.unpacked_bytes))
+        self.bit_stream.skip(RecordReader.consume_bits, RecordReader.total_size - self.bit_stream.unpacked_bytes_length)
 
 class ScheReader(BaseReader):
     start = RecordReader.start + RecordReader.size
@@ -234,7 +245,7 @@ class ScheReader(BaseReader):
     def read(self):
         for _ in range(11):
             self.bit_stream.unpack_bits(5)
-        self.bit_stream.skip(ScheReader.consume_bits, ScheReader.total_size - len(self.bit_stream.unpacked_bytes))
+        self.bit_stream.skip(ScheReader.consume_bits, ScheReader.total_size - self.bit_stream.unpacked_bytes_length)
 
 class OptionReader(BaseReader):
     start = ScheReader.start + ScheReader.size
@@ -249,7 +260,7 @@ class OptionReader(BaseReader):
         for _ in range(0xd):
             self.bit_stream.unpack_bits(1, 4)
             
-        # self.bit_stream.skip(OptionReader.consume_bits, OptionReader.total_size - len(self.bit_stream.unpacked_bytes))
+        # self.bit_stream.skip(OptionReader.consume_bits, OptionReader.total_size - self.bit_stream.unpacked_bytes_length)
 
 class MailReader(BaseReader):
     start = OptionReader.start + OptionReader.size
