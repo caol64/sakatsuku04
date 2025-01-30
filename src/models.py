@@ -24,23 +24,47 @@ class StrBitField:
     def value(self, string: str):
         self.byte_array = zero_pad(encode_str_to_bytes(string), self.byte_length)
 
-class Header:
-    year: int
-    month: int
-    date: int
-    day: int
-    club_name: bytes
-    club_name1: bytes
+class IntByteField:
+    def __init__(self, byte_length: int, value: int, byte_offset: int):
+        self.byte_length = byte_length
+        self.byte_offset = byte_offset
+        self.value = value
 
+
+class StrByteField:
+    def __init__(self, byte_array: bytes, byte_offset: int):
+        self.byte_length = len(byte_array)
+        self.byte_offset = byte_offset
+        self.byte_array = byte_array
+
+    @property
+    def value(self) -> str:
+        return zero_terminate(decode_bytes_to_str(self.byte_array))
+
+    @value.setter
+    def value(self, string: str):
+        self.byte_array = zero_pad(encode_str_to_bytes(string), self.byte_length)
+
+class Header:
+    u1: IntByteField
+    u2: IntByteField
+    year: IntByteField
+    month: IntByteField
+    date: IntByteField
+    day: IntByteField
+    club_name: StrByteField
+    club_name1: StrByteField
+
+    @property
     def play_date(self):
-        return f"{self.year - 2003}年目{self.month}月{self.day}日"
+        return f"{self.year.value - 2003}年目{self.month.value}月{self.day.value}日"
 
     def __repr__(self):
         return f"""
         Header(
-            date={self.play_date()},
-            club_name='{zero_terminate(decode_bytes_to_str(self.club_name))}',
-            club_name1='{zero_terminate(decode_bytes_to_str(self.club_name1))}'
+            date={self.play_date},
+            club_name='{self.club_name.value}',
+            club_name1='{self.club_name1.value}'
         )"""
 
 class Player:
@@ -169,6 +193,7 @@ class PlayerAbility:
         return f"{self.name}: {self.current.value}|{self.current_max.value}|{self.max.value}"
 
 class MyPlayer:
+    index: int
     id: IntBitField
     age: IntBitField
     number: IntBitField
@@ -195,7 +220,8 @@ class MyPlayer:
         else:
             return '双脚'
 
-    def __init__(self):
+    def __init__(self, index: int):
+        self.index = index
         self.abilities = list()
         self.un = list()
 

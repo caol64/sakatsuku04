@@ -94,7 +94,7 @@ class TeamReader(BaseReader):
 
     def read_players(self) -> list[MyPlayer]:
         # 0x7051c0
-        players: list[MyPlayer] = [MyPlayer() for _ in range(0x19)]
+        players: list[MyPlayer] = [MyPlayer(i) for i in range(0x19)]
         self.bit_stream.unpack_bits([16, 16, 1], 5)
         self.bit_stream.unpack_bits([-6] * 0x19, 0x19 + 2) # 7051E0
         # each player produce 0x240 bytes
@@ -119,12 +119,14 @@ class TeamReader(BaseReader):
             a = self.bit_stream.unpack_bits([4, 7, 4, 7, 3, 3, 7, 5, 1, 3, 4], 14) # 7053AC
             players[i].skill = a[7]
             a = self.bit_stream.unpack_bits([0x20, 2], 6)
-            injured = a[0] # 7053AC
-            # print(bin(injured.value))
+            magic_value = a[0] # 7053AC a magick value contains many information
+            # print(magic_value.value & 0x2000)
             a = self.bit_stream.unpack_bits([0xa, 8, 8, 0x10], 6) # 7053B8
             # print([z.value for z in a ])
             a = self.bit_stream.unpack_bits([8, 3, 3, 8, 8, 8], 6)
+            # self.print_mem_offset()
             a = self.bit_stream.unpack_bits([0x10] * 14, 30) # 7053DC
+            tired = a[10] # 7053D2
             a = self.bit_stream.unpack_bits([0x20, 0x10, 0x10, 0x10, 0x10, 0x10, 4, 7, 4, 7, 6, 4, 8, 4], 22)
             players[i].abroad_days = a[5] # 7053E8
             players[i].abroad_times = a[13] # 7053F1

@@ -72,7 +72,7 @@ class MemcardViewFrame(wx.Frame):
 
 class SaveViewPanel(wx.Panel):
     def __init__(self, parent: wx.Panel, root: wx.Frame):
-        super().__init__(parent)
+        super().__init__(parent, size=(760, 680))
         self.root = root
         self.create_layout(self)
         self.bind_events()
@@ -139,12 +139,14 @@ class SaveViewPanel(wx.Panel):
         self.update_panels()
 
     def on_submit_click(self, evt: wx.Event):
-        # wx.MessageBox('', '敬请期待', style=wx.OK | wx.ICON_INFORMATION)
         self.club_info_tab.submit(self.out_bit_stream)
+        self.player_tab.submit(self.out_bit_stream)
         self.reader.update_decode_buffer(self.out_bit_stream.input_data)
         encode_buffer = self.reader.enc()
         save_bin = self.reader.build_save_bytes(encode_buffer)
         self.root.write_file(save_bin)
+        wx.MessageBox('保存成功', 'Saka04SaveEditor', style=wx.OK | wx.ICON_INFORMATION)
+
 
     def update_panels(self):
         self.club_info_tab.update()
@@ -182,7 +184,7 @@ class ClubInfoTab(wx.Panel):
 
         form_sizer.Add(wx.StaticText(panel, label="年份："), flag=wx.ALIGN_CENTER_VERTICAL)
         year_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.year_input = wx.TextCtrl(panel, size=(50, -1))
+        self.year_input = wx.SpinCtrl(panel, min=1, max=999)
         year_label = wx.StaticText(panel, label="年")
         self.month_input = wx.TextCtrl(panel, size=(50, -1))
         month_label = wx.StaticText(panel, label="月")
@@ -211,7 +213,7 @@ class ClubInfoTab(wx.Panel):
     def update(self):
         self.fund_input_billion.SetValue(self.club.funds_high)
         self.fund_input_ten_thousand.SetValue(self.club.funds_low)
-        self.year_input.SetLabelText(str(self.club.year.value - 2003))
+        self.year_input.SetValue(self.club.year.value - 2003)
         self.month_input.SetLabelText(str(self.club.month.value))
         self.date_input.SetLabelText(str(self.club.date.value))
         self.manager_input.SetLabelText(self.club.manager_name.value)
@@ -220,6 +222,8 @@ class ClubInfoTab(wx.Panel):
     def submit(self, bit_stream: OutputBitStream):
         self.club.set_funds(self.fund_input_billion.GetValue(), self.fund_input_ten_thousand.GetValue())
         bit_stream.pack_bits(self.club.funds)
+        self.club.year.value = self.year_input.GetValue() + 2003
+        bit_stream.pack_bits(self.club.year)
 
 class PlayerTab(wx.Panel):
     def __init__(self, parent):
@@ -227,6 +231,7 @@ class PlayerTab(wx.Panel):
         self.create_layout(self)
         self.bind_events()
         self.team = None
+        self.player: MyPlayer = None
 
     def create_layout(self, panel: wx.Panel):
         # player list box
@@ -239,7 +244,7 @@ class PlayerTab(wx.Panel):
         self.player_name_text = wx.TextCtrl(panel)
         form_sizer.Add(self.player_name_text, flag=wx.EXPAND)
         form_sizer.Add(wx.StaticText(panel, label="年龄:"), flag=wx.ALIGN_CENTER_VERTICAL)
-        self.player_age_text = wx.TextCtrl(panel)
+        self.player_age_text = wx.SpinCtrl(panel, min=18, max=40)
         form_sizer.Add(self.player_age_text, flag=wx.EXPAND)
         form_sizer.Add(wx.StaticText(panel, label="号码:"), flag=wx.ALIGN_CENTER_VERTICAL)
         self.player_number_text = wx.TextCtrl(panel)
@@ -303,8 +308,9 @@ class PlayerTab(wx.Panel):
         self.show_player(player)
 
     def show_player(self, player: MyPlayer):
+        self.player = player
         self.player_name_text.SetLabelText(player.name.value)
-        self.player_age_text.SetLabelText(str(player.age.value))
+        self.player_age_text.SetValue(player.age.value)
         # self.player_born_text.SetLabelText(str(player.born.value))
         self.player_foot_text.SetLabelText(player.prefer_foot)
         self.player_number_text.SetLabelText(str(player.number.value))
@@ -317,6 +323,10 @@ class PlayerTab(wx.Panel):
         self.player_grow_type_tech_text.SetLabelText(player.player.grow_type_tech)
         self.player_grow_type_sys_text.SetLabelText(player.player.grow_type_sys)
         self.ability_panel.update(player.abilities)
+
+    def submit(self, bit_stream: OutputBitStream):
+        self.team.players[self.player.index].age.value = self.player_age_text.GetValue()
+        bit_stream.pack_bits(self.team.players[self.player.index].age)
 
 
 class OtherTeamTab(wx.Panel):
@@ -331,14 +341,14 @@ class OtherTeamTab(wx.Panel):
             "东欧": 54,
             "英国": 69,
             "法国": 93,
-            "西班牙": 115,
+            "西班牙": 114,
             "葡萄牙": 134,
             "比利时": 152,
             "荷兰": 154,
             "意大利": 172,
             "德国": 190,
             "欧洲": 208,
-            "非洲": 214,
+            "非洲": 213,
             "巴西": 221,
             "阿根廷": 245,
             "美洲": 248,

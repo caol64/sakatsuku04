@@ -4,6 +4,7 @@ import struct
 
 import numpy as np
 
+from crc_ecc import EccCaculator
 from error import Error
 import utils
 
@@ -32,12 +33,14 @@ class MemcardReader:
         self.fat_matrix = []
         self.root_entry = None
         self.entries_in_root = []
+        self.spare_size = 0
+        self.ecc_caculator = EccCaculator()
 
     def load(self):
         self.file = open(self.file_path, "rb")
         self.super_block = self.read_super_block()
-        spare_size = (self.super_block.page_len // 128) * 4
-        self.raw_page_size = self.super_block.page_len + spare_size
+        self.spare_size = (self.super_block.page_len // 128) * 4
+        self.raw_page_size = self.super_block.page_len + self.spare_size
         self.cluster_size = self.super_block.page_len * self.super_block.pages_per_cluster
         self.fat_per_cluster = self.cluster_size // 4
         self.fat_matrix = self.__build_fat_matrix()
@@ -70,8 +73,8 @@ class MemcardReader:
             self.file = open(self.file_path, "r+b")
             mc_entries = self.lookup_entry_by_name(save_entry.name)
             if mc_entries:
-                mc_entrie = mc_entries[0]
-                self.write_data_cluster(mc_entrie, byte_array)
+                main_entry = [f for f in mc_entries if f.name == save_entry.name][0]
+                self.write_data_cluster(main_entry, byte_array)
         finally:
             self.close()
 
@@ -104,6 +107,14 @@ class MemcardReader:
         end = min(self.super_block.page_len, len(data))
         self.offset = self.raw_page_size * n
         self.write_bytes(data[:end])
+        if self.spare_size != 0:
+            ecc_bytes = bytearray()
+            for i in range(self.super_block.page_len // 128):
+                self.file.seek(self.offset + i * 128)
+                ecc_bytes.extend(self.ecc_caculator.calc(self.file.read(128)))
+            ecc_bytes.extend(b"\0" * (self.spare_size - len(ecc_bytes)))
+            self.offset += self.super_block.page_len
+            self.write_bytes(ecc_bytes)
 
     def read_cluster(self, n: int) -> bytes:
         """
@@ -176,7 +187,7 @@ class MemcardReader:
             List[Entry]: List of sub-entries.
         """
         chain_start = parent_entry.cluster
-        sub_entries = []
+        sub_entries: list[Entry] = []
         while chain_start != Fat.CHAIN_END:
             entries = self.read_entry_cluster(chain_start)
             for e in entries:
@@ -353,7 +364,7 @@ class Entry:
     MODE_EXISTS = 0x8000
 
     SIZE = 512
-    DATA_STRUCT = struct.Struct("<H2xL8sL4x8s4x28x32s416x")
+    DATA_STRUCT = struct.Struct("<H2xL8sL4x8s32x32s416x")
     TOD_STRUCT = struct.Struct("<xBBBBBH")  # secs, mins, hours, mday, month, year
     assert SIZE == DATA_STRUCT.size
 

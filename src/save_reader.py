@@ -1,7 +1,8 @@
 import struct
 
-from crc import CrcCaculator
+from crc_ecc import CrcCaculator
 from enc_dec import Blowfish
+from models import Header, IntByteField, StrByteField
 
 class SaveReader:
     FILE_SIZE = 523276
@@ -86,3 +87,61 @@ class SaveReader:
         result += crc
         result += byte_array[SaveReader.HALF_SIZE:]
         return bytes(result)
+
+
+class SaveHeadReader:
+    FILE_SIZE = 432
+    DATA_STRUCT = struct.Struct("<I210sQ210s") # (432 - 12) / 2 = 210
+    HALF_SIZE = 210
+
+    def __init__(self, byte_array: bytes):
+        assert SaveHeadReader.FILE_SIZE == len(byte_array)
+        head_block, buffer1, crc, buffer2 = SaveHeadReader.DATA_STRUCT.unpack(byte_array)
+        self.data_buffer = bytearray()
+        self.data_buffer += buffer1
+        self.data_buffer += buffer2
+        self.crc = crc
+        assert head_block == len(self.data_buffer)
+    
+    def check_crc(self):
+        crc_calc = CrcCaculator()
+        left, right = crc_calc.calc(self.data_buffer)
+        assert self.crc == (right << 32) | left
+
+    def read(self) -> Header:
+        header = Header()
+        header.u1 = self.to_int_byte_field(0, 4)
+        header.u2 = self.to_int_byte_field(8, 4)
+        header.club_name = self.to_str_byte_field(0xc, 0xc6)
+        header.club_name1 = self.to_str_byte_field(0xd4, 0xc8)
+        header.year = self.to_int_byte_field(0x19c, 2)
+        header.month = self.to_int_byte_field(0x19e, 1)
+        header.day = self.to_int_byte_field(0x19f, 1)
+        return header
+
+    def write(self, field: IntByteField):
+        self.data_buffer[field.byte_offset: field.byte_offset + field.byte_length] = field.value.to_bytes(field.byte_length, 'little')
+
+    def to_int_byte_field(self, offset: int, length: int):
+        return IntByteField(length, int.from_bytes(self.data_buffer[offset: offset + length], 'little'), offset)
+
+    def to_str_byte_field(self, offset: int, length: int):
+        return StrByteField(self.data_buffer[offset: offset + length], offset)
+
+    def export_save_bytes(self, path: str):
+        with open(path, "wb") as f:
+            f.write(self.build_save_bytes())
+
+    def build_save_bytes(self) -> bytes:
+        crc = self.build_crc(self.data_buffer)
+        head = b'\xa4\x01\x00\x00'
+        result = bytearray(head)
+        result += self.data_buffer[:SaveHeadReader.HALF_SIZE]
+        result += crc
+        result += self.data_buffer[SaveHeadReader.HALF_SIZE:]
+        return bytes(result)
+
+    def build_crc(self, byte_array: bytes) -> bytes:
+        crc_calc = CrcCaculator()
+        left, right = crc_calc.calc(byte_array)
+        return struct.Struct("<II").pack(left, right)
