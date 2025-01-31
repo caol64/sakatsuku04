@@ -31,7 +31,7 @@ class MemcardViewFrame(wx.Frame):
 
     def create_layout(self, panel: wx.Panel):
         left_sizer = wx.BoxSizer(wx.VERTICAL)
-        self.save_entries_list_box = wx.ListBox(panel, size=(200, 620))
+        self.save_entries_list_box = wx.ListBox(panel, size=(200, 600))
         self.checkbox = wx.CheckBox(panel, label="汉化版")
         self.checkbox.SetValue(CnVersion.CN_VER)
         left_sizer.Add(self.save_entries_list_box)
@@ -399,17 +399,19 @@ class OtherTeamTab(wx.Panel):
         }
 
     def create_layout(self, panel: wx.Panel):
-        self.tree = wx.TreeCtrl(self, style=wx.TR_DEFAULT_STYLE, size=(200, 680))
+        self.tree = wx.TreeCtrl(self, style=wx.TR_DEFAULT_STYLE, size=(200, 600))
         self.tree.SetIndent(5)
         # Team Information group
         info_box = wx.StaticBox(panel, label="球队信息")
         info_sizer = wx.StaticBoxSizer(info_box, wx.VERTICAL)
         form_sizer = wx.FlexGridSizer(rows=1, cols=4, vgap=0, hgap=5)
         form_sizer.Add(wx.StaticText(panel, label="队名:"), flag=wx.ALIGN_CENTER_VERTICAL)
-        self.team_name_text = wx.TextCtrl(panel)
+        self.team_name_text = wx.TextCtrl(panel, size=(150, 20))
+        self.team_name_text.SetEditable(False)
         form_sizer.Add(self.team_name_text, flag=wx.ALL)
         form_sizer.Add(wx.StaticText(panel, label="友好度:"), flag=wx.ALIGN_CENTER_VERTICAL)
-        self.team_friendly_text = wx.TextCtrl(panel)
+        self.team_friendly_text = wx.TextCtrl(panel, size=(50, 20))
+        self.team_friendly_text.SetEditable(False)
         form_sizer.Add(self.team_friendly_text, flag=wx.ALL)
         info_sizer.Add(form_sizer, flag=wx.ALL | wx.EXPAND, border=0)
 
@@ -438,8 +440,8 @@ class OtherTeamTab(wx.Panel):
         self.grid.HideRowLabels()
         self.grid.SetColLabelSize(20)
         right_sizer = wx.BoxSizer(wx.VERTICAL)
-        right_sizer.Add(info_sizer, proportion=0, flag=wx.ALL, border=5)
-        right_sizer.Add(self.grid, 0, flag=wx.EXPAND | wx.ALL, border=5)
+        right_sizer.Add(info_sizer, proportion=0, flag=wx.ALL, border=0)
+        right_sizer.Add(self.grid, 0, flag=wx.EXPAND | wx.ALL, border=0)
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         sizer.Add(self.tree, 0, wx.ALL, border=5)
         sizer.Add(right_sizer, 0, wx.ALL, border=5)
@@ -608,6 +610,7 @@ class PlayerEditDialog(wx.Dialog):
         self.ability_max_text.SetValue(self.player.abilities[0].max.value)
         for ability in self.player.abilities:
             self.player_ablities.append([ability.current.value, ability.current_max.value, ability.max.value])
+        self.combo_box.SetSelection(0)
     
     def on_close(self, evt: wx.Event):
         self.EndModal(wx.ID_OK)
