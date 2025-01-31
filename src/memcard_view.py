@@ -71,7 +71,7 @@ class MemcardViewFrame(wx.Frame):
             self.save_entries_list_box.Append(entry.name, entry)
         if self.save_entries:
             self.save_entries_list_box.SetSelection(0)
-            self.save_view_panel.load(self.save_entries[0])
+            self.save_view_panel._load_task(self.save_entries[0]) # TODO
 
     def on_select(self, evt: wx.Event):
         save_entry = self.save_entries_list_box.GetClientData(self.save_entries_list_box.GetSelection())
