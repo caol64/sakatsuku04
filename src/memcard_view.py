@@ -562,7 +562,7 @@ class PlayerEditDialog(wx.Dialog):
         self.player_age_text = wx.SpinCtrl(panel, min=16, max=40)
         form_sizer.Add(self.player_age_text, flag=wx.EXPAND)
         form_sizer.Add(wx.StaticText(panel, label="能力:"), flag=wx.ALIGN_CENTER_VERTICAL)
-        self.combo_box = wx.ComboBox(panel, choices=PlayerAbility.ablility_list(), style=wx.CB_DROPDOWN)
+        self.combo_box = wx.Choice(panel, choices=PlayerAbility.ablility_list())
         form_sizer.Add(self.combo_box, flag=wx.EXPAND)
         form_sizer.Add(wx.StaticText(panel, label="能力值:"), flag=wx.ALIGN_CENTER_VERTICAL)
         self.ability_current_text = wx.SpinCtrl(panel, min=1, max=65535)
