@@ -70,8 +70,8 @@ class MemcardViewFrame(wx.Frame):
         for entry in self.save_entries:
             self.save_entries_list_box.Append(entry.name, entry)
         if self.save_entries:
-            self.save_view_panel.load(self.save_entries[0])
             self.save_entries_list_box.SetSelection(0)
+            self.save_view_panel.load(self.save_entries[0])
 
     def on_select(self, evt: wx.Event):
         save_entry = self.save_entries_list_box.GetClientData(self.save_entries_list_box.GetSelection())
@@ -129,14 +129,14 @@ class SaveViewPanel(wx.Panel):
         self.head_reader = SaveHeadReader(save_entry.save_head_entry)
         self.head_reader.check_crc()
         self.head = self.head_reader.read()
-        wx.CallAfter(self._update_ui)
-
-    def _update_ui(self):
         self.club_info_tab.load(self.club, self.head)
         self.player_tab.load(self.my_team)
         self.other_team_tab.load(self.other_teams)
-        self.update_panels()
+        wx.CallAfter(self._update_ui)
+
+    def _update_ui(self):
         self.notebook.SetSelection(0)
+        self.update_panels()
 
     def save(self, bit_fields: list[IntBitField | StrBitField], byte_fields: list[IntByteField | StrByteField] = None):
         for bit_field in bit_fields:
