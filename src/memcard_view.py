@@ -1,3 +1,4 @@
+from functools import partial
 from pathlib import Path
 import threading
 import wx
@@ -6,11 +7,12 @@ import wx.lib.agw.pygauge as PG
 
 from bit_stream import InputBitStream, OutputBitStream
 from error import Error
-from memcard_reader import MemcardReader
-from models import Club, MyPlayer, MyTeam, OtherTeam, PlayerAbility
+from memcard_reader import MemcardReader, Saka04SaveEntry
+from models import Club, Header, IntBitField, IntByteField, MyPlayer, MyTeam, OtherTeam, PlayerAbility, StrBitField, StrByteField
 from readers import ClubReader, OtherTeamReader, TeamReader
-from save_reader import SaveReader
+from save_reader import SaveHeadReader, SaveReader
 from utils import CnVersion
+from version import APP_DISPLAY_NAME
 
 
 class MemcardViewFrame(wx.Frame):
@@ -28,16 +30,26 @@ class MemcardViewFrame(wx.Frame):
             self.on_load()
 
     def create_layout(self, panel: wx.Panel):
-        self.save_entries_list_box = wx.ListBox(panel, size=(200, 680))
+        left_sizer = wx.BoxSizer(wx.VERTICAL)
+        self.save_entries_list_box = wx.ListBox(panel, size=(200, 620))
+        self.checkbox = wx.CheckBox(panel, label="汉化版")
+        self.checkbox.SetValue(CnVersion.CN_VER)
+        left_sizer.Add(self.save_entries_list_box)
+        left_sizer.Add(self.checkbox, 0, wx.ALIGN_RIGHT | wx.ALL, 5)
         self.save_view_panel = SaveViewPanel(panel, self)
         sizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer.Add(self.save_entries_list_box)
+        sizer.Add(left_sizer)
         sizer.Add(self.save_view_panel)
         panel.SetSizer(sizer)
 
     def bind_events(self):
         self.Bind(wx.EVT_CLOSE, self.on_exit)
         self.Bind(wx.EVT_LISTBOX, self.on_select, self.save_entries_list_box)
+        self.checkbox.Bind(wx.EVT_CHECKBOX, self.on_checkbox_click)
+
+    def on_checkbox_click(self, evt: wx.Event):
+        CnVersion.CN_VER = self.checkbox.IsChecked()
+        self.save_view_panel.update_panels()
 
     def on_exit(self, evt: wx.Event):
         self.parent.create_instance()
@@ -58,16 +70,16 @@ class MemcardViewFrame(wx.Frame):
         for entry in self.save_entries:
             self.save_entries_list_box.Append(entry.name, entry)
         if self.save_entries:
-            self.save_view_panel.load(self.save_entries[0].main_save_entry)
+            self.save_view_panel.load(self.save_entries[0])
             self.save_entries_list_box.SetSelection(0)
 
     def on_select(self, evt: wx.Event):
         save_entry = self.save_entries_list_box.GetClientData(self.save_entries_list_box.GetSelection())
-        self.save_view_panel.load(save_entry.main_save_entry)
+        self.save_view_panel.load(save_entry)
 
-    def write_file(self, byte_array: bytes):
+    def write_file(self, main_bytes: bytes, head_bytes: bytes = None):
         save_entry = self.save_entries_list_box.GetClientData(self.save_entries_list_box.GetSelection())
-        self.reader.write_save_entry(save_entry, byte_array)
+        self.reader.write_save_entry(save_entry, main_bytes, head_bytes)
 
 
 class SaveViewPanel(wx.Panel):
@@ -75,45 +87,34 @@ class SaveViewPanel(wx.Panel):
         super().__init__(parent, size=(760, 680))
         self.root = root
         self.create_layout(self)
-        self.bind_events()
         self.reader = None
+        self.head_reader = None
         self.in_bit_stream = None
         self.out_bit_stream = None
         self.club = None
         self.my_team = None
         self.other_teams = None
+        self.head = None
 
     def create_layout(self, panel: wx.Panel):
         notebook = wx.Notebook(panel)
-        self.club_info_tab = ClubInfoTab(notebook)
-        self.player_tab = PlayerTab(notebook)
+        self.club_info_tab = ClubInfoTab(notebook, self)
+        self.player_tab = PlayerTab(notebook, self)
         self.other_team_tab = OtherTeamTab(notebook)
         notebook.AddPage(self.club_info_tab, "俱乐部")
         notebook.AddPage(self.player_tab, "我的球队")
         notebook.AddPage(self.other_team_tab, "其它球队")
-        self.checkbox = wx.CheckBox(panel, label="汉化版")
-        self.checkbox.SetValue(CnVersion.CN_VER)
-        self.submit_btn = wx.Button(panel, label="保存")
-        footer_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        footer_sizer.Add((0, 0), 1, wx.EXPAND)
-        footer_sizer.Add(self.checkbox, 0, wx.ALL, 5)
-        footer_sizer.Add(self.submit_btn, 0, wx.ALL, 5)
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(notebook, 1, wx.EXPAND | wx.ALL, 5)
-        sizer.Add(footer_sizer, 0, wx.EXPAND | wx.ALL, 5)
         panel.SetSizer(sizer)
         panel.Centre()
         self.notebook = notebook
 
-    def bind_events(self):
-        self.checkbox.Bind(wx.EVT_CHECKBOX, self.on_checkbox_click)
-        self.submit_btn.Bind(wx.EVT_BUTTON, self.on_submit_click)
+    def load(self, save_entry: Saka04SaveEntry):
+        threading.Thread(target=self._load_task, args=[save_entry]).start()
 
-    def load(self, byte_array: bytes):
-        threading.Thread(target=self._load_task, args=(byte_array,)).start()
-
-    def _load_task(self, byte_array: bytes):
-        self.reader = SaveReader(byte_array)
+    def _load_task(self, save_entry: Saka04SaveEntry):
+        self.reader = SaveReader(save_entry.main_save_entry)
         self.reader.check_crc()
         self.reader.dec()
         decoded_byte_array = self.reader.decoded_data()
@@ -125,28 +126,31 @@ class SaveViewPanel(wx.Panel):
         self.my_team = team_reader.read()
         oteam_reader = OtherTeamReader(self.in_bit_stream)
         self.other_teams = oteam_reader.read()
+        self.head_reader = SaveHeadReader(save_entry.save_head_entry)
+        self.head_reader.check_crc()
+        self.head = self.head_reader.read()
         wx.CallAfter(self._update_ui)
 
     def _update_ui(self):
-        self.club_info_tab.load(self.club)
+        self.club_info_tab.load(self.club, self.head)
         self.player_tab.load(self.my_team)
         self.other_team_tab.load(self.other_teams)
         self.update_panels()
         self.notebook.SetSelection(0)
 
-    def on_checkbox_click(self, evt: wx.Event):
-        CnVersion.CN_VER = self.checkbox.IsChecked()
-        self.update_panels()
-
-    def on_submit_click(self, evt: wx.Event):
-        self.club_info_tab.submit(self.out_bit_stream)
-        self.player_tab.submit(self.out_bit_stream)
+    def save(self, bit_fields: list[IntBitField | StrBitField], byte_fields: list[IntByteField | StrByteField] = None):
+        for bit_field in bit_fields:
+            self.out_bit_stream.pack_bits(bit_field)
         self.reader.update_decode_buffer(self.out_bit_stream.input_data)
         encode_buffer = self.reader.enc()
         save_bin = self.reader.build_save_bytes(encode_buffer)
-        self.root.write_file(save_bin)
-        wx.MessageBox('保存成功', 'Saka04SaveEditor', style=wx.OK | wx.ICON_INFORMATION)
-
+        head_bytes = None
+        if byte_fields and len(byte_fields) > 0:
+            for byte_field in byte_fields:
+                self.head_reader.write(byte_field)
+                head_bytes = self.head_reader.build_save_bytes()
+        self.root.write_file(save_bin, head_bytes)
+        wx.MessageBox('保存成功', APP_DISPLAY_NAME, style=wx.OK | wx.ICON_INFORMATION)
 
     def update_panels(self):
         self.club_info_tab.update()
@@ -155,10 +159,13 @@ class SaveViewPanel(wx.Panel):
 
 
 class ClubInfoTab(wx.Panel):
-    def __init__(self, parent: wx.Panel):
-        super().__init__(parent)
+    def __init__(self, parent: wx.Panel, root: wx.Panel):
+        super().__init__(parent, size=(760, 680))
+        self.root = root
         self.create_layout(self)
+        self.bind_events()
         self.club = None
+        self.head = None
 
     def create_layout(self, panel: wx.Panel):
         # Club Information group
@@ -168,6 +175,7 @@ class ClubInfoTab(wx.Panel):
 
         form_sizer.Add(wx.StaticText(panel, label="俱乐部:"), flag=wx.ALIGN_CENTER_VERTICAL)
         self.club_input = wx.TextCtrl(panel, size=(50, -1))
+        self.club_input.SetEditable(False)
         form_sizer.Add(self.club_input, flag=wx.EXPAND)
 
         form_sizer.Add(wx.StaticText(panel, label="资金:"), flag=wx.ALIGN_CENTER_VERTICAL)
@@ -187,8 +195,10 @@ class ClubInfoTab(wx.Panel):
         self.year_input = wx.SpinCtrl(panel, min=1, max=999)
         year_label = wx.StaticText(panel, label="年")
         self.month_input = wx.TextCtrl(panel, size=(50, -1))
+        self.month_input.SetEditable(False)
         month_label = wx.StaticText(panel, label="月")
         self.date_input = wx.TextCtrl(panel, size=(50, -1))
+        self.date_input.SetEditable(False)
         date_label = wx.StaticText(panel, label="日")
         year_sizer.Add(self.year_input, flag=wx.RIGHT, border=5)
         year_sizer.Add(year_label, flag=wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, border=5)
@@ -200,15 +210,32 @@ class ClubInfoTab(wx.Panel):
 
         form_sizer.Add(wx.StaticText(panel, label="经理:"), flag=wx.ALIGN_CENTER_VERTICAL)
         self.manager_input = wx.TextCtrl(panel, size=(50, -1))
+        self.manager_input.SetEditable(False)
         form_sizer.Add(self.manager_input, flag=wx.EXPAND)
 
         club_info_sizer.Add(form_sizer, flag=wx.ALL | wx.EXPAND, border=10)
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(club_info_sizer, flag=wx.ALL, border=10)
+        self.submit_btn = wx.Button(panel, label="保存")
+        sizer.Add(self.submit_btn, flag=wx.ALL, border=10)
         panel.SetSizer(sizer)
 
-    def load(self, club: Club):
+
+    def bind_events(self):
+        self.submit_btn.Bind(wx.EVT_BUTTON, self.on_submit_click)
+
+    def on_submit_click(self, evt: wx.Event):
+        self.club.set_funds(self.fund_input_billion.GetValue(), self.fund_input_ten_thousand.GetValue())
+        self.club.year.value = self.year_input.GetValue() + 2003
+        bits_fields = list()
+        bits_fields.append(self.club.funds)
+        bits_fields.append(self.club.year)
+        self.head.year.value = self.year_input.GetValue() + 2003
+        self.root.save(bits_fields, [self.head.year])
+
+    def load(self, club: Club, head: Header):
         self.club = club
+        self.head = head
 
     def update(self):
         self.fund_input_billion.SetValue(self.club.funds_high)
@@ -219,15 +246,11 @@ class ClubInfoTab(wx.Panel):
         self.manager_input.SetLabelText(self.club.manager_name.value)
         self.club_input.SetLabelText(self.club.club_name.value)
 
-    def submit(self, bit_stream: OutputBitStream):
-        self.club.set_funds(self.fund_input_billion.GetValue(), self.fund_input_ten_thousand.GetValue())
-        bit_stream.pack_bits(self.club.funds)
-        self.club.year.value = self.year_input.GetValue() + 2003
-        bit_stream.pack_bits(self.club.year)
 
 class PlayerTab(wx.Panel):
-    def __init__(self, parent):
+    def __init__(self, parent, root: wx.Panel):
         super().__init__(parent)
+        self.root = root
         self.create_layout(self)
         self.bind_events()
         self.team = None
@@ -236,60 +259,77 @@ class PlayerTab(wx.Panel):
     def create_layout(self, panel: wx.Panel):
         # player list box
         self.list_box = wx.ListBox(panel, size=(150, 480))
+        self.edit_btn = wx.Button(panel, label="编辑")
+        left_sizer = wx.BoxSizer(wx.VERTICAL)
+        left_sizer.Add(self.list_box)
+        left_sizer.Add(self.edit_btn, 0, wx.ALIGN_RIGHT | wx.ALL, 5)
         # Player Information group
         info_box = wx.StaticBox(panel, label="球员信息")
         info_sizer = wx.StaticBoxSizer(info_box, wx.VERTICAL)
         form_sizer = wx.FlexGridSizer(rows=12, cols=2, vgap=5, hgap=5)
         form_sizer.Add(wx.StaticText(panel, label="姓名:"), flag=wx.ALIGN_CENTER_VERTICAL)
         self.player_name_text = wx.TextCtrl(panel)
+        self.player_name_text.SetEditable(False)
         form_sizer.Add(self.player_name_text, flag=wx.EXPAND)
         form_sizer.Add(wx.StaticText(panel, label="年龄:"), flag=wx.ALIGN_CENTER_VERTICAL)
-        self.player_age_text = wx.SpinCtrl(panel, min=18, max=40)
+        self.player_age_text = wx.TextCtrl(panel)
+        self.player_age_text.SetEditable(False)
         form_sizer.Add(self.player_age_text, flag=wx.EXPAND)
         form_sizer.Add(wx.StaticText(panel, label="号码:"), flag=wx.ALIGN_CENTER_VERTICAL)
         self.player_number_text = wx.TextCtrl(panel)
+        self.player_number_text.SetEditable(False)
         form_sizer.Add(self.player_number_text, flag=wx.EXPAND)
         # form_sizer.Add(wx.StaticText(panel, label="出生:"), flag=wx.ALIGN_CENTER_VERTICAL)
         # self.player_born_text = wx.TextCtrl(panel)
         # form_sizer.Add(self.player_born_text, flag=wx.EXPAND)
         form_sizer.Add(wx.StaticText(panel, label="惯用脚:"), flag=wx.ALIGN_CENTER_VERTICAL)
         self.player_foot_text = wx.TextCtrl(panel)
+        self.player_foot_text.SetEditable(False)
         form_sizer.Add(self.player_foot_text, flag=wx.EXPAND)
         form_sizer.Add(wx.StaticText(panel, label="留学次数:"), flag=wx.ALIGN_CENTER_VERTICAL)
         self.player_aboard_times_text = wx.TextCtrl(panel)
+        self.player_aboard_times_text.SetEditable(False)
         form_sizer.Add(self.player_aboard_times_text, flag=wx.EXPAND)
         form_sizer.Add(wx.StaticText(panel, label="位置:"), flag=wx.ALIGN_CENTER_VERTICAL)
         self.player_pos_text = wx.TextCtrl(panel)
+        self.player_pos_text.SetEditable(False)
         form_sizer.Add(self.player_pos_text, flag=wx.EXPAND)
         form_sizer.Add(wx.StaticText(panel, label="等级:"), flag=wx.ALIGN_CENTER_VERTICAL)
         self.player_rank_text = wx.TextCtrl(panel)
+        self.player_rank_text.SetEditable(False)
         form_sizer.Add(self.player_rank_text, flag=wx.EXPAND)
         form_sizer.Add(wx.StaticText(panel, label="连携:"), flag=wx.ALIGN_CENTER_VERTICAL)
         self.player_teamwork_text = wx.TextCtrl(panel)
+        self.player_teamwork_text.SetEditable(False)
         form_sizer.Add(self.player_teamwork_text, flag=wx.EXPAND)
         form_sizer.Add(wx.StaticText(panel, label="口调:"), flag=wx.ALIGN_CENTER_VERTICAL)
         self.player_tone_type_text = wx.TextCtrl(panel)
+        self.player_tone_type_text.SetEditable(False)
         form_sizer.Add(self.player_tone_type_text, flag=wx.EXPAND)
         form_sizer.Add(wx.StaticText(panel, label="身体:"), flag=wx.ALIGN_CENTER_VERTICAL)
         self.player_grow_type_phy_text = wx.TextCtrl(panel)
+        self.player_grow_type_phy_text.SetEditable(False)
         form_sizer.Add(self.player_grow_type_phy_text, flag=wx.EXPAND)
         form_sizer.Add(wx.StaticText(panel, label="技术:"), flag=wx.ALIGN_CENTER_VERTICAL)
         self.player_grow_type_tech_text = wx.TextCtrl(panel)
+        self.player_grow_type_tech_text.SetEditable(False)
         form_sizer.Add(self.player_grow_type_tech_text, flag=wx.EXPAND)
         form_sizer.Add(wx.StaticText(panel, label="头脑:"), flag=wx.ALIGN_CENTER_VERTICAL)
         self.player_grow_type_sys_text = wx.TextCtrl(panel)
+        self.player_grow_type_sys_text.SetEditable(False)
         form_sizer.Add(self.player_grow_type_sys_text, flag=wx.EXPAND)
         info_sizer.Add(form_sizer, flag=wx.ALL | wx.EXPAND, border=5)
         # player ability panel
         self.ability_panel = PlayerAbilPanel(self)
         sizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer.Add(self.list_box, 0, wx.ALL, border=5)
+        sizer.Add(left_sizer, 0, wx.ALL, border=5)
         sizer.Add(info_sizer, 0, wx.ALL, border=5)
         sizer.Add(self.ability_panel, 0, wx.ALL, border=5)
         panel.SetSizerAndFit(sizer)
 
     def bind_events(self):
         self.Bind(wx.EVT_LISTBOX, self.on_select, self.list_box)
+        self.edit_btn.Bind(wx.EVT_BUTTON, self.on_open_dialog)
 
     def load(self, team: MyTeam):
         self.team = team
@@ -310,7 +350,7 @@ class PlayerTab(wx.Panel):
     def show_player(self, player: MyPlayer):
         self.player = player
         self.player_name_text.SetLabelText(player.name.value)
-        self.player_age_text.SetValue(player.age.value)
+        self.player_age_text.SetLabelText(str(player.age.value))
         # self.player_born_text.SetLabelText(str(player.born.value))
         self.player_foot_text.SetLabelText(player.prefer_foot)
         self.player_number_text.SetLabelText(str(player.number.value))
@@ -324,9 +364,13 @@ class PlayerTab(wx.Panel):
         self.player_grow_type_sys_text.SetLabelText(player.player.grow_type_sys)
         self.ability_panel.update(player.abilities)
 
-    def submit(self, bit_stream: OutputBitStream):
-        self.team.players[self.player.index].age.value = self.player_age_text.GetValue()
-        bit_stream.pack_bits(self.team.players[self.player.index].age)
+    def on_open_dialog(self, evt: wx.Event):
+        dialog = PlayerEditDialog(self, self, self.player)
+        dialog.ShowModal()
+        dialog.Destroy()
+
+    def on_save(self, bits_fields: list[IntBitField | StrBitField]):
+        self.root.save(bits_fields)
 
 
 class OtherTeamTab(wx.Panel):
@@ -355,22 +399,19 @@ class OtherTeamTab(wx.Panel):
         }
 
     def create_layout(self, panel: wx.Panel):
-        self.tree = wx.TreeCtrl(self, style=wx.TR_DEFAULT_STYLE, size=(200, 440))
+        self.tree = wx.TreeCtrl(self, style=wx.TR_DEFAULT_STYLE, size=(200, 680))
+        self.tree.SetIndent(5)
         # Team Information group
-        info_box = wx.StaticBox(panel, label="球队信息", size=(200, 200))
+        info_box = wx.StaticBox(panel, label="球队信息")
         info_sizer = wx.StaticBoxSizer(info_box, wx.VERTICAL)
-        form_sizer = wx.FlexGridSizer(rows=2, cols=2, vgap=5, hgap=5)
+        form_sizer = wx.FlexGridSizer(rows=1, cols=4, vgap=0, hgap=5)
         form_sizer.Add(wx.StaticText(panel, label="队名:"), flag=wx.ALIGN_CENTER_VERTICAL)
         self.team_name_text = wx.TextCtrl(panel)
         form_sizer.Add(self.team_name_text, flag=wx.ALL)
         form_sizer.Add(wx.StaticText(panel, label="友好度:"), flag=wx.ALIGN_CENTER_VERTICAL)
         self.team_friendly_text = wx.TextCtrl(panel)
         form_sizer.Add(self.team_friendly_text, flag=wx.ALL)
-        info_sizer.Add(form_sizer, flag=wx.ALL | wx.EXPAND, border=5)
-
-        left_sizer = wx.BoxSizer(wx.VERTICAL)
-        left_sizer.Add(self.tree, 0, wx.ALL, border=5)
-        left_sizer.Add(info_sizer, 0, wx.ALL, border=5)
+        info_sizer.Add(form_sizer, flag=wx.ALL | wx.EXPAND, border=0)
 
         self.grid = wx.grid.Grid(panel, size=(520, -1))
         self.grid.CreateGrid(25, 10)
@@ -396,9 +437,12 @@ class OtherTeamTab(wx.Panel):
         self.grid.SetColSize(9, 50)
         self.grid.HideRowLabels()
         self.grid.SetColLabelSize(20)
+        right_sizer = wx.BoxSizer(wx.VERTICAL)
+        right_sizer.Add(info_sizer, proportion=0, flag=wx.ALL, border=5)
+        right_sizer.Add(self.grid, 0, flag=wx.EXPAND | wx.ALL, border=5)
         sizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer.Add(left_sizer, 0, wx.ALL, border=5)
-        sizer.Add(self.grid, 0, wx.ALL, border=5)
+        sizer.Add(self.tree, 0, wx.ALL, border=5)
+        sizer.Add(right_sizer, 0, wx.ALL, border=5)
         panel.SetSizer(sizer)
 
     def bind_events(self):
@@ -463,7 +507,7 @@ class PlayerAbilPanel(wx.Panel):
         form_sizer = wx.FlexGridSizer(rows=64, cols=3, vgap=10, hgap=10)
         self.gauge_list: list[PG.PyGauge] = list()
         self.text_list: list[wx.StaticText] = list()
-        for ability_name in PlayerAbility.ablility_list():
+        for i, ability_name in enumerate(PlayerAbility.ablility_list()):
             form_sizer.Add(wx.StaticText(scrolled_window, label=ability_name), flag=wx.ALIGN_CENTER_VERTICAL)
             gauge = PG.PyGauge(scrolled_window, -1, size=(100, 15), style=wx.GA_HORIZONTAL)
             gauge.SetValue([0, 0, 0])
@@ -488,8 +532,135 @@ class PlayerAbilPanel(wx.Panel):
         for i, abilitiy in enumerate(abilities):
             self.gauge_list[i].SetValue([0, 0, 0])
             self.gauge_list[i].Update([self.calc_perce(abilitiy.current.value), self.calc_perce(abilitiy.current_max.value), self.calc_perce(abilitiy.max.value)], 100)
-            self.text_list[i].SetLabelText(f"{abilitiy.current.value}/{abilitiy.current_max.value}/{abilitiy.max.value}")
+            self.text_list[i].SetLabelText(f"{abilitiy.current.value} | {abilitiy.current_max.value} | {abilitiy.max.value}")
 
     def calc_perce(self, n: int) -> int:
         r = int(n / 65535 * 100)
         return r or 1
+
+
+class PlayerEditDialog(wx.Dialog):
+    def __init__(self, parent, root: wx.Panel, player: MyPlayer):
+        super().__init__(parent, title="球员编辑", size=(400, 300))
+        self.root = root
+        self.player = player
+        self.player_ablities = list()
+        self.ability_index = 0
+        panel = wx.Panel(self)
+        self.create_layout(panel)
+        self.bind_events()
+        self.load()
+
+    def create_layout(self, panel: wx.Panel):
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        form_sizer = wx.FlexGridSizer(rows=6, cols=2, vgap=10, hgap=10)
+        form_sizer.Add(wx.StaticText(panel, label="姓名:"), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.player_name_text = wx.TextCtrl(panel)
+        self.player_name_text.SetEditable(False)
+        form_sizer.Add(self.player_name_text, flag=wx.EXPAND)
+        form_sizer.Add(wx.StaticText(panel, label="年龄:"), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.player_age_text = wx.SpinCtrl(panel, min=16, max=40)
+        form_sizer.Add(self.player_age_text, flag=wx.EXPAND)
+        form_sizer.Add(wx.StaticText(panel, label="能力:"), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.combo_box = wx.ComboBox(panel, choices=PlayerAbility.ablility_list(), style=wx.CB_DROPDOWN)
+        form_sizer.Add(self.combo_box, flag=wx.EXPAND)
+        form_sizer.Add(wx.StaticText(panel, label="能力值:"), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.ability_current_text = wx.SpinCtrl(panel, min=1, max=65535)
+        self.ability_current_max_text = wx.SpinCtrl(panel, min=1, max=65535)
+        self.ability_max_text = wx.SpinCtrl(panel, min=1, max=65535)
+        ability_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        ability_sizer.Add(self.ability_current_text)
+        ability_sizer.Add(self.ability_current_max_text)
+        ability_sizer.Add(self.ability_max_text)
+        form_sizer.Add(ability_sizer, flag=wx.EXPAND)
+        form_sizer.Add(wx.StaticText(panel, label=""), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.current_max_btn = wx.Button(panel, label="所有能力到达当前上限")
+        form_sizer.Add(self.current_max_btn, 0, flag=wx.ALIGN_RIGHT | wx.ALL)
+        form_sizer.Add(wx.StaticText(panel, label=""), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.max_btn = wx.Button(panel, label="所有能力到达最高上限")
+        form_sizer.Add(self.max_btn, 0, flag=wx.ALIGN_RIGHT | wx.ALL)
+
+        sizer.Add(form_sizer, flag=wx.ALIGN_CENTER | wx.ALL, border=10)
+        foot_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.close_btn = wx.Button(panel, label="Close")
+        self.save_btn = wx.Button(panel, label="Save")
+        foot_sizer.Add((0, 0), 1, wx.EXPAND)
+        foot_sizer.Add(self.close_btn, wx.ALL, border=10)
+        foot_sizer.Add(self.save_btn, wx.ALL, border=10)
+        sizer.Add(foot_sizer, flag=wx.ALIGN_RIGHT | wx.ALL, border=10)
+        panel.SetSizer(sizer)
+
+    def bind_events(self):
+        self.close_btn.Bind(wx.EVT_BUTTON, self.on_close)
+        self.save_btn.Bind(wx.EVT_BUTTON, self.on_submit)
+        self.current_max_btn.Bind(wx.EVT_BUTTON, self.on_current_max)
+        self.max_btn.Bind(wx.EVT_BUTTON, self.on_max)
+        self.combo_box.Bind(wx.EVT_COMBOBOX, self.on_combobox_select)
+        self.ability_current_text.Bind(wx.EVT_SPINCTRL, self.on_current_changed)
+        self.ability_current_max_text.Bind(wx.EVT_SPINCTRL, self.on_current_max_changed)
+        self.ability_max_text.Bind(wx.EVT_SPINCTRL, self.on_max_changed)
+
+    def load(self):
+        self.player_name_text.SetValue(self.player.name.value)
+        self.player_age_text.SetValue(self.player.age.value)
+        self.ability_current_text.SetValue(self.player.abilities[0].current.value)
+        self.ability_current_max_text.SetValue(self.player.abilities[0].current_max.value)
+        self.ability_max_text.SetValue(self.player.abilities[0].max.value)
+        for ability in self.player.abilities:
+            self.player_ablities.append([ability.current.value, ability.current_max.value, ability.max.value])
+    
+    def on_close(self, evt: wx.Event):
+        self.EndModal(wx.ID_OK)
+
+    def on_submit(self, evt: wx.Event):
+        self.player.age.value = self.player_age_text.GetValue()
+        for ability, ability_cache in zip(self.player.abilities, self.player_ablities):
+            ability.current.value = ability_cache[0]
+            ability.current_max.value = ability_cache[1]
+            ability.max.value = ability_cache[2]
+        bits_fields = list()
+        bits_fields.append(self.player.age)
+        for ability in self.player.abilities:
+            bits_fields.append(ability.current)
+            bits_fields.append(ability.current_max)
+            bits_fields.append(ability.max)
+        self.root.on_save(bits_fields)
+        self.root.show_player(self.player)
+
+    def on_combobox_select(self, evt: wx.Event):
+        selected_index = self.combo_box.GetSelection()
+        self.ability_current_text.SetValue(self.player.abilities[selected_index].current.value)
+        self.ability_current_max_text.SetValue(self.player.abilities[selected_index].current_max.value)
+        self.ability_max_text.SetValue(self.player.abilities[selected_index].max.value)
+        self.ability_index = selected_index
+
+    def on_current_changed(self, evt: wx.Event):
+        value = evt.GetInt()
+        self.player_ablities[self.ability_index][0] = value
+        evt.Skip()
+
+    def on_current_max_changed(self, evt: wx.Event):
+        value = evt.GetInt()
+        self.player_ablities[self.ability_index][1] = value
+        evt.Skip()
+
+    def on_max_changed(self, evt: wx.Event):
+        value = evt.GetInt()
+        self.player_ablities[self.ability_index][2] = value
+        evt.Skip()
+
+    def on_current_max(self, evt: wx.Event):
+        for i, ability in enumerate(self.player.abilities):
+            self.player_ablities[i][0] = ability.current_max.value
+            self.player_ablities[i][1] = ability.current_max.value
+        self.ability_current_text.SetValue(self.player_ablities[self.ability_index][0])
+        self.ability_current_max_text.SetValue(self.player_ablities[self.ability_index][1])
+        self.ability_max_text.SetValue(self.player_ablities[self.ability_index][2])
+
+    def on_max(self, evt: wx.Event):
+        for i, ability in enumerate(self.player.abilities):
+            self.player_ablities[i][0] = ability.max.value
+            self.player_ablities[i][1] = ability.max.value
+        self.ability_current_text.SetValue(self.player_ablities[self.ability_index][0])
+        self.ability_current_max_text.SetValue(self.player_ablities[self.ability_index][1])
+        self.ability_max_text.SetValue(self.player_ablities[self.ability_index][2])

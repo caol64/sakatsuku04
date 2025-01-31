@@ -67,14 +67,17 @@ class MemcardReader:
             save_entries.append(Saka04SaveEntry(entry.name, main_save_entry, save_head_entry, sys_icon_entry))
         return save_entries
 
-    def write_save_entry(self, save_entry: 'Saka04SaveEntry', byte_array: bytes):
+    def write_save_entry(self, save_entry: 'Saka04SaveEntry', main_bytes: bytes, head_bytes: bytes = None):
         self.offset = 0
         try:
             self.file = open(self.file_path, "r+b")
             mc_entries = self.lookup_entry_by_name(save_entry.name)
             if mc_entries:
                 main_entry = [f for f in mc_entries if f.name == save_entry.name][0]
-                self.write_data_cluster(main_entry, byte_array)
+                self.write_data_cluster(main_entry, main_bytes)
+                if head_bytes and len(head_bytes) > 0:
+                    head_entry = [f for f in mc_entries if f.name == 'head.dat'][0]
+                    self.write_data_cluster(head_entry, head_bytes)
         finally:
             self.close()
 

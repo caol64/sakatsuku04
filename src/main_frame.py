@@ -5,6 +5,7 @@ import wx.adv
 
 from game_data_view import DataViewFrame
 from memcard_view import MemcardViewFrame
+from version import APP_DISPLAY_NAME, COPY_RIGHT, DESCRIPTION, VERSION
 
 
 FRAME_STYLE = wx.DEFAULT_FRAME_STYLE & ~(wx.RESIZE_BORDER | wx.MAXIMIZE_BOX)
@@ -51,10 +52,10 @@ class OpenFileFrame(wx.Frame):
 
     def show_about_dialog(self, event):
         info = wx.adv.AboutDialogInfo()
-        info.SetName("创造球会04存档编辑器")
-        info.SetVersion("1.0.0")
-        info.SetDescription("made by caol64(阿不) with ❤️")
-        info.SetCopyright("(C) 2025 Lei Cao")
+        info.SetName(APP_DISPLAY_NAME)
+        info.SetVersion(VERSION)
+        info.SetDescription(DESCRIPTION)
+        info.SetCopyright(COPY_RIGHT)
         # info.SetWebSite("https://yuzhi.tech")
         wx.adv.AboutBox(info)
 

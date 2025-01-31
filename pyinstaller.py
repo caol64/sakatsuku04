@@ -2,7 +2,9 @@
 import os
 import PyInstaller.__main__
 
-app_name = 'Saka04SaveEditor'
+from version import APP_NAME
+
+app_name = APP_NAME
 app_file = 'src/main_frame.py'
 # hidden_import = 'glcontext'
 datas = ['resource', 'resource']
