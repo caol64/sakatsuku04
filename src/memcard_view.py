@@ -597,7 +597,7 @@ class PlayerEditDialog(wx.Dialog):
         self.save_btn.Bind(wx.EVT_BUTTON, self.on_submit)
         self.current_max_btn.Bind(wx.EVT_BUTTON, self.on_current_max)
         self.max_btn.Bind(wx.EVT_BUTTON, self.on_max)
-        self.combo_box.Bind(wx.EVT_COMBOBOX, self.on_combobox_select)
+        self.combo_box.Bind(wx.EVT_CHOICE, self.on_combobox_select)
         self.ability_current_text.Bind(wx.EVT_SPINCTRL, self.on_current_changed)
         self.ability_current_max_text.Bind(wx.EVT_SPINCTRL, self.on_current_max_changed)
         self.ability_max_text.Bind(wx.EVT_SPINCTRL, self.on_max_changed)
