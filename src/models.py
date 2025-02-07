@@ -207,6 +207,7 @@ class MyPlayer:
     grow_type: IntBitField
     tone_type: IntBitField
     skill: IntBitField
+    magic_value: IntBitField
     test: IntBitField = IntBitField(0, 0, 0)
     un: list[int]
     player: Player

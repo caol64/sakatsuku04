@@ -119,7 +119,7 @@ class TeamReader(BaseReader):
             a = self.bit_stream.unpack_bits([4, 7, 4, 7, 3, 3, 7, 5, 1, 3, 4], 14) # 7053AC
             players[i].skill = a[7]
             a = self.bit_stream.unpack_bits([0x20, 2], 6)
-            magic_value = a[0] # 7053AC a magick value contains many information
+            players[i].magic_value = a[0] # 7053AC a magick value contains many information
             # print(magic_value.value & 0x2000)
             a = self.bit_stream.unpack_bits([0xa, 8, 8, 0x10], 6) # 7053B8
             # print([z.value for z in a ])

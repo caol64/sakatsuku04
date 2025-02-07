@@ -318,6 +318,12 @@ class PlayerTab(wx.Panel):
         self.player_grow_type_sys_text = wx.TextCtrl(panel)
         self.player_grow_type_sys_text.SetEditable(False)
         form_sizer.Add(self.player_grow_type_sys_text, flag=wx.EXPAND)
+
+        # form_sizer.Add(wx.StaticText(panel, label="magic:"), flag=wx.ALIGN_CENTER_VERTICAL)
+        # self.player_magic_text = wx.TextCtrl(panel)
+        # self.player_magic_text.SetEditable(False)
+        # form_sizer.Add(self.player_magic_text, flag=wx.EXPAND)
+
         info_sizer.Add(form_sizer, flag=wx.ALL | wx.EXPAND, border=5)
         # player ability panel
         self.ability_panel = PlayerAbilPanel(self)
@@ -362,6 +368,7 @@ class PlayerTab(wx.Panel):
         self.player_grow_type_phy_text.SetLabelText(player.player.grow_type_phy)
         self.player_grow_type_tech_text.SetLabelText(player.player.grow_type_tech)
         self.player_grow_type_sys_text.SetLabelText(player.player.grow_type_sys)
+        # self.player_magic_text.SetLabelText(bin(player.magic_value.value))
         self.ability_panel.update(player.abilities)
 
     def on_open_dialog(self, evt: wx.Event):
