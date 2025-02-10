@@ -67,6 +67,8 @@ class InputBitStream:
         if self.debug_mode:
             if sum_bytes < total_bytes:
                 self.unpacked_bytes.extend([0] * (total_bytes - sum_bytes))
+            if total_bytes > 0 and sum_bytes > total_bytes:
+                self.unpacked_bytes = self.unpacked_bytes[:total_bytes - sum_bytes]
         self.unpacked_bytes_length += total_bytes
 
         return result if not result_is_int else result[0]

@@ -1,4 +1,4 @@
-# Sakatsuku04
+# Sakatsuku04 save editor
 
 ![](data/cover.jpg)
 
@@ -6,7 +6,7 @@ Opensource game and save editor for J.League Pro Soccer Club o Tsukurou! 04 (PS2
 
 ## Features
 
-Currently supported viewing features:  
+Currently supported viewing features:
 
 - Club information
   - Club name
@@ -41,3 +41,12 @@ Currently supported editing features:
 ## Hacker notes
 
 [Save File Format Analysis](docs/save_file_format_analysis.md)
+
+## Acknowledgements
+
+The data used in this project was obtained from [サカつく04緑本追補] and [サカつく04データ置き場]. I am grateful for their contribution to making this information publicly available.
+
+## References
+
+- [サカつく04緑本追補](https://sites.google.com/view/sakatsuku04/home)
+- [サカつく04データ置き場](https://www.potato.ne.jp/ando/sakatuku/index.html)

@@ -10,15 +10,18 @@ class DataViewFrame(wx.Frame):
         super(DataViewFrame, self).__init__(*args, **kw, size=(640, 480))
         self.file_path = file_path
         self.parent = parent
+        self.error = None
         panel = wx.Panel(self)
         self.list_box = wx.ListBox(panel, size=(250, 480))
         self.Bind(wx.EVT_LISTBOX, self.on_select, self.list_box)
         self.grid = wx.grid.Grid(panel, size=(390, 480))
-        self.grid.CreateGrid(60, 2)
+        self.grid.CreateGrid(60, 3)
         self.grid.SetColLabelValue(0, "Ability")
         self.grid.SetColLabelValue(1, "Value")
+        self.grid.SetColLabelValue(2, "Hex")
         self.grid.SetColSize(0, 150)
-        self.grid.SetColSize(1, 150)
+        self.grid.SetColSize(1, 75)
+        self.grid.SetColSize(2, 75)
         self.grid.HideRowLabels()
         self.search_box = wx.TextCtrl(panel)
         self.search_box.Bind(wx.EVT_TEXT, self.on_key_typed)
@@ -52,6 +55,7 @@ class DataViewFrame(wx.Frame):
         for i, (ability_name, ability_value) in enumerate(player.data):
             self.grid.SetCellValue(i, 0, ability_name)
             self.grid.SetCellValue(i, 1, str(ability_value))
+            self.grid.SetCellValue(i, 2, hex(ability_value))
 
     def on_key_typed(self, evt: wx.Event):
         search_name = self.search_box.GetValue()

@@ -1,5 +1,5 @@
 from bit_stream import InputBitStream
-from models import Club, MyPlayer, MyTeam, OtherTeam, OtherPlayer, PlayerAbility
+from models import Club, MyPlayer, MyTeam, OtherTeam, OtherPlayer, PlayerAbility, Scout
 
 class BaseReader:
     base_offset = 0x703D50
@@ -76,20 +76,279 @@ class TeamReader(BaseReader):
         team.players = self.read_players()
         self.read_players()
         # 0070DD78
-        for _ in range(20):
-            self.bit_stream.unpack_bits(0x10)
+        for _ in range(20): # edit player, but not useful
+            a = self.bit_stream.unpack_bits(0x10)
             a = self.bit_stream.unpack_str(0xd)
-            self.bit_stream.unpack_bits([8] * 0x15, 0x16)
-            self.bit_stream.unpack_bits([8] * 0x2b)
+            # print(a.value)
+            a = self.bit_stream.unpack_bits([8] * 0x15, 0x16)
+            a = self.bit_stream.unpack_bits([8] * 0x2b)
+            # print([hex(z.value) for z in a ])
             self.bit_stream.unpack_bits(0x10)
         self.bit_stream.unpack_bits([0x10, 4, 7], 4)
-        for _ in range(0x40):
+        for _ in range(0x40): # not useful
             a = self.bit_stream.unpack_bits([0x10, 0x10, 0x10])
         self.bit_stream.unpack_bits(0xb)
         a = self.bit_stream.unpack_str(0xd)
         self.bit_stream.unpack_bits([8, 8, 4, 4, 7, 8, 4, 7, 3, 7, 0x10, 0x10, 4, 4, 4, 4], 18)
-        # 0070E584 708
-        self.bit_stream.skip(TeamReader.consume_bits, TeamReader.total_size - self.bit_stream.unpacked_bytes_length)
+        # 0070E584
+        self.bit_stream.unpack_bits([1, 2, 4, 4, 4, 4, 7, 7, 7, 7, 7, 3, 3, 3, 3, 3], 16)
+        # 0x70e595
+        self.bit_stream.unpack_bits([3, 3, 3, 3, 3, 3, 4, 4, 4, 7, 4, 7, 3, 3, 7, 5, 1, 3, 4], 19)
+        # 0x70e5a8
+        self.bit_stream.unpack_bits([0x20, 2, 0xa, 8, 8, 0x10, 8, 3, 3, 8, 8, 8], 17)
+        # 0x70e5b9
+        self.bit_stream.unpack_bits([0x10] * 14)
+        # 0x70e5d5
+        self.bit_stream.unpack_bits([0x20, 0x10, 0x10, 0x10, 0x10, 0x10])
+        # 0x70e5e3
+        self.bit_stream.unpack_bits([4, 7, 4, 7, 6, 4, 8, 4, 0x10, 0x10, 7], 13)
+        # 0x70e5f0
+        self.bit_stream.unpack_bits([8] * 9)
+        # 0x70e5f9
+        self.bit_stream.unpack_bits([0x10, 0x10, 8, 8, 5, 5, 6, 0x20, 0x20, 0x20, 0x20, 0x10], 27)
+        # 0x70e614
+        for _ in range(7):
+            self.bit_stream.unpack_bits([-6, 8], 2)
+            self.bit_stream.unpack_bits([8] * 10)
+        # 0x70e668
+        self.bit_stream.unpack_bits(8)
+        # 0x70e669
+        self.bit_stream.align(13)
+        # 0x70e676
+        a = self.bit_stream.unpack_bits([0x10, 0x10, 0x10, 0x10], 10)
+        # 0x70e680
+        a = self.bit_stream.unpack_bits([1] * (0x19 * 0xa), 0x19 * 0xa)
+        # 0x70e77a
+        a = self.bit_stream.unpack_bits([7] * (0x19 * 6), 0x19 * 6)
+        # 0x70e810
+        a = self.bit_stream.unpack_bits([0x20] * 0x19)
+        # 0x70e874
+        for _ in range(0x19 + 2):
+            self.bit_stream.unpack_bits([8, 8], 2)
+            self.bit_stream.unpack_bits([7, 7, 7, 7, 7, 7, 7, 7, 0xa], 9)
+            self.bit_stream.unpack_bits([7, 7, 7, 7, 7, 7, 7, 7, 0xa], 9)
+            self.bit_stream.unpack_bits([2] * 48, 48)
+        # 0x70efa0
+        self.bit_stream.unpack_bits([2, 8, 6], 4)
+        # 0x70efa4
+        for _ in range(7):
+            self.bit_stream.unpack_bits([1, 1, 0x10, 6], 6)
+        # 0x70efce
+        self.bit_stream.align(2)
+        self.bit_stream.unpack_bits([0x20] * 2)
+        # 0x70efd8
+        self.bit_stream.unpack_bits([8] * (0x2e + 9))
+        # 0x70f00f
+        self.bit_stream.align(1)
+        self.bit_stream.unpack_bits([1] * (3 + 0x2e + 21), 3 + 0x2e + 21)
+        # 0x70f056
+        self.bit_stream.unpack_bits([6], 2)
+        self.bit_stream.unpack_bits([5, 5, 1, 1, 0x10], 7)
+        # 0x70f05f
+        self.bit_stream.unpack_bits([8, 0x20], 5)
+        # 0x70f064
+        self.bit_stream.unpack_bits([8] * 0xf)
+        # 0x70f073
+        self.bit_stream.unpack_bits([1] * (0x11 * 2 + 0xf), 0x11 * 2 + 0xf + 4)
+        # 0x70f093
+        for _ in range(0x18): # youth team players
+            self.bit_stream.unpack_bits([0x10, 4, 7], 4)
+            self.bit_stream.unpack_bits([0x10, 0x10, 0x10] * 0x40)
+            self.bit_stream.unpack_bits([0xb], 2)
+            un = self.bit_stream.unpack_str(0xd)
+            self.bit_stream.unpack_bits([8, 8, 4, 4, 7, 8, 4, 7, 3, 7], 11)
+            self.bit_stream.unpack_bits([0x10, 0x10])
+            self.bit_stream.unpack_bits([4, 4, 4, 4, 1, 2, 4, 4, 4, 4], 10)
+            self.bit_stream.unpack_bits([7, 7, 7, 7, 7, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4], 18)
+            self.bit_stream.unpack_bits([4, 7, 4, 7, 3, 3, 7, 5, 1, 3, 4], 14)
+            self.bit_stream.unpack_bits([0x20, 2], 6)
+            self.bit_stream.unpack_bits([0xa, 8, 8, 0x10], 6)
+            self.bit_stream.unpack_bits([8, 3, 3, 8, 8, 8], 6)
+            self.bit_stream.unpack_bits([0x10] * 14, 30)
+            self.bit_stream.unpack_bits([0x20, 0x10, 0x10, 0x10, 0x10, 0x10, 4, 7, 4, 7, 6, 4, 8, 4], 22)
+            self.bit_stream.unpack_bits([0x10, 0x10, 7])
+            self.bit_stream.unpack_bits([-8] * 9, 9)
+            self.bit_stream.unpack_bits([0x10, 0x10, 8, -8, 5, 5, 6], 12)
+            self.bit_stream.unpack_bits([0x20, 0x20, 0x20, 0x20, 0x10], 20)
+        # 0x7126a8
+        self.bit_stream.unpack_bits([-3, 3], 2)
+        # 0x7126aa
+        for _ in range(0x18):
+            self.bit_stream.unpack_bits([7] * 6, 6)
+        # 0x71273a
+        self.bit_stream.align(2)
+        self.bit_stream.unpack_bits([0x10, 3, 8] * (0x12 + 0x16 * 3), 4 * (0x12 + 0x16 * 3))
+        # 0x71288c
+        team.my_scouts = list()
+        for _ in range(3): # my scout
+            self.bit_stream.unpack_bits(4, 2) # index
+            name = self.bit_stream.unpack_str(0xd)
+            # 0x71289b
+            a = self.bit_stream.unpack_bits([8, 8, 4, 7, 7, 0x10, 8], 9)
+            born = a[0] # 0x71289c
+            age = a[1] # 0x71289d
+            un = a[2] # 0x71289e
+            un = a[3] # 0x71289f
+            un = a[4] # 0x7128a0
+            un = a[5] # 0x7128a1
+            un = a[6] # 0x7128a2
+            # print([hex(z.value) for z in a ])
+            # 0x7128a4
+            a = self.bit_stream.unpack_bits([0x10, 4, 4, 4, 4], 6)
+            # 0x7128aa
+            abilities = self.bit_stream.unpack_bits([7] * 21, 21)
+            # 0x7128bf
+            a = self.bit_stream.unpack_bits([8, 8, 8, 0x10, 3, 3, 2], 9)
+            area1 = a[0] # 0x7128c0
+            area2 = a[1] # 0x7128c1
+            id = a[3]
+            # 0x7128c8
+            for _ in range(5):
+                self.bit_stream.unpack_bits([0x10, 0xb, 4, 6, 8], 8)
+                self.bit_stream.unpack_bits([0x10, 0x10, 3, 8], 6)
+            self.bit_stream.unpack_bits([0xe, 4, 5, 3], 6)
+            self.bit_stream.unpack_bits([8, 8, 4, 3, 0xb, 8, 0x10, 0xb, 0xb, 0xb, 0xb, 0xb], 20)
+            my_scout = Scout(id, age)
+            my_scout.saved_name = name
+            my_scout.abilities = abilities
+            team.my_scouts.append(my_scout)
+        # 0x712a60
+        team.scout_candidates = list()
+        for _ in range(0xa): # スカウト候補リスト
+            scout_id, offer_years, age = self.bit_stream.unpack_bits([0x10, 3, 8], 4)
+            if scout_id and scout_id.value != 0xffff:
+                scout = Scout(scout_id, age)
+                team.scout_candidates.append(scout)
+        # 0x712a88
+        for _ in range(4): # coach
+            self.bit_stream.unpack_bits(3, 2)
+            un = self.bit_stream.unpack_str(0xd)
+            self.bit_stream.unpack_bits([8, 4, 3, 8, 7, 0x10, 4, 4, 4, 4], 11)
+            self.bit_stream.unpack_bits([7, 7, 7, 1, 0x10, 3, 3, 3, 3, 2, 3, 4, 8, 4, 4, 3, 2], 18)
+            self.bit_stream.unpack_bits([7] * 0x35, 0x35)
+            self.bit_stream.unpack_bits([8, 8, 5, 5, 5, 5, 5, 5, 3, 0x10, 3, 3, 3], 14)
+            self.bit_stream.unpack_bits([0x10] * 9, 20)
+            self.bit_stream.unpack_bits(1, 1)
+        # 0x712c98
+        for _ in range(0x32):
+            self.bit_stream.unpack_bits([9, 6, 6, 9, 3], 8)
+            self.bit_stream.unpack_bits([0x10, 0x10, 0x20, 0x10, 0x10, 0x10, 0x10])
+            self.bit_stream.unpack_bits([0x15], 4)
+            self.bit_stream.unpack_bits([0x15], 4)
+            self.bit_stream.unpack_bits([0x20] * 13)
+        # 0x713d00
+        for _ in range(0x32):
+            self.bit_stream.unpack_bits([8, 6, 8, 2], 4)
+            self.bit_stream.unpack_bits([0x10, 0x10, 0x20, 8], 12)
+            self.bit_stream.unpack_bits([0x20] * 0x10)
+            self.bit_stream.unpack_bits([8] * 0x10)
+        # 0x714fc0
+        self.bit_stream.unpack_bits([8] * (8 * 0xc))
+        # 0x715020
+        self.bit_stream.unpack_bits(1, 2)
+        self.bit_stream.unpack_bits(4, 2)
+        self.bit_stream.unpack_bits([0x10, 8, 8, 8, 1, 1, 1, 1, 1], 12)
+        # 0x715030
+        self.bit_stream.unpack_bits([0x20] * 0x10)
+        # 0x715070
+        for _ in range(7):
+            self.bit_stream.unpack_bits([8, 3, 3, 8, 8, 3, 0x10, 1, 1], 10)
+        # 0x7150b6
+        self.bit_stream.unpack_bits([8] * (0x20 + 0x1a))
+        # 0x7150f0
+        self.bit_stream.unpack_bits([0x20] * 3)
+        self.bit_stream.unpack_bits(2, 2)
+        self.bit_stream.unpack_bits([0x10] * 11)
+        for _ in range(0x2c):
+            self.bit_stream.unpack_bits([8, 3], 4)
+            self.bit_stream.unpack_bits([0x20])
+        # 0x715274
+        for _ in range(0x36):
+            self.bit_stream.unpack_bits([2, 1, 1], 3)
+        # 0x715316
+        self.bit_stream.unpack_bits([8] * 12)
+        for _ in range(6):
+            self.bit_stream.unpack_bits(8, 1)
+            for _ in range(5):
+                un = self.bit_stream.unpack_str(0xd)
+            self.bit_stream.unpack_bits(8, 1)
+        # 0x7154b4
+        self.bit_stream.unpack_bits([6, 1] * 4, 8)
+        for _ in range(0x27):
+            self.bit_stream.unpack_bits([2, 8, 8, 1], 4)
+        # 0x715558
+        self.bit_stream.unpack_bits([8] * 10)
+        self.bit_stream.unpack_bits([6, 1] * 4, 8)
+        self.bit_stream.unpack_bits([8] * (0x27 + 6))
+        self.bit_stream.align(1)
+        for _ in range(0x19):
+            self.bit_stream.unpack_bits([0x10, 0x10, 0x10])
+        self.bit_stream.align(1)
+        self.bit_stream.unpack_bits([8, 0x20, 0x20, 0x20])
+        for _ in range(6):
+            self.bit_stream.unpack_bits([8] * 0x16)
+            self.bit_stream.unpack_bits([2, 2, 2, 5, 5, 5], 6)
+            self.bit_stream.unpack_bits([0x20] * 3)
+            for _ in range(0xa8 * 2):
+                self.bit_stream.align(4)
+                self.bit_stream.unpack_bits(-3, 4)
+                for _ in range(3):
+                    self.bit_stream.align(4)
+                    self.bit_stream.unpack_bits([-5, -6, -5, -4], 4)
+                    self.bit_stream.align(1)
+                    self.bit_stream.unpack_bits([-4, -7, -7], 3)
+        # 0x72b1ac
+        self.bit_stream.unpack_bits([0x20] * 6)
+        self.bit_stream.unpack_bits([8] * 2)
+        self.bit_stream.unpack_bits([0x10] * 9)
+        self.bit_stream.unpack_bits([0x20] * 9)
+        for _ in range(0x1a): # 纪念相册
+            un = self.bit_stream.unpack_str(0xd)
+            self.bit_stream.unpack_bits([8, 4, 8, 8, 3, 4, 6, 3], 8)
+            self.bit_stream.unpack_bits([8] * 18)
+            self.bit_stream.unpack_bits([8] * (0x15 + 0x2b))
+            self.bit_stream.unpack_bits([8, -6, 0x10], 5)
+        # 0x72bcf4
+        for _ in range(0x34):
+            self.bit_stream.unpack_bits([0x10, 0xb], 4)
+            self.bit_stream.unpack_bits([4, 6, 8], 4)
+            self.bit_stream.unpack_bits([0x10, 0x10, 3, 8], 6)
+        # 0x72bfcc
+        for _ in range(0x78 + 0x3c + 0x3c):
+            self.bit_stream.unpack_bits([0x10, 8], 4)
+        # 0x72c38c
+        for _ in range(0x1a):
+            self.bit_stream.unpack_bits([8], 2)
+            self.bit_stream.unpack_bits([0x10, 0x10, 0x10, 0x10])
+        # 0x72c490
+        self.bit_stream.unpack_bits([0x10] * 200)
+        # 0x72c620
+        for _ in range(2):
+            self.bit_stream.unpack_bits([4], 2)
+            un = self.bit_stream.unpack_str(0xd)
+            self.bit_stream.unpack_bits([8, 8, 4, 7, 7, 0x10, 8, 0x10], 10)
+            self.bit_stream.unpack_bits([4] * 4, 5)
+            self.bit_stream.unpack_bits([7] * 21, 21)
+            self.bit_stream.unpack_bits([8] * 3, 3)
+            self.bit_stream.unpack_bits([0x10, 3, 3, 2], 6)
+            for _ in range(5):
+                self.bit_stream.unpack_bits([0x10, 0xb], 4)
+                self.bit_stream.unpack_bits([4, 6, 8], 4)
+                self.bit_stream.unpack_bits([0x10, 0x10, 3, 8], 6)
+            self.bit_stream.unpack_bits([0xe, 4, 5, 3, 8, 8, 4, 3, 0xb, 8, 0x10], 14)
+            self.bit_stream.unpack_bits([0xb] * 5, 12)
+        # 0x72c758
+        self.bit_stream.unpack_bits([0x10, 0x10, 8], 6)
+        self.bit_stream.unpack_bits([0x10] * (0xd * 3))
+        self.bit_stream.unpack_bits([0x10], 4)
+        self.bit_stream.unpack_bits([0x20, 0x20, 0x20, 0x10, 0x10, 0x10])
+        self.bit_stream.unpack_bits([3, 3], 2)
+        self.bit_stream.unpack_bits([0x10] * 2)
+        self.bit_stream.unpack_bits([0x20] * 6)
+        # 0x72c7e0
+        # self.print_mem_offset()
+        self.bit_stream.padding(self.tail_padding)
+        # 0x72c7f0
         return team
 
     def read_players(self) -> list[MyPlayer]:
@@ -99,7 +358,7 @@ class TeamReader(BaseReader):
         self.bit_stream.unpack_bits([-6] * 0x19, 0x19 + 2) # 7051E0
         # each player produce 0x240 bytes
         for i in range(0x19): #0x19
-            players[i].id, _, players[i].age = self.bit_stream.unpack_bits([-0x10, 4, 7], 4) # 7051E4
+            players[i].id, _, players[i].age = self.bit_stream.unpack_bits([0x10, 4, 7], 4) # 7051E4
             players[i].set_player()
             for l in range(0x40):
                 current, current_max, max = self.bit_stream.unpack_bits([0x10, 0x10, 0x10])
@@ -109,13 +368,32 @@ class TeamReader(BaseReader):
             a = self.bit_stream.unpack_bits([8, 8, 4, 4, 7, 8, 4, 7, 3, 7], 11) # 70537E
             players[i].born = a[0] # 705373
             born2 = a[1] # 705374
+            players[i].rank = a[2] # 705375
             players[i].height = a[5] # 705378
             players[i].number = a[7] # 70537A
             players[i].foot = a[8] # 70537B
             a = self.bit_stream.unpack_bits([0x10, 0x10]) # 705382
-            a = self.bit_stream.unpack_bits([4, 4, 4, 4, 1, 2, 4, 4, 4, 4, 7, 7, 7, 7, 7, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4], 28) # 70539E
-            players[i].grow_type = a[10]
-            players[i].tone_type = a[15]
+            a = self.bit_stream.unpack_bits([4, 4, 4, 4, 1, 2, 4, 4, 4, 4], 10) # 70538C
+            desire = a[9] # 0x70538C
+            a = self.bit_stream.unpack_bits([7, 7, 7, 7, 7, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4], 18) # 70539E
+            pride = a[0] # 0x70538D
+            ambition = a[1] # 0x70538E
+            un = a[2] # 0x70538F
+            un = a[3] # 0x705390
+            un = a[4] # 0x705391
+            un = a[5] # 0x705392
+            un = a[6] # 0x705393
+            un = a[7] # 0x705394
+            un = a[8] # 0x705395
+            un = a[9] # 0x705396
+            un = a[10] # 0x705397
+            patient = a[11] # 0x705398
+            un = a[12] # 0x705399
+            players[i].cooperation_type = a[13] # 0070539A
+            un = a[14] # 0x70539B
+            players[i].grow_type = a[15] # 0070539C
+            un = a[16] # 0x70539D
+            un = a[17] # 0x70539E
             a = self.bit_stream.unpack_bits([4, 7, 4, 7, 3, 3, 7, 5, 1, 3, 4], 14) # 7053AC
             players[i].skill = a[7]
             a = self.bit_stream.unpack_bits([0x20, 2], 6)
@@ -207,25 +485,48 @@ class LeagueReader(BaseReader):
     consume_bytes = 0x20AEA
     consume_bits = 0x105750
     remain_mask = 0x80
+    tail_padding = b'\x7c\x01\x83\xfe' * 4
 
     def read(self):
-        self.bit_stream.unpack_bits(0x20)
-        self.bit_stream.skip(LeagueReader.consume_bits, LeagueReader.total_size - self.bit_stream.unpacked_bytes_length)
+        for _ in range(7):
+            self.bit_stream.unpack_bits(0x20)
+            for _ in range(2):
+                self.bit_stream.unpack_bits(0x20)
+                for _ in range(0x19):
+                    self.bit_stream.unpack_bits(0xb, 2)
+                self.bit_stream.align(2)
+        self.bit_stream.unpack_bits(4, 4)
+        self.bit_stream.padding(self.tail_padding)
 
 class TownReader(BaseReader):
-    start = LeagueReader.start + LeagueReader.size
+    start = LeagueReader.start + LeagueReader.size # 0x7354f0
     size = 0x17C
     total_size = LeagueReader.total_size + size
     consume_bytes = 0x20B72
     consume_bits = 0x105B8D
     remain_mask = 0x4
+    tail_padding = b'\x10\xe3\xef\x1c' * 4
 
     def read(self):
-        self.bit_stream.unpack_bits(3, 1)
-        self.bit_stream.skip(TownReader.consume_bits, TownReader.total_size - self.bit_stream.unpacked_bytes_length)
+        self.bit_stream.unpack_bits(3, 2)
+        self.bit_stream.unpack_bits([0x10, 0x10, 0x10, 0x10], 10)
+        self.bit_stream.unpack_bits([0x20])
+        self.bit_stream.unpack_bits([7, 7, 7, 8, 8], 8)
+        self.bit_stream.unpack_bits([0x10, 0x10, 0x10])
+        for _ in range(3):
+            self.bit_stream.unpack_bits([0x10, 0xe], 4)
+            self.bit_stream.unpack_bits([4, 5, 3, 8], 6)
+        self.bit_stream.unpack_bits([3, 4, 8], 3)
+        self.bit_stream.unpack_bits([1] * 0xd, 0xd)
+        self.bit_stream.unpack_bits([1] * (0x27 * 3), 0x27 * 3)
+        self.bit_stream.unpack_bits([4] * 0xd, 0xd)
+        self.bit_stream.unpack_bits([2] * (0x27 * 3), 0x27 * 3)
+        self.bit_stream.unpack_bits([8] * 0x27, 0x27)
+        self.bit_stream.unpack_bits(8, 2)
+        self.bit_stream.padding(self.tail_padding)
 
 class RecordReader(BaseReader):
-    start = TownReader.start + TownReader.size
+    start = TownReader.start + TownReader.size # 0x73566c
     size = 0x2E310
     total_size = TownReader.total_size + size
     consume_bytes = 0x41B1F
@@ -233,7 +534,7 @@ class RecordReader(BaseReader):
     remain_mask = 0x2
 
     def read(self):
-        self.bit_stream.unpack_bits(0x10)
+        self.bit_stream.unpack_bits([0x10, 0x10])
         self.bit_stream.skip(RecordReader.consume_bits, RecordReader.total_size - self.bit_stream.unpacked_bytes_length)
 
 class ScheReader(BaseReader):

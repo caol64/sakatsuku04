@@ -1,7 +1,7 @@
 import csv
 from dataclasses import dataclass
 
-from utils import decode_bytes_to_str, encode_str_to_bytes, get_resource_path, zero_pad, zero_terminate
+from utils import convert_rank, decode_bytes_to_str, encode_str_to_bytes, get_resource_path, zero_pad, zero_terminate
 
 class IntBitField:
     def __init__(self, bit_length: int, value: int, bit_offset: int):
@@ -204,8 +204,10 @@ class MyPlayer:
     abroad_days: IntBitField
     height: IntBitField
     foot: IntBitField
+    rank: IntBitField
     grow_type: IntBitField
     tone_type: IntBitField
+    cooperation_type: IntBitField
     skill: IntBitField
     magic_value: IntBitField
     test: IntBitField = IntBitField(0, 0, 0)
@@ -220,6 +222,10 @@ class MyPlayer:
             return '右脚'
         else:
             return '双脚'
+
+    @property
+    def readable_rank(self) -> str:
+        return convert_rank(self.rank.value)
 
     def __init__(self, index: int):
         self.index = index
@@ -254,6 +260,8 @@ class MyTeam:
     english_name: StrBitField
     oilis_english_name: StrBitField
     players: list[MyPlayer]
+    my_scouts: list['Scout']
+    scout_candidates: list['Scout']
 
     def __repr__(self):
         return f"""
@@ -313,3 +321,39 @@ class OtherTeam:
             return self.order_list.index(player.player.pos)
         else:
             return -1
+
+
+@dataclass
+class Scout:
+    id: IntBitField
+    age: IntBitField
+    saved_name: StrBitField = None
+    abilities: list[IntBitField] = None
+    offer_years: IntBitField = None
+    _ablility_list = None
+    _scout_dict = None
+
+    def __post_init__(self):
+        hex_id = f"{self.id.value:04X}"
+        self.name = Scout.scout_dict().get(hex_id)
+
+    @classmethod
+    def ablility_list(cls) -> list[str]:
+        if cls._ablility_list is None:
+            cls._ablility_list = list()
+            with open(get_resource_path('resource/scout_ability.csv'), 'r', encoding='utf8', newline='') as csvfile:
+                reader = csv.reader(csvfile)
+                for row in reader:
+                    if len(row) == 1:
+                        cls._ablility_list.append(row[0])
+        return cls._ablility_list
+
+    @classmethod
+    def scout_dict(cls) -> dict[str, str]:
+        if cls._scout_dict is None:
+            cls._scout_dict = dict()
+            with open(get_resource_path('resource/scouts.csv'), 'r', encoding='utf8', newline='') as csvfile:
+                reader = csv.reader(csvfile)
+                for row in reader:
+                    cls._scout_dict[row[0]] = row[1]
+        return cls._scout_dict

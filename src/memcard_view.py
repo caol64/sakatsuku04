@@ -1,4 +1,3 @@
-from functools import partial
 from pathlib import Path
 import threading
 import wx
@@ -8,7 +7,7 @@ import wx.lib.agw.pygauge as PG
 from bit_stream import InputBitStream, OutputBitStream
 from error import Error
 from memcard_reader import MemcardReader, Saka04SaveEntry
-from models import Club, Header, IntBitField, IntByteField, MyPlayer, MyTeam, OtherTeam, PlayerAbility, StrBitField, StrByteField
+from models import IntBitField, IntByteField, MyPlayer, MyTeam, OtherTeam, PlayerAbility, Scout, StrBitField, StrByteField
 from readers import ClubReader, OtherTeamReader, TeamReader
 from save_reader import SaveHeadReader, SaveReader
 from utils import CnVersion
@@ -87,6 +86,7 @@ class SaveViewPanel(wx.Panel):
         super().__init__(parent, size=(760, 680))
         self.root = root
         self.create_layout(self)
+        self.bind_events()
         self.reader = None
         self.head_reader = None
         self.in_bit_stream = None
@@ -97,21 +97,31 @@ class SaveViewPanel(wx.Panel):
         self.head = None
 
     def create_layout(self, panel: wx.Panel):
-        notebook = wx.Notebook(panel)
-        self.club_info_tab = ClubInfoTab(notebook, self)
-        self.player_tab = PlayerTab(notebook, self)
-        self.other_team_tab = OtherTeamTab(notebook)
-        notebook.AddPage(self.club_info_tab, "俱乐部")
-        notebook.AddPage(self.player_tab, "我的球队")
-        notebook.AddPage(self.other_team_tab, "其它球队")
+        self.notebook = wx.Notebook(panel)
+        self.club_info_tab = ClubInfoTab(self.notebook, self)
+        self.player_tab = PlayerTab(self.notebook, self)
+        self.other_team_tab = OtherTeamTab(self.notebook)
+        self.scout_tab = ScoutTab(self.notebook, self)
+        self.notebook.AddPage(self.club_info_tab, "俱乐部")
+        self.notebook.AddPage(self.player_tab, "我的球队")
+        self.notebook.AddPage(self.other_team_tab, "其它球队")
+        self.notebook.AddPage(self.scout_tab, "球探")
         sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(notebook, 1, wx.EXPAND | wx.ALL, 5)
+        sizer.Add(self.notebook, 1, wx.EXPAND | wx.ALL, 5)
         panel.SetSizer(sizer)
         panel.Centre()
-        self.notebook = notebook
+
+    def bind_events(self):
+        self.notebook.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.on_tab_changed)
 
     def load(self, save_entry: Saka04SaveEntry):
         threading.Thread(target=self._load_task, args=[save_entry]).start()
+
+    def on_tab_changed(self, evt: wx.Event):
+        page_index = evt.GetSelection()
+        page = self.notebook.GetPage(page_index)
+        page.load(self)
+        evt.Skip()
 
     def _load_task(self, save_entry: Saka04SaveEntry):
         self.reader = SaveReader(save_entry.main_save_entry)
@@ -129,13 +139,13 @@ class SaveViewPanel(wx.Panel):
         self.head_reader = SaveHeadReader(save_entry.save_head_entry)
         self.head_reader.check_crc()
         self.head = self.head_reader.read()
-        self.club_info_tab.load(self.club, self.head)
-        self.player_tab.load(self.my_team)
-        self.other_team_tab.load(self.other_teams)
+
         wx.CallAfter(self._update_ui)
 
     def _update_ui(self):
+        self.reset_panels()
         self.notebook.SetSelection(0)
+        self.club_info_tab.load(self)
         self.update_panels()
 
     def save(self, bit_fields: list[IntBitField | StrBitField], byte_fields: list[IntByteField | StrByteField] = None):
@@ -156,6 +166,13 @@ class SaveViewPanel(wx.Panel):
         self.club_info_tab.update()
         self.player_tab.update()
         self.other_team_tab.update()
+        self.scout_tab.update()
+
+    def reset_panels(self):
+        self.club_info_tab.reset()
+        self.player_tab.reset()
+        self.other_team_tab.reset()
+        self.scout_tab.reset()
 
 
 class ClubInfoTab(wx.Panel):
@@ -233,9 +250,11 @@ class ClubInfoTab(wx.Panel):
         self.head.year.value = self.year_input.GetValue() + 2003
         self.root.save(bits_fields, [self.head.year])
 
-    def load(self, club: Club, head: Header):
-        self.club = club
-        self.head = head
+    def load(self, save_panel: SaveViewPanel):
+        if self.club is None:
+            self.club = save_panel.club
+            self.head = save_panel.head
+            self.update()
 
     def update(self):
         self.fund_input_billion.SetValue(self.club.funds_high)
@@ -246,6 +265,10 @@ class ClubInfoTab(wx.Panel):
         self.manager_input.SetLabelText(self.club.manager_name.value)
         self.club_input.SetLabelText(self.club.club_name.value)
 
+    def reset(self):
+        self.club = None
+        self.head = None
+
 
 class PlayerTab(wx.Panel):
     def __init__(self, parent, root: wx.Panel):
@@ -253,7 +276,7 @@ class PlayerTab(wx.Panel):
         self.root = root
         self.create_layout(self)
         self.bind_events()
-        self.team = None
+        self.team: MyTeam = None
         self.player: MyPlayer = None
 
     def create_layout(self, panel: wx.Panel):
@@ -337,17 +360,24 @@ class PlayerTab(wx.Panel):
         self.Bind(wx.EVT_LISTBOX, self.on_select, self.list_box)
         self.edit_btn.Bind(wx.EVT_BUTTON, self.on_open_dialog)
 
-    def load(self, team: MyTeam):
-        self.team = team
+    def load(self, save_panel: SaveViewPanel):
+        if self.team is None:
+            self.team = save_panel.my_team
+            self.update()
 
     def update(self):
-        self.list_box.Clear()
-        for player in self.team.players:
-            if player.id.value != 0xFFFF:
-                self.list_box.Append(player.name.value, player)
-        self.list_box.SetSelection(0)
-        player = self.list_box.GetClientData(self.list_box.GetSelection())
-        self.show_player(player)
+        if self.team:
+            self.list_box.Clear()
+            for player in self.team.players:
+                if player.id.value != 0xFFFF:
+                    self.list_box.Append(player.name.value, player)
+            self.list_box.SetSelection(0)
+            player = self.list_box.GetClientData(self.list_box.GetSelection())
+            self.show_player(player)
+
+    def reset(self):
+        self.team = None
+        self.player = None
 
     def on_select(self, evt: wx.Event):
         player = self.list_box.GetClientData(self.list_box.GetSelection())
@@ -362,7 +392,7 @@ class PlayerTab(wx.Panel):
         self.player_number_text.SetLabelText(str(player.number.value))
         self.player_aboard_times_text.SetLabelText(str(player.abroad_times.value))
         self.player_pos_text.SetLabelText(player.player.pos)
-        self.player_rank_text.SetLabelText(player.player.rank)
+        self.player_rank_text.SetLabelText(player.readable_rank)
         self.player_teamwork_text.SetLabelText(player.player.team_work)
         self.player_tone_type_text.SetLabelText(player.player.tone_type)
         self.player_grow_type_phy_text.SetLabelText(player.player.grow_type_phy)
@@ -457,29 +487,35 @@ class OtherTeamTab(wx.Panel):
     def bind_events(self):
         self.tree.Bind(wx.EVT_TREE_SEL_CHANGED, self.on_select)
 
-    def load(self, teams: list[OtherTeam]):
-        self.teams = teams
+    def load(self, save_panel: SaveViewPanel):
+        if self.teams is None:
+            self.teams = save_panel.other_teams
+            self.update()
 
     def update(self):
-        self.tree.DeleteAllItems()
-        root = self.tree.AddRoot("Teams")
-        group_names = sorted(self.group_index.keys(), key=lambda k: self.group_index[k])
-        for i, group_name in enumerate(group_names):
-            start_index = self.group_index[group_name]
-            end_index = self.group_index[group_names[i + 1]] if i + 1 < len(group_names) else len(self.teams)
-            group_node = self.tree.AppendItem(root, group_name)
-            for team in self.teams[start_index:end_index]:
-                team_item = self.tree.AppendItem(group_node, team.name)
-                self.tree.SetItemData(team_item, team)
-        self.tree.Expand(root)
+        if self.teams:
+            self.tree.DeleteAllItems()
+            root = self.tree.AddRoot("Teams")
+            group_names = sorted(self.group_index.keys(), key=lambda k: self.group_index[k])
+            for i, group_name in enumerate(group_names):
+                start_index = self.group_index[group_name]
+                end_index = self.group_index[group_names[i + 1]] if i + 1 < len(group_names) else len(self.teams)
+                group_node = self.tree.AppendItem(root, group_name)
+                for team in self.teams[start_index:end_index]:
+                    team_item = self.tree.AppendItem(group_node, team.name)
+                    self.tree.SetItemData(team_item, team)
+            self.tree.Expand(root)
 
-        if self.tree.ItemHasChildren(root):
-            first_group, _ = self.tree.GetFirstChild(root)
-            first_team, _ = self.tree.GetFirstChild(first_group)
-            if first_team:
-                self.tree.SelectItem(first_team)
-                team = self.tree.GetItemData(first_team)
-                self.show_team(team)
+            if self.tree.ItemHasChildren(root):
+                first_group, _ = self.tree.GetFirstChild(root)
+                first_team, _ = self.tree.GetFirstChild(first_group)
+                if first_team:
+                    self.tree.SelectItem(first_team)
+                    team = self.tree.GetItemData(first_team)
+                    self.show_team(team)
+
+    def reset(self):
+        self.teams = None
 
     def on_select(self, evt: wx.Event):
         item = evt.GetItem()
@@ -674,3 +710,145 @@ class PlayerEditDialog(wx.Dialog):
         self.ability_current_text.SetValue(self.player_ablities[self.ability_index][0])
         self.ability_current_max_text.SetValue(self.player_ablities[self.ability_index][1])
         self.ability_max_text.SetValue(self.player_ablities[self.ability_index][2])
+
+
+class ScoutTab(wx.Panel):
+    def __init__(self, parent, root: wx.Panel):
+        super().__init__(parent)
+        self.root = root
+        self.create_layout(self)
+        self.bind_events()
+        self.team: MyTeam = None
+        # self.my_scout: MyScout = None
+        # self.scout_candidate: Scout = None
+
+    def create_layout(self, panel: wx.Panel):
+        self.tree = wx.TreeCtrl(self, style=wx.TR_DEFAULT_STYLE, size=(150, 600))
+        info_box = wx.StaticBox(panel, label="球探信息")
+        info_sizer = wx.StaticBoxSizer(info_box, wx.VERTICAL)
+        form_sizer = wx.FlexGridSizer(rows=2, cols=2, vgap=5, hgap=5)
+
+        form_sizer.Add(wx.StaticText(panel, label="姓名:"), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.name_text = wx.TextCtrl(panel)
+        self.name_text.SetEditable(False)
+        form_sizer.Add(self.name_text, flag=wx.EXPAND)
+
+        form_sizer.Add(wx.StaticText(panel, label="年龄:"), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.age_text = wx.TextCtrl(panel)
+        self.age_text.SetEditable(False)
+        form_sizer.Add(self.age_text, flag=wx.EXPAND)
+
+        info_sizer.Add(form_sizer, flag=wx.ALL | wx.EXPAND, border=5)
+
+        self.submit_btn = wx.Button(panel, label="保存")
+        info_sizer.Add(self.submit_btn, flag=wx.ALL, border=10)
+
+        self.ability_panel = ScoutAbilPanel(self)
+
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+        sizer.Add(self.tree, 0, wx.ALL, border=5)
+        sizer.Add(info_sizer, 0, wx.ALL, border=5)
+        sizer.Add(self.ability_panel, 0, wx.ALL, border=5)
+        panel.SetSizer(sizer)
+
+    def bind_events(self):
+        self.tree.Bind(wx.EVT_TREE_SEL_CHANGED, self.on_select)
+        self.submit_btn.Bind(wx.EVT_BUTTON, self.on_submit_click)
+
+    def load(self, save_panel: SaveViewPanel):
+        if self.team is None:
+            self.team = save_panel.my_team
+            self.update()
+
+    def on_select(self, evt: wx.Event):
+        item = evt.GetItem()
+        if item.IsOk():
+            scout = self.tree.GetItemData(item)
+            if scout:
+                self.show_scout(scout)
+
+    def update(self):
+        if self.team:
+            self.tree.DeleteAllItems()
+            root = self.tree.AddRoot("Scout")
+            group_node1 = self.tree.AppendItem(root, "我的球探")
+            for s in self.team.my_scouts:
+                s_item = self.tree.AppendItem(group_node1, s.saved_name.value)
+                self.tree.SetItemData(s_item, s)
+            group_node2 = self.tree.AppendItem(root, "候选球探")
+            for s in self.team.scout_candidates:
+                s_item = self.tree.AppendItem(group_node2, s.name)
+                self.tree.SetItemData(s_item, s)
+            self.tree.Expand(root)
+
+            if self.tree.ItemHasChildren(root):
+                first_group, _ = self.tree.GetFirstChild(root)
+                first_scout, _ = self.tree.GetFirstChild(first_group)
+                if first_scout:
+                    self.tree.SelectItem(first_scout)
+                    scout = self.tree.GetItemData(first_scout)
+                    self.show_scout(scout)
+
+    def reset(self):
+        self.team = None
+        self.my_scout = None
+        self.scout_candidate = None
+
+    def show_scout(self, scout: Scout):
+        if scout.saved_name:
+            self.name_text.SetLabelText(scout.saved_name.value)
+        else:
+            self.name_text.SetLabelText(scout.name)
+        self.age_text.SetLabelText(str(scout.age.value))
+        if scout.abilities:
+            self.ability_panel.Show()
+            self.ability_panel.update(scout.abilities)
+        else:
+            self.ability_panel.Hide()
+
+    def on_submit_click(self, evt: wx.Event):
+        scout = self.tree.GetItemData(self.tree.GetSelection())
+        bits_fields = list()
+        for a in scout.abilities:
+            a.value = 0x63
+            bits_fields.append(a)
+        self.root.save(bits_fields)
+
+
+class ScoutAbilPanel(wx.Panel):
+    def __init__(self, parent):
+        super().__init__(parent, size=(400, 680))
+        self.create_layout(self)
+
+    def create_layout(self, panel: wx.Panel):
+        scrolled_window = wx.ScrolledWindow(panel, style=wx.VSCROLL | wx.HSCROLL)
+        scrolled_window.SetScrollRate(10, 10)
+        form_sizer = wx.FlexGridSizer(rows=21, cols=3, vgap=10, hgap=10)
+        self.gauge_list: list[PG.PyGauge] = list()
+        self.text_list: list[wx.StaticText] = list()
+        for i, ability_name in enumerate(Scout.ablility_list()):
+            form_sizer.Add(wx.StaticText(scrolled_window, label=ability_name), flag=wx.ALIGN_CENTER_VERTICAL)
+            gauge = PG.PyGauge(scrolled_window, -1, size=(100, 15), style=wx.GA_HORIZONTAL)
+            gauge.SetValue([0])
+            gauge.SetBarColor([wx.Colour(162, 255, 178)])
+            gauge.SetBackgroundColour(wx.WHITE)
+            gauge.SetBorderColor(wx.BLACK)
+            gauge.SetBorderPadding(2)
+            self.gauge_list.append(gauge)
+            form_sizer.Add(gauge, flag=wx.ALIGN_CENTER_VERTICAL)
+            ability_text = wx.StaticText(scrolled_window, label="")
+            form_sizer.Add(ability_text, flag=wx.ALIGN_CENTER_VERTICAL)
+            self.text_list.append(ability_text)
+        scrolled_window.SetSizer(form_sizer)
+        form_sizer.FitInside(scrolled_window)
+        form_sizer.SetFlexibleDirection(wx.BOTH)
+        form_sizer.SetNonFlexibleGrowMode(wx.FLEX_GROWMODE_NONE)
+        main_sizer = wx.BoxSizer(wx.VERTICAL)
+        main_sizer.Add(scrolled_window, proportion=1, flag=wx.EXPAND)
+        panel.SetSizer(main_sizer)
+
+    def update(self, abilities: list[IntBitField]):
+        for i, abilitiy in enumerate(abilities):
+            self.gauge_list[i].SetValue([0])
+            self.gauge_list[i].Update([abilitiy.value], 100)
+            self.text_list[i].SetLabelText(f"{abilitiy.value}")

@@ -29,12 +29,12 @@ def zero_terminate(data: str) -> str:
 def zero_pad(data: bytes, target_length: int) -> bytes:
     padding_length = target_length - len(data)
     if padding_length > 0:
-        padding = b'\x00' * padding_length  # 创建填充的零字节
-        return data + padding # 拼接原始数据和填充
+        padding = b'\x00' * padding_length
+        return data + padding
     elif padding_length == 0:
-        return data # 长度相等，无需填充
+        return data
     else:
-        return data[:target_length] # 长度超出，进行截断
+        return data[:target_length]
 
 def decode_name(byte_array: bytes) -> str:
     """Decode bytes to a string."""
@@ -99,6 +99,23 @@ def get_resource_path(relative_path) -> str:
     else:
         # 开发环境：资源文件位于当前脚本所在的目录
         return Path(__file__).resolve().parent.parent / relative_path
+
+
+def convert_rank(rank: int) -> str:
+    rank_dict = {
+        0: 'SSS',
+        1: 'SS',
+        2: 'S',
+        3: 'A',
+        4: 'B',
+        5: 'C',
+        6: 'D',
+        7: 'E',
+        8: 'F',
+        9: 'G',
+        10: 'H',
+    }
+    return rank_dict.get(rank)
 
 
 class CnVersion:
