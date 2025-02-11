@@ -128,6 +128,7 @@ class Club:
     funds: IntBitField
     manager_name: StrBitField
     club_name: StrBitField
+    difficulty: IntBitField
 
     @property
     def funds_high(self) -> int:
@@ -200,12 +201,15 @@ class MyPlayer:
     name: StrBitField
     abilities: list[PlayerAbility]
     born: IntBitField
+    born2: IntBitField
     abroad_times: IntBitField
     abroad_days: IntBitField
     height: IntBitField
     foot: IntBitField
     rank: IntBitField
-    grow_type: IntBitField
+    grow_type_phy: IntBitField
+    grow_type_tec: IntBitField
+    grow_type_bra: IntBitField
     tone_type: IntBitField
     cooperation_type: IntBitField
     skill: IntBitField
@@ -213,6 +217,7 @@ class MyPlayer:
     test: IntBitField = IntBitField(0, 0, 0)
     un: list[int]
     player: Player
+    _skill_dict = None
 
     @property
     def prefer_foot(self) -> int:
@@ -227,6 +232,25 @@ class MyPlayer:
     def readable_rank(self) -> str:
         return convert_rank(self.rank.value)
 
+    @property
+    def readable_skill(self) -> str:
+        hex_id = f"{self.skill.value:02X}"
+        return self.skill_dict()[hex_id]
+
+    @property
+    def readable_born(self) -> str:
+        hex_id = f"{self.born.value:02X}"
+        return Region.region_dict()[hex_id]
+
+    @property
+    def readable_cooperation_type(self) -> str:
+        hex_id = f"{self.cooperation_type.value:02X}"
+        return CooperationType.cooperation_type_dict()[hex_id]
+
+    def get_readable_grow_type(self, grow_type: int) -> str:
+        hex_id = f"{grow_type:02X}"
+        return GrowType.grow_type_dict()[hex_id]
+
     def __init__(self, index: int):
         self.index = index
         self.abilities = list()
@@ -234,6 +258,20 @@ class MyPlayer:
 
     def set_player(self):
         self.player = Player(self.id.value)
+
+    @classmethod
+    def skill_dict(cls) -> dict[str, str]:
+        if cls._skill_dict is None:
+            cls._skill_dict = dict()
+            with open(get_resource_path('resource/skill_jp.csv'), 'r', encoding='utf8', newline='') as csvfile:
+                reader = csv.reader(csvfile)
+                for row in reader:
+                    cls._skill_dict[row[0]] = row[1]
+        return cls._skill_dict
+
+    @classmethod
+    def skill_dict_reverse(cls) -> dict[str, str]:
+        return {value: int(key, 16) for key, value in cls.skill_dict()}
 
     def __repr__(self):
         return f"""
@@ -357,3 +395,57 @@ class Scout:
                 for row in reader:
                     cls._scout_dict[row[0]] = row[1]
         return cls._scout_dict
+
+
+class Region:
+    _region_dict = None
+
+    @classmethod
+    def region_dict(cls) -> dict[str, str]:
+        if cls._region_dict is None:
+            cls._region_dict = dict()
+            with open(get_resource_path('resource/regions.csv'), 'r', encoding='utf8', newline='') as csvfile:
+                reader = csv.reader(csvfile)
+                for row in reader:
+                    cls._region_dict[row[0]] = row[1]
+        return cls._region_dict
+
+    @classmethod
+    def region_dict_reverse(cls) -> dict[str, int]:
+        return {value: int(key, 16) for key, value in cls.region_dict()}
+
+
+class GrowType:
+    _grow_type_dict = None
+
+    @classmethod
+    def grow_type_dict(cls) -> dict[str, str]:
+        if cls._grow_type_dict is None:
+            cls._grow_type_dict = dict()
+            with open(get_resource_path('resource/grow_type.csv'), 'r', encoding='utf8', newline='') as csvfile:
+                reader = csv.reader(csvfile)
+                for row in reader:
+                    cls._grow_type_dict[row[0]] = row[1]
+        return cls._grow_type_dict
+
+    @classmethod
+    def grow_type_dict_reverse(cls) -> dict[str, int]:
+        return {value: int(key, 16) for key, value in cls.grow_type_dict()}
+
+
+class CooperationType:
+    _cooperation_type_dict = None
+
+    @classmethod
+    def cooperation_type_dict(cls) -> dict[str, str]:
+        if cls._cooperation_type_dict is None:
+            cls._cooperation_type_dict = dict()
+            with open(get_resource_path('resource/cooperation_type.csv'), 'r', encoding='utf8', newline='') as csvfile:
+                reader = csv.reader(csvfile)
+                for row in reader:
+                    cls._cooperation_type_dict[row[0]] = row[1]
+        return cls._cooperation_type_dict
+
+    @classmethod
+    def cooperation_type_dict_reverse(cls) -> dict[str, int]:
+        return {value: int(key, 16) for key, value in cls.cooperation_type_dict()}

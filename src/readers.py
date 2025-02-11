@@ -45,7 +45,8 @@ class ClubReader(BaseReader):
         # 0x7050cc
         seed = self.bit_stream.unpack_bits(0x20) # maybe random seed?
         # 0x7050d0
-        self.bit_stream.unpack_bits([0x20, 8, 5, 0x10, 1], 12)
+        a = self.bit_stream.unpack_bits([0x20, 8, 5, 0x10, 1], 12)
+        club.difficulty = a[2] # 007050D5
         self.bit_stream.unpack_bits([0x20, 0x20, 0x20, 8, 8], 16)
         self.bit_stream.unpack_bits([0x20, 8, 8, 8], 8)
         # 0x7050f4
@@ -365,9 +366,10 @@ class TeamReader(BaseReader):
                 players[i].abilities.append(PlayerAbility(l, current, current_max, max)) # 705364
             self.bit_stream.unpack_bits(0xb) # unknown
             players[i].name = self.bit_stream.unpack_str(0xd)
+            # print(players[i].name.value)
             a = self.bit_stream.unpack_bits([8, 8, 4, 4, 7, 8, 4, 7, 3, 7], 11) # 70537E
             players[i].born = a[0] # 705373
-            born2 = a[1] # 705374
+            players[i].born2 = a[1] # 705374
             players[i].rank = a[2] # 705375
             players[i].height = a[5] # 705378
             players[i].number = a[7] # 70537A
@@ -375,7 +377,9 @@ class TeamReader(BaseReader):
             a = self.bit_stream.unpack_bits([0x10, 0x10]) # 705382
             a = self.bit_stream.unpack_bits([4, 4, 4, 4, 1, 2, 4, 4, 4, 4], 10) # 70538C
             desire = a[9] # 0x70538C
-            a = self.bit_stream.unpack_bits([7, 7, 7, 7, 7, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4], 18) # 70539E
+            a = self.bit_stream.unpack_bits([7, 7, 7, 7, 7, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3], 16) # 70539C
+            # print([hex(z.value) for z in a ])
+            # players[i].un = [hex(z.value) for z in a ]
             pride = a[0] # 0x70538D
             ambition = a[1] # 0x70538E
             un = a[2] # 0x70538F
@@ -389,21 +393,23 @@ class TeamReader(BaseReader):
             un = a[10] # 0x705397
             patient = a[11] # 0x705398
             un = a[12] # 0x705399
-            players[i].cooperation_type = a[13] # 0070539A
-            un = a[14] # 0x70539B
-            players[i].grow_type = a[15] # 0070539C
-            un = a[16] # 0x70539D
-            un = a[17] # 0x70539E
-            a = self.bit_stream.unpack_bits([4, 7, 4, 7, 3, 3, 7, 5, 1, 3, 4], 14) # 7053AC
-            players[i].skill = a[7]
+            un = a[13] # 0070539A
+            players[i].cooperation_type = a[14] # 0x70539B
+            un = a[15] # 0070539C
+            players[i].grow_type_phy = self.bit_stream.unpack_bits(4, 1) # 0x70539D
+            players[i].grow_type_tec = self.bit_stream.unpack_bits(4, 1) # 0x70539E
+            players[i].grow_type_bra = self.bit_stream.unpack_bits(4, 1) # 0x70539F
+            a = self.bit_stream.unpack_bits([7, 4, 7, 3, 3, 7, 5, 1, 3, 4], 13) # 7053AC
+            players[i].skill = a[6] # 0x7053A5
             a = self.bit_stream.unpack_bits([0x20, 2], 6)
             players[i].magic_value = a[0] # 7053AC a magick value contains many information
             # print(magic_value.value & 0x2000)
             a = self.bit_stream.unpack_bits([0xa, 8, 8, 0x10], 6) # 7053B8
             # print([z.value for z in a ])
             a = self.bit_stream.unpack_bits([8, 3, 3, 8, 8, 8], 6)
-            # self.print_mem_offset()
+            # 0x7053be
             a = self.bit_stream.unpack_bits([0x10] * 14, 30) # 7053DC
+            un = a[0] # 0x7053be dissatisfied?
             tired = a[10] # 7053D2
             a = self.bit_stream.unpack_bits([0x20, 0x10, 0x10, 0x10, 0x10, 0x10, 4, 7, 4, 7, 6, 4, 8, 4], 22)
             players[i].abroad_days = a[5] # 7053E8
@@ -418,8 +424,11 @@ class TeamReader(BaseReader):
             self.bit_stream.unpack_bits(0x10) # 708A4A
         self.bit_stream.unpack_bits([-6, -6, 5, -6, -6, -6, -6, -6, 2], 9)
         self.bit_stream.unpack_bits([5, 3, 2, 2, 2, 2, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 3] * 3, 60)
+        # 0x708a8f
         self.bit_stream.align(1)
-        a = self.bit_stream.unpack_bits([0x10] * (0x19 * 0x19)) # 708F72
+        for _ in range(0x19): # Quarrel?
+            a = self.bit_stream.unpack_bits([0x10] * 0x19)
+        # 0x708f72
         self.bit_stream.unpack_bits([8] * 3)
         a = self.bit_stream.unpack_bits([8] * 0x19)
         self.bit_stream.unpack_bits(3, 2)
