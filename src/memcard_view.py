@@ -311,6 +311,7 @@ class PlayerTab(wx.Panel):
         form_sizer.Add(self.player_number_text, flag=wx.EXPAND)
         form_sizer.Add(wx.StaticText(panel, label="出生地:"), flag=wx.ALIGN_CENTER_VERTICAL)
         self.player_born_text = wx.TextCtrl(panel)
+        self.player_born_text.SetEditable(False)
         form_sizer.Add(self.player_born_text, flag=wx.EXPAND)
         form_sizer.Add(wx.StaticText(panel, label="惯用脚:"), flag=wx.ALIGN_CENTER_VERTICAL)
         self.player_foot_text = wx.TextCtrl(panel)
@@ -464,7 +465,7 @@ class OtherTeamTab(wx.Panel):
         form_sizer.Add(wx.StaticText(panel, label="友好度:"), flag=wx.ALIGN_CENTER_VERTICAL)
         self.team_friendly_text = wx.SpinCtrl(panel, size=(60, 20), min=0, max=255)
         form_sizer.Add(self.team_friendly_text, flag=wx.ALL)
-        self.submit_btn = wx.Button(panel, label="保存", size=(40, -1))
+        self.submit_btn = wx.Button(panel, label="保存", size=(40, 20))
         form_sizer.Add(self.submit_btn, flag=wx.ALL)
         info_sizer.Add(form_sizer, flag=wx.ALL | wx.EXPAND, border=0)
 
