@@ -7,7 +7,7 @@ import wx.lib.agw.pygauge as PG
 from bit_stream import InputBitStream, OutputBitStream
 from error import Error
 from memcard_reader import MemcardReader, Saka04SaveEntry
-from models import IntBitField, IntByteField, MyPlayer, MyTeam, OtherTeam, PlayerAbility, Region, Scout, StrBitField, StrByteField
+from models import CooperationType, GrowType, IntBitField, IntByteField, MyPlayer, MyTeam, OtherTeam, PlayerAbility, Region, Scout, StrBitField, StrByteField
 from readers import ClubReader, OtherTeamReader, TeamReader
 from save_reader import SaveHeadReader, SaveReader
 from utils import CnVersion
@@ -309,7 +309,7 @@ class PlayerTab(wx.Panel):
         self.player_number_text = wx.TextCtrl(panel)
         self.player_number_text.SetEditable(False)
         form_sizer.Add(self.player_number_text, flag=wx.EXPAND)
-        form_sizer.Add(wx.StaticText(panel, label="出生:"), flag=wx.ALIGN_CENTER_VERTICAL)
+        form_sizer.Add(wx.StaticText(panel, label="出生地:"), flag=wx.ALIGN_CENTER_VERTICAL)
         self.player_born_text = wx.TextCtrl(panel)
         form_sizer.Add(self.player_born_text, flag=wx.EXPAND)
         form_sizer.Add(wx.StaticText(panel, label="惯用脚:"), flag=wx.ALIGN_CENTER_VERTICAL)
@@ -379,7 +379,7 @@ class PlayerTab(wx.Panel):
     def update(self):
         if self.team:
             self.list_box.Clear()
-            for player in self.team.players:
+            for player in self.team.sorted_players:
                 if player.id.value != 0xFFFF:
                     self.list_box.Append(player.name.value, player)
             self.list_box.SetSelection(0)
@@ -608,7 +608,7 @@ class PlayerAbilPanel(wx.Panel):
 
 class PlayerEditDialog(wx.Dialog):
     def __init__(self, parent, root: wx.Panel, player: MyPlayer):
-        super().__init__(parent, title="球员编辑", size=(400, 350))
+        super().__init__(parent, title="球员编辑", size=(400, 400))
         self.root = root
         self.player = player
         self.player_ablities = list()
@@ -620,7 +620,7 @@ class PlayerEditDialog(wx.Dialog):
 
     def create_layout(self, panel: wx.Panel):
         sizer = wx.BoxSizer(wx.VERTICAL)
-        form_sizer = wx.FlexGridSizer(rows=8, cols=2, vgap=10, hgap=10)
+        form_sizer = wx.FlexGridSizer(rows=10, cols=2, vgap=10, hgap=10)
         form_sizer.Add(wx.StaticText(panel, label="姓名:"), flag=wx.ALIGN_CENTER_VERTICAL)
         self.player_name_text = wx.TextCtrl(panel)
         self.player_name_text.SetEditable(False)
@@ -628,12 +628,24 @@ class PlayerEditDialog(wx.Dialog):
         form_sizer.Add(wx.StaticText(panel, label="年龄:"), flag=wx.ALIGN_CENTER_VERTICAL)
         self.player_age_text = wx.SpinCtrl(panel, min=16, max=40)
         form_sizer.Add(self.player_age_text, flag=wx.EXPAND)
-        form_sizer.Add(wx.StaticText(panel, label="出生:"), flag=wx.ALIGN_CENTER_VERTICAL)
+        form_sizer.Add(wx.StaticText(panel, label="出生地:"), flag=wx.ALIGN_CENTER_VERTICAL)
         self.born_choice = wx.Choice(panel, choices=list(Region.region_dict().values()))
         form_sizer.Add(self.born_choice, flag=wx.EXPAND)
         form_sizer.Add(wx.StaticText(panel, label="技能:"), flag=wx.ALIGN_CENTER_VERTICAL)
         self.skill_choice = wx.Choice(panel, choices=list(MyPlayer.skill_dict().values()))
         form_sizer.Add(self.skill_choice, flag=wx.EXPAND)
+        form_sizer.Add(wx.StaticText(panel, label="连携:"), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.cooperation_choice = wx.Choice(panel, choices=list(CooperationType.cooperation_type_dict().values()))
+        form_sizer.Add(self.cooperation_choice, flag=wx.EXPAND)
+        form_sizer.Add(wx.StaticText(panel, label="成长类型:"), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.grow_phy_choice = wx.Choice(panel, choices=list(GrowType.grow_type_dict().values()))
+        self.grow_tec_choice = wx.Choice(panel, choices=list(GrowType.grow_type_dict().values()))
+        self.grow_bra_choice = wx.Choice(panel, choices=list(GrowType.grow_type_dict().values()))
+        grow_type_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        grow_type_sizer.Add(self.grow_phy_choice)
+        grow_type_sizer.Add(self.grow_tec_choice)
+        grow_type_sizer.Add(self.grow_bra_choice)
+        form_sizer.Add(grow_type_sizer, flag=wx.EXPAND)
         form_sizer.Add(wx.StaticText(panel, label="能力:"), flag=wx.ALIGN_CENTER_VERTICAL)
         self.ability_choice = wx.Choice(panel, choices=PlayerAbility.ablility_list())
         form_sizer.Add(self.ability_choice, flag=wx.EXPAND)
@@ -684,6 +696,10 @@ class PlayerEditDialog(wx.Dialog):
         self.ability_choice.SetSelection(0)
         self.born_choice.SetStringSelection(self.player.readable_born)
         self.skill_choice.SetStringSelection(self.player.readable_skill)
+        self.cooperation_choice.SetStringSelection(self.player.readable_cooperation_type)
+        self.grow_phy_choice.SetStringSelection(self.player.get_readable_grow_type(self.player.grow_type_phy.value))
+        self.grow_tec_choice.SetStringSelection(self.player.get_readable_grow_type(self.player.grow_type_tec.value))
+        self.grow_bra_choice.SetStringSelection(self.player.get_readable_grow_type(self.player.grow_type_bra.value))
     
     def on_close(self, evt: wx.Event):
         self.EndModal(wx.ID_OK)
@@ -695,15 +711,30 @@ class PlayerEditDialog(wx.Dialog):
         self.player.born2.value = self.player.born.value
         selected_skill = self.skill_choice.GetStringSelection()
         self.player.skill.value = MyPlayer.skill_dict_reverse()[selected_skill]
-        for ability, ability_cache in zip(self.player.abilities, self.player_ablities):
-            ability.current.value = ability_cache[0]
-            ability.current_max.value = ability_cache[1]
-            ability.max.value = ability_cache[2]
+        selected_cooperation_type = self.cooperation_choice.GetStringSelection()
+        selected_grow_type_phy = self.grow_phy_choice.GetStringSelection()
+        selected_grow_type_tec = self.grow_tec_choice.GetStringSelection()
+        selected_grow_type_bra = self.grow_bra_choice.GetStringSelection()
+        self.player.cooperation_type.value = CooperationType.cooperation_type_dict_reverse()[selected_cooperation_type]
+        self.player.grow_type_phy.value = GrowType.grow_type_dict_reverse()[selected_grow_type_phy]
+        self.player.grow_type_tec.value = GrowType.grow_type_dict_reverse()[selected_grow_type_tec]
+        self.player.grow_type_bra.value = GrowType.grow_type_dict_reverse()[selected_grow_type_bra]
+
         bits_fields = list()
         bits_fields.append(self.player.age)
         bits_fields.append(self.player.skill)
         bits_fields.append(self.player.born)
         bits_fields.append(self.player.born2)
+        bits_fields.append(self.player.cooperation_type)
+        bits_fields.append(self.player.grow_type_phy)
+        bits_fields.append(self.player.grow_type_tec)
+        bits_fields.append(self.player.grow_type_bra)
+
+        for ability, ability_cache in zip(self.player.abilities, self.player_ablities):
+            ability.current.value = ability_cache[0]
+            ability.current_max.value = ability_cache[1]
+            ability.max.value = ability_cache[2]
+
         for ability in self.player.abilities:
             bits_fields.append(ability.current)
             bits_fields.append(ability.current_max)
@@ -761,15 +792,15 @@ class ScoutTab(wx.Panel):
         # self.scout_candidate: Scout = None
 
     def create_layout(self, panel: wx.Panel):
-        self.tree = wx.TreeCtrl(self, style=wx.TR_DEFAULT_STYLE, size=(150, 480))
+        self.list_box = wx.ListBox(self, size=(150, 480))
         self.edit_btn = wx.Button(panel, label="编辑")
         left_sizer = wx.BoxSizer(wx.VERTICAL)
-        left_sizer.Add(self.tree)
+        left_sizer.Add(self.list_box)
         left_sizer.Add(self.edit_btn, 0, wx.ALIGN_RIGHT | wx.ALL, 5)
 
         info_box = wx.StaticBox(panel, label="球探信息")
         info_sizer = wx.StaticBoxSizer(info_box, wx.VERTICAL)
-        form_sizer = wx.FlexGridSizer(rows=2, cols=2, vgap=5, hgap=5)
+        form_sizer = wx.FlexGridSizer(rows=4, cols=2, vgap=5, hgap=5)
 
         form_sizer.Add(wx.StaticText(panel, label="姓名:"), flag=wx.ALIGN_CENTER_VERTICAL)
         self.name_text = wx.TextCtrl(panel)
@@ -780,6 +811,16 @@ class ScoutTab(wx.Panel):
         self.age_text = wx.TextCtrl(panel)
         self.age_text.SetEditable(False)
         form_sizer.Add(self.age_text, flag=wx.EXPAND)
+
+        form_sizer.Add(wx.StaticText(panel, label="得意地区1:"), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.area1_text = wx.TextCtrl(panel)
+        self.area1_text.SetEditable(False)
+        form_sizer.Add(self.area1_text, flag=wx.EXPAND)
+
+        form_sizer.Add(wx.StaticText(panel, label="得意地区2:"), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.area2_text = wx.TextCtrl(panel)
+        self.area2_text.SetEditable(False)
+        form_sizer.Add(self.area2_text, flag=wx.EXPAND)
 
         info_sizer.Add(form_sizer, flag=wx.ALL | wx.EXPAND, border=5)
 
@@ -792,7 +833,7 @@ class ScoutTab(wx.Panel):
         panel.SetSizer(sizer)
 
     def bind_events(self):
-        self.tree.Bind(wx.EVT_TREE_SEL_CHANGED, self.on_select)
+        self.list_box.Bind(wx.EVT_LISTBOX, self.on_select)
         # self.submit_btn.Bind(wx.EVT_BUTTON, self.on_submit_click)
 
     def load(self, save_panel: SaveViewPanel):
@@ -801,33 +842,16 @@ class ScoutTab(wx.Panel):
             self.update()
 
     def on_select(self, evt: wx.Event):
-        item = evt.GetItem()
-        if item.IsOk():
-            scout = self.tree.GetItemData(item)
-            if scout:
-                self.show_scout(scout)
+        scout = self.list_box.GetClientData(self.list_box.GetSelection())
+        self.show_scout(scout)
 
     def update(self):
         if self.team:
-            self.tree.DeleteAllItems()
-            root = self.tree.AddRoot("Scout")
-            group_node1 = self.tree.AppendItem(root, "我的球探")
+            self.list_box.Clear()
             for s in self.team.my_scouts:
-                s_item = self.tree.AppendItem(group_node1, s.saved_name.value)
-                self.tree.SetItemData(s_item, s)
-            group_node2 = self.tree.AppendItem(root, "候选球探")
-            for s in self.team.scout_candidates:
-                s_item = self.tree.AppendItem(group_node2, s.name)
-                self.tree.SetItemData(s_item, s)
-            self.tree.Expand(root)
-
-            if self.tree.ItemHasChildren(root):
-                first_group, _ = self.tree.GetFirstChild(root)
-                first_scout, _ = self.tree.GetFirstChild(first_group)
-                if first_scout:
-                    self.tree.SelectItem(first_scout)
-                    scout = self.tree.GetItemData(first_scout)
-                    self.show_scout(scout)
+                self.list_box.Append(s.saved_name.value, s)
+            self.list_box.SetSelection(0)
+            self.show_scout(self.team.my_scouts[0])
 
     def reset(self):
         self.team = None
@@ -835,19 +859,14 @@ class ScoutTab(wx.Panel):
         self.scout_candidate = None
 
     def show_scout(self, scout: Scout):
-        if scout.saved_name:
-            self.name_text.SetLabelText(scout.saved_name.value)
-        else:
-            self.name_text.SetLabelText(scout.name)
+        self.name_text.SetLabelText(scout.saved_name.value)
         self.age_text.SetLabelText(str(scout.age.value))
-        if scout.abilities:
-            self.ability_panel.Show()
-            self.ability_panel.update(scout.abilities)
-        else:
-            self.ability_panel.Hide()
+        self.area1_text.SetLabelText(Region.get_region(scout.area1.value))
+        self.area2_text.SetLabelText(Region.get_region(scout.area2.value))
+        self.ability_panel.update(scout.abilities)
 
     def on_submit_click(self, evt: wx.Event):
-        scout = self.tree.GetItemData(self.tree.GetSelection())
+        scout = self.list_box.GetClientData(self.list_box.GetSelection())
         bits_fields = list()
         for a in scout.abilities:
             a.value = 0x63

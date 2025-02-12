@@ -212,6 +212,8 @@ class TeamReader(BaseReader):
             my_scout = Scout(id, age)
             my_scout.saved_name = name
             my_scout.abilities = abilities
+            my_scout.area1 = area1
+            my_scout.area2 = area2
             team.my_scouts.append(my_scout)
         # 0x712a60
         team.scout_candidates = list()

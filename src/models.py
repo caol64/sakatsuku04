@@ -271,7 +271,7 @@ class MyPlayer:
 
     @classmethod
     def skill_dict_reverse(cls) -> dict[str, str]:
-        return {value: int(key, 16) for key, value in cls.skill_dict()}
+        return {value: int(key, 16) for key, value in cls.skill_dict().items()}
 
     def __repr__(self):
         return f"""
@@ -300,6 +300,19 @@ class MyTeam:
     players: list[MyPlayer]
     my_scouts: list['Scout']
     scout_candidates: list['Scout']
+    order_list = ["GK", "CDF", "SDF", "DMF", "SMF", "OMF", "FW"]
+
+    @property
+    def sorted_players(self) -> list[MyPlayer]:
+        return sorted(self.players, key=self.sort_key)
+
+    def sort_key(self, player: MyPlayer):
+        if player.id.value > 0x2fa7:
+            return 100
+        if player.player and player.player.pos:
+            return self.order_list.index(player.player.pos)
+        else:
+            return -1
 
     def __repr__(self):
         return f"""
@@ -368,6 +381,8 @@ class Scout:
     saved_name: StrBitField = None
     abilities: list[IntBitField] = None
     offer_years: IntBitField = None
+    area1: IntBitField = None
+    area2: IntBitField = None
     _ablility_list = None
     _scout_dict = None
 
@@ -401,6 +416,11 @@ class Region:
     _region_dict = None
 
     @classmethod
+    def get_region(cls, code: int) -> str:
+        hex_id = f"{code:02X}"
+        return cls.region_dict()[hex_id]
+
+    @classmethod
     def region_dict(cls) -> dict[str, str]:
         if cls._region_dict is None:
             cls._region_dict = dict()
@@ -412,7 +432,7 @@ class Region:
 
     @classmethod
     def region_dict_reverse(cls) -> dict[str, int]:
-        return {value: int(key, 16) for key, value in cls.region_dict()}
+        return {value: int(key, 16) for key, value in cls.region_dict().items()}
 
 
 class GrowType:
@@ -430,7 +450,7 @@ class GrowType:
 
     @classmethod
     def grow_type_dict_reverse(cls) -> dict[str, int]:
-        return {value: int(key, 16) for key, value in cls.grow_type_dict()}
+        return {value: int(key, 16) for key, value in cls.grow_type_dict().items()}
 
 
 class CooperationType:
@@ -448,4 +468,4 @@ class CooperationType:
 
     @classmethod
     def cooperation_type_dict_reverse(cls) -> dict[str, int]:
-        return {value: int(key, 16) for key, value in cls.cooperation_type_dict()}
+        return {value: int(key, 16) for key, value in cls.cooperation_type_dict().items()}
