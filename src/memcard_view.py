@@ -462,7 +462,7 @@ class OtherTeamTab(wx.Panel):
         self.team_name_text.SetEditable(False)
         form_sizer.Add(self.team_name_text, flag=wx.ALL)
         form_sizer.Add(wx.StaticText(panel, label="友好度:"), flag=wx.ALIGN_CENTER_VERTICAL)
-        self.team_friendly_text = wx.SpinCtrl(panel, min=0, max=255)
+        self.team_friendly_text = wx.SpinCtrl(panel, size=(60, 20), min=0, max=255)
         form_sizer.Add(self.team_friendly_text, flag=wx.ALL)
         self.submit_btn = wx.Button(panel, label="保存", size=(40, -1))
         form_sizer.Add(self.submit_btn, flag=wx.ALL)
@@ -608,7 +608,7 @@ class PlayerAbilPanel(wx.Panel):
 
 class PlayerEditDialog(wx.Dialog):
     def __init__(self, parent, root: wx.Panel, player: MyPlayer):
-        super().__init__(parent, title="球员编辑", size=(400, 400))
+        super().__init__(parent, title="球员编辑", size=(400, 450))
         self.root = root
         self.player = player
         self.player_ablities = list()
