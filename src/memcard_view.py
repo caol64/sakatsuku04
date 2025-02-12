@@ -7,7 +7,7 @@ import wx.lib.agw.pygauge as PG
 from bit_stream import InputBitStream, OutputBitStream
 from error import Error
 from memcard_reader import MemcardReader, Saka04SaveEntry
-from models import CooperationType, GrowType, IntBitField, IntByteField, MyPlayer, MyTeam, OtherTeam, PlayerAbility, Region, Scout, StrBitField, StrByteField
+from models import CooperationType, GrowType, IntBitField, IntByteField, MyPlayer, MyTeam, OtherTeam, PlayerAbility, Position, Region, Scout, StrBitField, StrByteField
 from readers import ClubReader, OtherTeamReader, TeamReader
 from save_reader import SaveHeadReader, SaveReader
 from utils import CnVersion
@@ -403,16 +403,16 @@ class PlayerTab(wx.Panel):
         self.player_foot_text.SetLabelText(player.prefer_foot)
         self.player_number_text.SetLabelText(str(player.number.value))
         self.player_aboard_times_text.SetLabelText(str(player.abroad_times.value))
-        self.player_pos_text.SetLabelText(player.player.pos)
+        self.player_pos_text.SetLabelText(player.readable_pos)
         self.player_skill_text.SetLabelText(player.readable_skill)
         self.player_rank_text.SetLabelText(player.readable_rank)
         self.player_teamwork_text.SetLabelText(player.readable_cooperation_type)
-        self.player_tone_type_text.SetLabelText(player.player.tone_type)
+        self.player_tone_type_text.SetLabelText(player.readable_tone_type)
         self.player_grow_type_phy_text.SetLabelText(player.get_readable_grow_type(player.grow_type_phy.value))
         self.player_grow_type_tech_text.SetLabelText(player.get_readable_grow_type(player.grow_type_tec.value))
         self.player_grow_type_sys_text.SetLabelText(player.get_readable_grow_type(player.grow_type_bra.value))
         # self.player_magic_text.SetLabelText(bin(player.magic_value.value))
-        # print(player.un)
+        print(player.un)
         self.ability_panel.update(player.abilities)
 
     def on_open_dialog(self, evt: wx.Event):
@@ -609,7 +609,7 @@ class PlayerAbilPanel(wx.Panel):
 
 class PlayerEditDialog(wx.Dialog):
     def __init__(self, parent, root: wx.Panel, player: MyPlayer):
-        super().__init__(parent, title="球员编辑", size=(400, 450))
+        super().__init__(parent, title="球员编辑", size=(400, 480))
         self.root = root
         self.player = player
         self.player_ablities = list()
@@ -621,7 +621,7 @@ class PlayerEditDialog(wx.Dialog):
 
     def create_layout(self, panel: wx.Panel):
         sizer = wx.BoxSizer(wx.VERTICAL)
-        form_sizer = wx.FlexGridSizer(rows=10, cols=2, vgap=10, hgap=10)
+        form_sizer = wx.FlexGridSizer(rows=11, cols=2, vgap=10, hgap=10)
         form_sizer.Add(wx.StaticText(panel, label="姓名:"), flag=wx.ALIGN_CENTER_VERTICAL)
         self.player_name_text = wx.TextCtrl(panel)
         self.player_name_text.SetEditable(False)
@@ -632,6 +632,9 @@ class PlayerEditDialog(wx.Dialog):
         form_sizer.Add(wx.StaticText(panel, label="出生地:"), flag=wx.ALIGN_CENTER_VERTICAL)
         self.born_choice = wx.Choice(panel, choices=list(Region.region_dict().values()))
         form_sizer.Add(self.born_choice, flag=wx.EXPAND)
+        form_sizer.Add(wx.StaticText(panel, label="位置:"), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.pos_choice = wx.Choice(panel, choices=list(Position.position_dict().values()))
+        form_sizer.Add(self.pos_choice, flag=wx.EXPAND)
         form_sizer.Add(wx.StaticText(panel, label="技能:"), flag=wx.ALIGN_CENTER_VERTICAL)
         self.skill_choice = wx.Choice(panel, choices=list(MyPlayer.skill_dict().values()))
         form_sizer.Add(self.skill_choice, flag=wx.EXPAND)
@@ -696,6 +699,7 @@ class PlayerEditDialog(wx.Dialog):
             self.player_ablities.append([ability.current.value, ability.current_max.value, ability.max.value])
         self.ability_choice.SetSelection(0)
         self.born_choice.SetStringSelection(self.player.readable_born)
+        self.pos_choice.SetStringSelection(self.player.readable_pos)
         self.skill_choice.SetStringSelection(self.player.readable_skill)
         self.cooperation_choice.SetStringSelection(self.player.readable_cooperation_type)
         self.grow_phy_choice.SetStringSelection(self.player.get_readable_grow_type(self.player.grow_type_phy.value))
@@ -710,6 +714,8 @@ class PlayerEditDialog(wx.Dialog):
         selected_born = self.born_choice.GetStringSelection()
         self.player.born.value = Region.region_dict_reverse()[selected_born]
         self.player.born2.value = self.player.born.value
+        selected_pos = self.pos_choice.GetStringSelection()
+        self.player.pos.value = Position.position_dict_reverse()[selected_pos]
         selected_skill = self.skill_choice.GetStringSelection()
         self.player.skill.value = MyPlayer.skill_dict_reverse()[selected_skill]
         selected_cooperation_type = self.cooperation_choice.GetStringSelection()
@@ -723,9 +729,10 @@ class PlayerEditDialog(wx.Dialog):
 
         bits_fields = list()
         bits_fields.append(self.player.age)
-        bits_fields.append(self.player.skill)
         bits_fields.append(self.player.born)
         bits_fields.append(self.player.born2)
+        bits_fields.append(self.player.pos)
+        bits_fields.append(self.player.skill)
         bits_fields.append(self.player.cooperation_type)
         bits_fields.append(self.player.grow_type_phy)
         bits_fields.append(self.player.grow_type_tec)

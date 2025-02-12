@@ -67,6 +67,25 @@ class Header:
             club_name1='{self.club_name1.value}'
         )"""
 
+
+class Position:
+    _position_dict = None
+
+    @classmethod
+    def position_dict(cls) -> dict[str, str]:
+        if cls._position_dict is None:
+            cls._position_dict = dict()
+            with open(get_resource_path('resource/position.csv'), 'r', encoding='utf8', newline='') as csvfile:
+                reader = csv.reader(csvfile)
+                for row in reader:
+                    cls._position_dict[row[0]] = row[1]
+        return cls._position_dict
+
+    @classmethod
+    def position_dict_reverse(cls) -> dict[str, int]:
+        return {value: int(key, 16) for key, value in cls.position_dict().items()}
+
+
 class Player:
     _player_dict = None
 
@@ -207,6 +226,7 @@ class MyPlayer:
     height: IntBitField
     foot: IntBitField
     rank: IntBitField
+    pos: IntBitField
     grow_type_phy: IntBitField
     grow_type_tec: IntBitField
     grow_type_bra: IntBitField
@@ -216,7 +236,6 @@ class MyPlayer:
     magic_value: IntBitField
     test: IntBitField = IntBitField(0, 0, 0)
     un: list[int]
-    player: Player
     _skill_dict = None
 
     @property
@@ -247,6 +266,16 @@ class MyPlayer:
         hex_id = f"{self.cooperation_type.value:02X}"
         return CooperationType.cooperation_type_dict()[hex_id]
 
+    @property
+    def readable_pos(self) -> str:
+        hex_id = f"{self.pos.value:02X}"
+        return Position.position_dict()[hex_id]
+
+    @property
+    def readable_tone_type(self) -> str:
+        hex_id = f"{self.tone_type.value:02X}"
+        return ToneType.tone_type_dict()[hex_id]
+
     def get_readable_grow_type(self, grow_type: int) -> str:
         hex_id = f"{grow_type:02X}"
         return GrowType.grow_type_dict()[hex_id]
@@ -255,9 +284,6 @@ class MyPlayer:
         self.index = index
         self.abilities = list()
         self.un = list()
-
-    def set_player(self):
-        self.player = Player(self.id.value)
 
     @classmethod
     def skill_dict(cls) -> dict[str, str]:
@@ -300,7 +326,7 @@ class MyTeam:
     players: list[MyPlayer]
     my_scouts: list['Scout']
     scout_candidates: list['Scout']
-    order_list = ["GK", "CDF", "SDF", "DMF", "SMF", "OMF", "FW"]
+    _sort_keys = list(Position.position_dict().values())
 
     @property
     def sorted_players(self) -> list[MyPlayer]:
@@ -309,8 +335,8 @@ class MyTeam:
     def sort_key(self, player: MyPlayer):
         if player.id.value > 0x2fa7:
             return 100
-        if player.player and player.player.pos:
-            return self.order_list.index(player.player.pos)
+        if player.pos:
+            return self._sort_keys.index(player.readable_pos)
         else:
             return -1
 
@@ -346,7 +372,7 @@ class OtherTeam:
     unknown2: IntBitField
     players: list[OtherPlayer]
     _team_list = None
-    order_list = ["GK", "CDF", "SDF", "DMF", "SMF", "OMF", "FW"]
+    _sort_keys = list(Position.position_dict().values())
 
     @classmethod
     def team_list(cls) -> list[str]:
@@ -369,7 +395,7 @@ class OtherTeam:
 
     def sort_key(self, player: OtherPlayer):
         if player.player and player.player.pos:
-            return self.order_list.index(player.player.pos)
+            return self._sort_keys.index(player.player.pos)
         else:
             return -1
 
@@ -445,7 +471,7 @@ class GrowType:
             with open(get_resource_path('resource/grow_type.csv'), 'r', encoding='utf8', newline='') as csvfile:
                 reader = csv.reader(csvfile)
                 for row in reader:
-                    cls._grow_type_dict[row[0]] = row[1]
+                    cls._grow_type_dict[row[0]] = row[2]
         return cls._grow_type_dict
 
     @classmethod
@@ -469,3 +495,21 @@ class CooperationType:
     @classmethod
     def cooperation_type_dict_reverse(cls) -> dict[str, int]:
         return {value: int(key, 16) for key, value in cls.cooperation_type_dict().items()}
+
+
+class ToneType:
+    _tone_type_dict = None
+
+    @classmethod
+    def tone_type_dict(cls) -> dict[str, str]:
+        if cls._tone_type_dict is None:
+            cls._tone_type_dict = dict()
+            with open(get_resource_path('resource/tone_type.csv'), 'r', encoding='utf8', newline='') as csvfile:
+                reader = csv.reader(csvfile)
+                for row in reader:
+                    cls._tone_type_dict[row[0]] = row[1]
+        return cls._tone_type_dict
+
+    @classmethod
+    def tone_type_dict_reverse(cls) -> dict[str, int]:
+        return {value: int(key, 16) for key, value in cls.tone_type_dict().items()}
