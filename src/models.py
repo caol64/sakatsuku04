@@ -227,16 +227,21 @@ class MyPlayer:
     foot: IntBitField
     rank: IntBitField
     pos: IntBitField
+    pos2: IntBitField
     grow_type_phy: IntBitField
     grow_type_tec: IntBitField
     grow_type_bra: IntBitField
     tone_type: IntBitField
     cooperation_type: IntBitField
-    skill: IntBitField
+    style: IntBitField
+    style_equip: IntBitField
+    style_learned1: IntBitField
+    style_learned2: IntBitField
+    style_learned3: IntBitField
+    style_learned4: IntBitField
     magic_value: IntBitField
     test: IntBitField = IntBitField(0, 0, 0)
     un: list[int]
-    _skill_dict = None
 
     @property
     def prefer_foot(self) -> int:
@@ -252,9 +257,9 @@ class MyPlayer:
         return convert_rank(self.rank.value)
 
     @property
-    def readable_skill(self) -> str:
-        hex_id = f"{self.skill.value:02X}"
-        return self.skill_dict()[hex_id]
+    def readable_style(self) -> str:
+        hex_id = f"{self.style.value:02X}"
+        return Style.style_dict()[hex_id]
 
     @property
     def readable_born(self) -> str:
@@ -285,36 +290,17 @@ class MyPlayer:
         self.abilities = list()
         self.un = list()
 
-    @classmethod
-    def skill_dict(cls) -> dict[str, str]:
-        if cls._skill_dict is None:
-            cls._skill_dict = dict()
-            with open(get_resource_path('resource/skill_jp.csv'), 'r', encoding='utf8', newline='') as csvfile:
-                reader = csv.reader(csvfile)
-                for row in reader:
-                    cls._skill_dict[row[0]] = row[1]
-        return cls._skill_dict
-
-    @classmethod
-    def skill_dict_reverse(cls) -> dict[str, str]:
-        return {value: int(key, 16) for key, value in cls.skill_dict().items()}
+    def set_style(self, style_index: int):
+        new_int = (self.style_learned2.value << 32) | self.style_learned1.value
+        new_int |= (1 << style_index)
+        self.style_learned1.value = new_int & 0xFFFFFFFF
+        self.style_learned2.value = (new_int >> 32) & 0xFFFFFFFF
 
     def __repr__(self):
         return f"""
         MyPlayer(
             id='{self.id.value}',
-            age='{self.age.value}',
             name='{self.name.value}',
-            born='{self.born.value}',
-            abroad_times='{self.abroad_times.value}',
-            abroad_days='{self.abroad_days.value}',
-            height='{self.height.value}',
-            number='{self.number.value}',
-            foot='{self.foot.value}',
-            tone_type='{self.tone_type.value}',
-            skill='{self.skill.value}',
-            test='{self.test.value}',
-            un='{self.un}',
         )"""
 
     def print_info(self):
@@ -333,8 +319,6 @@ class MyTeam:
         return sorted(self.players, key=self.sort_key)
 
     def sort_key(self, player: MyPlayer):
-        if player.id.value > 0x2fa7:
-            return 100
         if player.pos:
             return self._sort_keys.index(player.readable_pos)
         else:
@@ -513,3 +497,21 @@ class ToneType:
     @classmethod
     def tone_type_dict_reverse(cls) -> dict[str, int]:
         return {value: int(key, 16) for key, value in cls.tone_type_dict().items()}
+
+
+class Style:
+    _style_dict = None
+
+    @classmethod
+    def style_dict(cls) -> dict[str, str]:
+        if cls._style_dict is None:
+            cls._style_dict = dict()
+            with open(get_resource_path('resource/styles.csv'), 'r', encoding='utf8', newline='') as csvfile:
+                reader = csv.reader(csvfile)
+                for row in reader:
+                    cls._style_dict[row[0]] = row[1]
+        return cls._style_dict
+
+    @classmethod
+    def style_dict_reverse(cls) -> dict[str, int]:
+        return {value: int(key, 16) for key, value in cls.style_dict().items()}
