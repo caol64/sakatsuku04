@@ -609,7 +609,7 @@ class PlayerAbilPanel(wx.Panel):
 
 class PlayerEditDialog(wx.Dialog):
     def __init__(self, parent, root: wx.Panel, player: MyPlayer):
-        super().__init__(parent, title="球员编辑", size=(400, 500))
+        super().__init__(parent, title="球员编辑", size=(400, 520))
         self.root = root
         self.player = player
         self.player_ablities = list()
