@@ -13,20 +13,26 @@ Currently supported viewing features:
   - Funds
   - Game year, month, date
   - Manager name
+  - Game difficulty
 - My Team information
-  - Player basic information (name, age, rank, growth types, teamwork types, tone types)
+  - Player basic information (name, age, birthplace, rank, growth types, cooperation types, tone types, play styles)
   - Player abilities
 - Other team information
-  - Team players (name, age, rank, growth types, teamwork types, tone types)
+  - Teams (name, friendliness) and players (name, age, rank, growth types, cooperation types, tone types)
+- Scout
+  - My Scout abilities
 
 Currently supported editing features:
 
 - Club information
   - Funds
   - Game year
+  - Game difficulty
 - My Team information
-  - Player age
+  - Player basic information (age, birthplace, growth types, cooperation types, tone types, play styles)
   - Player abilities
+- Other team information
+  - Teams (friendliness)
 
 ## Screenshots
 
