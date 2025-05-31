@@ -11,7 +11,7 @@ The recommended way to run `sakatsuku04` is by using [`uv`](https://github.com/a
 ```bash
 uv venv --python python3.13
 uv pip install sakatsuku04
-uv run sakatsuku04
+uv run Saka04SaveEditor
 ```
 
 Alternatively, you can download the latest prebuilt releases from GitHub:
