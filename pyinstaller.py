@@ -1,22 +1,15 @@
-# pyinstaller.py
-import os
+import tomli as tomllib
 import PyInstaller.__main__
+from pathlib import Path
 
-from version import APP_NAME
+config = tomllib.loads(Path("pyproject.toml").read_text())
 
-app_name = APP_NAME
-app_file = 'src/main_frame.py'
-# hidden_import = 'glcontext'
-datas = ['resource', 'resource']
+pyi_cfg = config["tool"]["pyinstaller"]
 
-PyInstaller.__main__.run(
-    [
-        '--name=%s' % app_name,
-        '--windowed',
-        '--onefile',
-        #'--icon=%s' % 'path/to/your/icon.ico',
-        '--add-data=%s' % os.pathsep.join(datas),
-        # '--hidden-import=%s' % hidden_import,
-        app_file,
-    ]
-)
+PyInstaller.__main__.run([
+    f"--name={pyi_cfg['app_name']}",
+    "--windowed" if pyi_cfg.get("windowed") else "",
+    "--onefile" if pyi_cfg.get("onefile") else "",
+    *[f"--add-data={d}" for d in pyi_cfg["add_data"]],
+    pyi_cfg["entry_point"]
+])

@@ -1,7 +1,7 @@
 import codecs
 import csv
+import importlib.resources
 from pathlib import Path
-import sys
 
 
 def decode_bytes_to_str(byte_array: bytes) -> str:
@@ -62,7 +62,7 @@ def decode_cn(s: bytes) -> str:
     code_map = CnVersion.get_char_dict()
     i = 0
     length = len(s)
-    
+
     while i < length:
         # Check if there are at least 2 bytes remaining for a valid chunk
         if i + 1 < length:
@@ -71,11 +71,11 @@ def decode_cn(s: bytes) -> str:
                 decoded_str.append(code_map[chunk])
                 i += 2
                 continue
-        
+
         # Default: treat as an ASCII character
         decoded_str.append(chr(s[i]))
         i += 1
-    
+
     return ''.join(decoded_str)
 
 def encode_cn(s: str) -> bytes:
@@ -92,13 +92,15 @@ def encode_cn(s: str) -> bytes:
     return bytes(encoded_bytes)
 
 
-def get_resource_path(relative_path) -> str:
-    if hasattr(sys, "_MEIPASS"):
-        # 打包环境：资源文件位于 _MEIPASS 指定的临时目录
-        return Path(sys._MEIPASS).resolve() / relative_path
-    else:
-        # 开发环境：资源文件位于当前脚本所在的目录
-        return Path(__file__).resolve().parent.parent / relative_path
+def get_resource_path(relative_path) -> Path:
+    with importlib.resources.path("sakatsuku04.resource", relative_path) as file_path:
+        return file_path
+    # if hasattr(sys, "_MEIPASS"):
+    #     # 打包环境：资源文件位于 _MEIPASS 指定的临时目录
+    #     return Path(sys._MEIPASS).resolve() / relative_path
+    # else:
+    #     # 开发环境：资源文件位于当前脚本所在的目录
+    #     return Path(__file__).resolve().parent.parent / relative_path
 
 
 def convert_rank(rank: int) -> str:
@@ -126,7 +128,7 @@ class CnVersion:
     def get_char_dict(cls) -> dict[str, str]:
         if cls._cn_char_dict is None:
             cls._cn_char_dict = {}
-            with open(get_resource_path('resource/cn.csv'), 'r', encoding='utf8', newline='') as csvfile:
+            with open(get_resource_path('cn.csv'), 'r', encoding='utf8', newline='') as csvfile:
                 reader = csv.reader(csvfile)
                 for row in reader:
                     if len(row) == 2:

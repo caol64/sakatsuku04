@@ -4,14 +4,14 @@ import wx
 import wx.grid
 import wx.lib.agw.pygauge as PG
 
-from bit_stream import InputBitStream, OutputBitStream
-from error import Error
-from memcard_reader import MemcardReader, Saka04SaveEntry
-from models import CooperationType, GrowType, IntBitField, IntByteField, MyPlayer, MyTeam, OtherTeam, PlayerAbility, Position, Region, Scout, StrBitField, StrByteField, Style, ToneType
-from readers import ClubReader, OtherTeamReader, TeamReader
-from save_reader import SaveHeadReader, SaveReader
-from utils import CnVersion
-from version import APP_DISPLAY_NAME
+from .bit_stream import InputBitStream, OutputBitStream
+from .error import Error
+from .memcard_reader import MemcardReader, Saka04SaveEntry
+from .models import CooperationType, GrowType, IntBitField, IntByteField, MyPlayer, MyTeam, OtherTeam, PlayerAbility, Position, Region, Scout, StrBitField, StrByteField, Style, ToneType
+from .readers import ClubReader, OtherTeamReader, TeamReader
+from .save_reader import SaveHeadReader, SaveReader
+from .utils import CnVersion
+from .version import APP_DISPLAY_NAME
 
 
 class MemcardViewFrame(wx.Frame):
@@ -709,7 +709,7 @@ class PlayerEditDialog(wx.Dialog):
         self.grow_phy_choice.SetStringSelection(self.player.get_readable_grow_type(self.player.grow_type_phy.value))
         self.grow_tec_choice.SetStringSelection(self.player.get_readable_grow_type(self.player.grow_type_tec.value))
         self.grow_bra_choice.SetStringSelection(self.player.get_readable_grow_type(self.player.grow_type_bra.value))
-    
+
     def on_close(self, evt: wx.Event):
         self.EndModal(wx.ID_OK)
 

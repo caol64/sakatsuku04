@@ -1,5 +1,5 @@
-from bit_stream import InputBitStream
-from models import Club, MyPlayer, MyTeam, OtherTeam, OtherPlayer, PlayerAbility, Scout
+from .bit_stream import InputBitStream
+from .models import Club, MyPlayer, MyTeam, OtherTeam, OtherPlayer, PlayerAbility, Scout
 
 class BaseReader:
     base_offset = 0x703D50
@@ -588,7 +588,7 @@ class OptionReader(BaseReader):
         self.bit_stream.unpack_bits(0x20)
         for _ in range(0xd):
             self.bit_stream.unpack_bits(1, 4)
-            
+
         # self.bit_stream.skip(OptionReader.consume_bits, OptionReader.total_size - self.bit_stream.unpacked_bytes_length)
 
 class MailReader(BaseReader):

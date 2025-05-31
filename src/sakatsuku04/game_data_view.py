@@ -2,7 +2,7 @@ from pathlib import Path
 import wx
 import wx.grid
 
-from game_data_reader import DataPacReader, PlayerData
+from .game_data_reader import DataPacReader, PlayerData
 
 
 class DataViewFrame(wx.Frame):

@@ -1,6 +1,6 @@
 import struct
 
-from utils import get_resource_path
+from .utils import get_resource_path
 
 class Blowfish:
 
@@ -16,7 +16,7 @@ class Blowfish:
     @classmethod
     def s_boxes(cls) -> tuple[int]:
         if cls._s_boxes is None:
-            with open(get_resource_path("resource/s_boxes.bin"), "rb") as f:
+            with open(get_resource_path("s_boxes.bin"), "rb") as f:
                 cls._s_boxes = struct.unpack('<1024I', f.read())
         return cls._s_boxes
 

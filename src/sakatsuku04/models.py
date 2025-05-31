@@ -1,7 +1,7 @@
 import csv
 from dataclasses import dataclass
 
-from utils import convert_rank, decode_bytes_to_str, encode_str_to_bytes, get_resource_path, zero_pad, zero_terminate
+from .utils import convert_rank, decode_bytes_to_str, encode_str_to_bytes, get_resource_path, zero_pad, zero_terminate
 
 class IntBitField:
     def __init__(self, bit_length: int, value: int, bit_offset: int):
@@ -75,7 +75,7 @@ class Position:
     def position_dict(cls) -> dict[str, str]:
         if cls._position_dict is None:
             cls._position_dict = dict()
-            with open(get_resource_path('resource/position.csv'), 'r', encoding='utf8', newline='') as csvfile:
+            with open(get_resource_path('position.csv'), 'r', encoding='utf8', newline='') as csvfile:
                 reader = csv.reader(csvfile)
                 for row in reader:
                     cls._position_dict[row[0]] = row[1]
@@ -101,7 +101,7 @@ class Player:
     def player_dict(cls) -> dict[str, list[str]]:
         if cls._player_dict is None:
             cls._player_dict = dict()
-            with open(get_resource_path('resource/players.csv'), 'r', encoding='utf8', newline='') as csvfile:
+            with open(get_resource_path('players.csv'), 'r', encoding='utf8', newline='') as csvfile:
                 reader = csv.reader(csvfile)
                 for row in reader:
                     cls._player_dict[row[0]] = row
@@ -198,7 +198,7 @@ class PlayerAbility:
     def ablility_list(cls) -> list[str]:
         if cls._ablility_list is None:
             cls._ablility_list = list()
-            with open(get_resource_path('resource/ability.csv'), 'r', encoding='utf8', newline='') as csvfile:
+            with open(get_resource_path('ability.csv'), 'r', encoding='utf8', newline='') as csvfile:
                 reader = csv.reader(csvfile)
                 for row in reader:
                     if len(row) == 1:
@@ -362,7 +362,7 @@ class OtherTeam:
     def team_list(cls) -> list[str]:
         if cls._team_list is None:
             cls._team_list = list()
-            with open(get_resource_path('resource/teams.csv'), 'r', encoding='utf8', newline='') as csvfile:
+            with open(get_resource_path('teams.csv'), 'r', encoding='utf8', newline='') as csvfile:
                 reader = csv.reader(csvfile)
                 for row in reader:
                     if len(row) == 1:
@@ -404,7 +404,7 @@ class Scout:
     def ablility_list(cls) -> list[str]:
         if cls._ablility_list is None:
             cls._ablility_list = list()
-            with open(get_resource_path('resource/scout_ability.csv'), 'r', encoding='utf8', newline='') as csvfile:
+            with open(get_resource_path('scout_ability.csv'), 'r', encoding='utf8', newline='') as csvfile:
                 reader = csv.reader(csvfile)
                 for row in reader:
                     if len(row) == 1:
@@ -415,7 +415,7 @@ class Scout:
     def scout_dict(cls) -> dict[str, str]:
         if cls._scout_dict is None:
             cls._scout_dict = dict()
-            with open(get_resource_path('resource/scouts.csv'), 'r', encoding='utf8', newline='') as csvfile:
+            with open(get_resource_path('scouts.csv'), 'r', encoding='utf8', newline='') as csvfile:
                 reader = csv.reader(csvfile)
                 for row in reader:
                     cls._scout_dict[row[0]] = row[1]
@@ -434,7 +434,7 @@ class Region:
     def region_dict(cls) -> dict[str, str]:
         if cls._region_dict is None:
             cls._region_dict = dict()
-            with open(get_resource_path('resource/regions.csv'), 'r', encoding='utf8', newline='') as csvfile:
+            with open(get_resource_path('regions.csv'), 'r', encoding='utf8', newline='') as csvfile:
                 reader = csv.reader(csvfile)
                 for row in reader:
                     cls._region_dict[row[0]] = row[1]
@@ -452,7 +452,7 @@ class GrowType:
     def grow_type_dict(cls) -> dict[str, str]:
         if cls._grow_type_dict is None:
             cls._grow_type_dict = dict()
-            with open(get_resource_path('resource/grow_type.csv'), 'r', encoding='utf8', newline='') as csvfile:
+            with open(get_resource_path('grow_type.csv'), 'r', encoding='utf8', newline='') as csvfile:
                 reader = csv.reader(csvfile)
                 for row in reader:
                     cls._grow_type_dict[row[0]] = row[2]
@@ -470,7 +470,7 @@ class CooperationType:
     def cooperation_type_dict(cls) -> dict[str, str]:
         if cls._cooperation_type_dict is None:
             cls._cooperation_type_dict = dict()
-            with open(get_resource_path('resource/cooperation_type.csv'), 'r', encoding='utf8', newline='') as csvfile:
+            with open(get_resource_path('cooperation_type.csv'), 'r', encoding='utf8', newline='') as csvfile:
                 reader = csv.reader(csvfile)
                 for row in reader:
                     cls._cooperation_type_dict[row[0]] = row[1]
@@ -488,7 +488,7 @@ class ToneType:
     def tone_type_dict(cls) -> dict[str, str]:
         if cls._tone_type_dict is None:
             cls._tone_type_dict = dict()
-            with open(get_resource_path('resource/tone_type.csv'), 'r', encoding='utf8', newline='') as csvfile:
+            with open(get_resource_path('tone_type.csv'), 'r', encoding='utf8', newline='') as csvfile:
                 reader = csv.reader(csvfile)
                 for row in reader:
                     cls._tone_type_dict[row[0]] = row[1]
@@ -506,7 +506,7 @@ class Style:
     def style_dict(cls) -> dict[str, str]:
         if cls._style_dict is None:
             cls._style_dict = dict()
-            with open(get_resource_path('resource/styles.csv'), 'r', encoding='utf8', newline='') as csvfile:
+            with open(get_resource_path('styles.csv'), 'r', encoding='utf8', newline='') as csvfile:
                 reader = csv.reader(csvfile)
                 for row in reader:
                     cls._style_dict[row[0]] = row[1]

@@ -1,6 +1,6 @@
 import csv
 from pathlib import Path
-from utils import decode_bytes_to_str, get_resource_path, zero_terminate
+from .utils import decode_bytes_to_str, get_resource_path, zero_terminate
 
 
 class DataPacReader:
@@ -34,7 +34,7 @@ class DataPacReader:
     def read_player(self, uid: int) -> 'PlayerData':
         self.file.seek(DataPacReader.START_OFFSET + uid * PlayerData.BLOCK_SIZE)
         return PlayerData(self.file.read(PlayerData.BLOCK_SIZE))
-    
+
     def close(self):
         if self.file:
             self.file.close()
@@ -72,7 +72,7 @@ class PlayerData(BaseData):
     def base_ablility_list(cls) -> list[str]:
         if cls._base_ablility_list is None:
             cls._base_ablility_list = list()
-            with open(get_resource_path('resource/ability1.csv'), 'r', encoding='utf8', newline='') as csvfile:
+            with open(get_resource_path('ability1.csv'), 'r', encoding='utf8', newline='') as csvfile:
                 reader = csv.reader(csvfile)
                 for row in reader:
                     if len(row) == 1:

@@ -1,0 +1,62 @@
+[project]
+name = "sakatsuku04"
+version = "1.0.4"
+description = "Opensource game and save editor for J.League Pro Soccer Club o Tsukurou! 04 (PS2)."
+authors = [{ name = "Lei", email = "caol64@gmail.com" }]
+readme = "README.md"
+requires-python = ">=3.13"
+license = "MIT"
+dependencies = [
+    "wxPython==4.2.2",
+    "numpy==2.2.2"
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: X11 Applications :: GTK",
+    "Environment :: MacOS X :: Cocoa",
+    "Environment :: Win32 (MS Windows)",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Multimedia :: Graphics",
+    "Topic :: Software Development :: User Interfaces",
+    "Topic :: Utilities"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pyinstaller==6.11.1",
+    "tomli==2.2.1",
+    "build==1.2.2"
+]
+
+[project.scripts]
+Saka04SaveEditor = "sakatsuku04.main_frame:main"
+
+[project.urls]
+Homepage = "https://github.com/caol64/sakatsuku04"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build]
+exclude = ["/data", "/docs"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src/sakatsuku04",
+    "/README.md",
+    "/pyproject.toml",
+]
+
+[tool.pyinstaller]
+app_name = "Saka04SaveEditor"
+entry_point = "launcher.py"
+onefile = true
+windowed = true
+add_data = ["src/sakatsuku04/resource:sakatsuku04/resource"]

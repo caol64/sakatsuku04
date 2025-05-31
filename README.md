@@ -4,6 +4,19 @@
 
 Opensource game and save editor for J.League Pro Soccer Club o Tsukurou! 04 (PS2).
 
+## Quick Start
+
+The recommended way to run `sakatsuku04` is by using [`uv`](https://github.com/astral-sh/uv) to create and manage a virtual environment:
+
+```bash
+uv venv --python python3.13
+uv pip install sakatsuku04
+uv run sakatsuku04
+```
+
+Alternatively, you can download the latest prebuilt releases from GitHub:
+👉 [https://github.com/caol64/sakatsuku04/releases](https://github.com/caol64/sakatsuku04/releases)
+
 ## Features
 
 Currently supported viewing features:

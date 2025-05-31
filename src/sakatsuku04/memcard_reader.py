@@ -4,9 +4,9 @@ import struct
 
 import numpy as np
 
-from crc_ecc import EccCaculator
-from error import Error
-import utils
+from . import utils
+from .crc_ecc import EccCaculator
+from .error import Error
 
 
 class MemcardReader:

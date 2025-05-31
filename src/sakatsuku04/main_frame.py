@@ -3,9 +3,9 @@ from typing import Callable, Type
 import wx
 import wx.adv
 
-from game_data_view import DataViewFrame
-from memcard_view import MemcardViewFrame
-from version import APP_DISPLAY_NAME, COPY_RIGHT, DESCRIPTION, VERSION
+from .game_data_view import DataViewFrame
+from .memcard_view import MemcardViewFrame
+from .version import APP_DISPLAY_NAME, COPY_RIGHT, DESCRIPTION, VERSION
 
 
 FRAME_STYLE = wx.DEFAULT_FRAME_STYLE & ~(wx.RESIZE_BORDER | wx.MAXIMIZE_BOX)
@@ -119,7 +119,11 @@ class WxFileDropTarget(wx.FileDropTarget):
         return True
 
 
-if __name__ == "__main__":
+def main():
     app = wx.App()
     OpenFileFrame.create_instance()
     app.MainLoop()
+
+
+if __name__ == "__main__":
+    main()

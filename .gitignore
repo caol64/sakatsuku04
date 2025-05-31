@@ -12,3 +12,4 @@ test/
 .venv
 bin/
 Saka04SaveEditor.spec
+.env

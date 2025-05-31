@@ -1,6 +1,6 @@
 import struct
 
-from utils import get_resource_path
+from .utils import get_resource_path
 
 
 class CrcCaculator:
@@ -12,7 +12,7 @@ class CrcCaculator:
     @classmethod
     def crc_table(cls) -> tuple[int]:
         if cls._crc_table is None:
-            with open(get_resource_path("resource/crc_table.bin"), "rb") as f:
+            with open(get_resource_path("crc_table.bin"), "rb") as f:
                 cls._crc_table = struct.unpack('<256H', f.read())
         return cls._crc_table
 

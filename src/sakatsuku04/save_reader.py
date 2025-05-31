@@ -1,8 +1,8 @@
 import struct
 
-from crc_ecc import CrcCaculator
-from enc_dec import Blowfish
-from models import Header, IntByteField, StrByteField
+from .crc_ecc import CrcCaculator
+from .enc_dec import Blowfish
+from .models import Header, IntByteField, StrByteField
 
 class SaveReader:
     FILE_SIZE = 523276
@@ -102,7 +102,7 @@ class SaveHeadReader:
         self.data_buffer += buffer2
         self.crc = crc
         assert head_block == len(self.data_buffer)
-    
+
     def check_crc(self):
         crc_calc = CrcCaculator()
         left, right = crc_calc.calc(self.data_buffer)
