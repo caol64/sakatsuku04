@@ -57,7 +57,6 @@ class MemcardViewFrame(wx.Frame):
     def check_file(self, file_path: Path) -> Error:
         try:
             self.reader = MemcardReader(file_path)
-            self.reader.load()
             self.save_entries = self.reader.read_save_entries()
             return None
         except Error as e:
