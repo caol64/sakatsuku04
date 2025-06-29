@@ -1,0 +1,36 @@
+@import 'tailwindcss';
+
+@theme {
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", 'Microsoft YaHei', monospace;
+}
+
+@custom-variant dark (@media (prefers-color-scheme: dark));
+
+@layer base {
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+        border-color: var(--color-gray-200, currentcolor);
+    }
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+:root {
+    --primary-color: #1c90ff;
+    --light-bg-color: #fff;
+    --light-text-color: #282a36;
+    --dark-bg-color: #282a36;
+    --dark-text-color: #f8f8f2;
+    @apply font-sans text-sm;
+}
+body {
+    @apply w-full h-screen overflow-hidden bg-[var(--light-bg-color)] dark:bg-[var(--dark-bg-color)] text-[var(--light-text-color)] dark:text-[var(--dark-text-color)];
+}
+* {
+    @apply box-border;
+}
