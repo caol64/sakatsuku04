@@ -1,14 +1,15 @@
 [project]
-name = "sakatsuku04"
-version = "1.0.5"
+name = "Saka04Editor"
+version = "1.0.6"
 description = "Opensource game and save editor for J.League Pro Soccer Club o Tsukurou! 04 (PS2)."
 authors = [{ name = "Lei", email = "caol64@gmail.com" }]
 readme = "README.md"
 requires-python = ">=3.13"
 license = "MIT"
 dependencies = [
-    "wxPython==4.2.2",
-    "ps2mc",
+    "pywebview>=5.4",
+    "pydantic>=2.11.7",
+    "ps2mc>=0.1.1",
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -18,10 +19,7 @@ classifiers = [
     "Intended Audience :: End Users/Desktop",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
-    "Programming Language :: Python",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.13",
     "Topic :: Multimedia :: Graphics",
     "Topic :: Software Development :: User Interfaces",
@@ -31,7 +29,6 @@ classifiers = [
 [project.optional-dependencies]
 dev = [
     "pyinstaller==6.11.1",
-    "tomli==2.2.1",
     "build==1.2.2"
 ]
 
@@ -53,11 +50,22 @@ include = [
     "/src/sakatsuku04",
     "/README.md",
     "/pyproject.toml",
+    "/webview",
 ]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/saka04saveeditor"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [tool.pyinstaller]
 app_name = "Saka04SaveEditor"
 entry_point = "launcher.py"
 onefile = true
 windowed = true
-add_data = ["src/sakatsuku04/resource:sakatsuku04/resource"]
+add_data = [
+    "src/sakatsuku04/resource:sakatsuku04/resource",
+    "webview/build:sakatsuku04/resource/webview/build",
+    "pyproject.toml:sakatsuku04/resource",
+]

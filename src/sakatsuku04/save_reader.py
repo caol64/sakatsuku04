@@ -1,6 +1,6 @@
 import struct
 
-from .crc_ecc import CrcCaculator
+from .crc import CrcCaculator
 from .enc_dec import Blowfish
 from .models import Header, IntByteField, StrByteField
 

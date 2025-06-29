@@ -1,7 +1,17 @@
 import csv
 from dataclasses import dataclass
 
+from .dtos import ClubDto, MyPlayerDto, OtherTeamPlayerDto
 from .utils import convert_rank, decode_bytes_to_str, encode_str_to_bytes, get_resource_path, zero_pad, zero_terminate
+
+
+@dataclass
+class Saka04SaveEntry:
+    name: str
+    main_save_entry: bytes
+    save_head_entry: bytes
+    sys_icon_entry: bytes
+
 
 class IntBitField:
     def __init__(self, bit_length: int, value: int, bit_offset: int):
@@ -185,6 +195,19 @@ class Club:
     def print_info(self):
         print(self)
 
+    def to_dto(self):
+        return ClubDto(
+            club_name=self.club_name.value,
+            year=self.year.value - 2003,
+            month=self.month.value,
+            date=self.date.value,
+            day=self.day.value,
+            fund_heigh=self.funds_high,
+            fund_low=self.funds_low,
+            manager_name=self.manager_name.value,
+            difficulty=self.difficulty.value,
+        )
+
 
 @dataclass
 class PlayerAbility:
@@ -244,7 +267,7 @@ class MyPlayer:
     un: list[int]
 
     @property
-    def prefer_foot(self) -> int:
+    def prefer_foot(self) -> str:
         if self.foot.value == 0:
             return '左脚'
         elif self.foot.value == 1:
@@ -306,6 +329,15 @@ class MyPlayer:
     def print_info(self):
         print(self)
 
+    def to_dto(self) -> MyPlayerDto:
+        return MyPlayerDto(
+            index=self.index,
+            id=self.id.value,
+            age=self.age.value,
+            number=self.number.value,
+            name=self.name.value,
+        )
+
 class MyTeam:
     english_name: StrBitField
     oilis_english_name: StrBitField
@@ -345,6 +377,22 @@ class OtherPlayer:
     def __post_init__(self):
         if self.id.value is not None:
             self.player = Player(self.id.value)
+
+    def to_dto(self):
+        return OtherTeamPlayerDto(
+            id=self.id.value,
+            age=self.age.value,
+            ability_graph=self.ability_graph.value,
+            number=self.number.value,
+            name=self.player.name,
+            rank=self.player.rank,
+            pos=self.player.pos,
+            team_work=self.player.team_work,
+            tone_type=self.player.tone_type,
+            grow_type_phy=self.player.grow_type_phy,
+            grow_type_tech=self.player.grow_type_tech,
+            grow_type_sys=self.player.grow_type_sys,
+        )
 
 
 @dataclass

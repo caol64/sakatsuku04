@@ -1,0 +1,17 @@
+{
+  "name": "sakatsuku04",
+  "version": "0.1.0",
+  "description": "",
+  "type": "module",
+  "scripts": {
+    "desktop:dev": "uv run python -m sakatsuku04.main dev",
+    "desktop:prod": "pnpm run web:build && uv run python -m sakatsuku04.main prod",
+    "desktop:release": "pnpm run web:build && uv run python pyinstaller.py",
+    "web:dev": "pnpm --filter webview dev",
+    "web:build": "pnpm --filter webview build",
+    "clean": "pnpm -r clean"
+  },
+  "pnpm": {
+    "overrides": {}
+  }
+}

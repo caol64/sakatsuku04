@@ -1,4 +1,4 @@
-import tomli as tomllib
+import tomllib
 import PyInstaller.__main__
 from pathlib import Path
 

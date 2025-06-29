@@ -4,6 +4,25 @@ import importlib.resources
 from pathlib import Path
 
 
+team_group_index = {
+    "日本": 0,
+    "亚太": 30,
+    "东欧": 54,
+    "英国": 69,
+    "法国": 93,
+    "西班牙": 114,
+    "葡萄牙": 134,
+    "比利时": 152,
+    "荷兰": 154,
+    "意大利": 172,
+    "德国": 190,
+    "欧洲": 208,
+    "非洲": 213,
+    "巴西": 221,
+    "阿根廷": 245,
+    "美洲": 248,
+}
+
 def decode_bytes_to_str(byte_array: bytes) -> str:
     if CnVersion.CN_VER:
         return decode_cn(byte_array)

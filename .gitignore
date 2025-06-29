@@ -13,3 +13,4 @@ test/
 bin/
 Saka04SaveEditor.spec
 .env
+node_modules

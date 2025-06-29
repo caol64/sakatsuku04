@@ -1,5 +1,5 @@
 import sys
-from sakatsuku04.main_frame import main
+from sakatsuku04.main import main
 
 
 if __name__ == "__main__":
