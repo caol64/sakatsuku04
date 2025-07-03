@@ -14,7 +14,9 @@ const config = {
 		adapter: adapter(),
         alias: {
             $lib: 'src/lib',
-            '$lib/*': 'src/lib/*'
+            '$lib/*': 'src/lib/*',
+            $locales: 'src/locales',
+            '$locales/*': 'src/locales/*',
         }
 	}
 };

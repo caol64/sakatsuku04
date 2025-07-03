@@ -3,6 +3,8 @@
     import HStack from "$lib/components/Stack/HStack.svelte";
     import VStack from "$lib/components/Stack/VStack.svelte";
     import { onMount } from "svelte";
+    import teamsData from "$locales/teams_zh.json";
+    import teamGroupsData from "$locales/team_groups_zh.json";
 
     let treeData: TeamsWithRegion[] = $state([]);
     let openedRegion = $state("");
@@ -27,23 +29,34 @@
 	}
 
 	onMount(async () => {
-        if (window.pywebview?.api?.fetch_other_teams) {
-            const pageData: TeamsWithRegion[] = await window.pywebview.api.fetch_other_teams();
-            if (pageData) {
-                treeData = pageData;
-                openedRegion = treeData[0].region;
-                selectedTeam = treeData[0].teams[0];
-                await selectTeam(selectedTeam);
+        let index = 0;
+        for (let i = 0; i < teamGroupsData.length; i++) {
+            const item = teamGroupsData[i];
+            const regionName = item[0] as string;
+            const max = i + 1 < teamGroupsData.length ? teamGroupsData[i + 1][1] as number : teamsData.length;
+            const teams: Team[] = [];
+            for (let i = index; i < max; i++) {
+                teams.push({
+                    index,
+                    name: teamsData[index],
+                    friendly: 0
+                });
+                index++;
             }
-        } else {
-            alert('pywebview API 未加载');
+            treeData.push({
+                region: regionName,
+                teams: teams
+            });
         }
+        openedRegion = treeData[0].region;
+        selectedTeam = treeData[0].teams[0];
+        await selectTeam(selectedTeam);
 	});
 
 </script>
 
-<HStack className="flex-1 overflow-hidden">
-    <div class="w-1/4 overflow-y-auto my-2">
+<HStack className="flex-1 overflow-hidden m-2">
+    <div class="w-1/4 overflow-y-auto">
         {#each treeData as item}
             <div class="py-0.5 flex items-center gap-x-0.5 w-full">
                 <button onclick={() => toggleRegion(item.region)} class="size-6 flex justify-center items-center hover:bg-gray-100 rounded-md">
@@ -79,13 +92,15 @@
         {/each}
     </div>
 
-    <VStack className="relative overflow-x-auto grow my-2">
-        <HStack className="my-2 items-center">
-            <label for="gameDifficulty">友好度</label>
-            <span class="text-sm">{ selectedTeam.friendly }</span>
-            <input id="gameDifficulty" type="range" bind:value={ selectedTeam.friendly } class="h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700">
+    <VStack className="relative overflow-x-auto grow mx-2">
+        <HStack className="items-center mb-1">
+            <label for="gameDifficulty" class="w-16">友好度</label>
+            <span class="text-sm w-16">{ selectedTeam.friendly }</span>
+            <input id="gameDifficulty" type="range" min="0" max="255" bind:value={ selectedTeam.friendly } class="w-52 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700">
+            <button class="w-18 h-8 rounded-md cursor-pointer mx-2 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium text-sm text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                保存
+            </button>
         </HStack>
-
         <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                 <tr>
@@ -140,7 +155,7 @@
                             {item.rank}
                         </td>
                         <td>
-                            {item.teamWork}
+                            {item.cooperationType}
                         </td>
                         <td>
                             {item.toneType}
@@ -149,7 +164,7 @@
                             {item.growTypePhy}
                         </td>
                         <td>
-                            {item.growTypeTech}
+                            {item.growTypeTec}
                         </td>
                         <td>
                             {item.growTypeSys}

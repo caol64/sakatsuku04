@@ -1,4 +1,4 @@
-import { defaultBaseData, type Base, type SaveEntry } from "./models";
+import { defaultClubData, type Club } from "./models";
 
 // -------mode-------
 
@@ -16,34 +16,34 @@ export function setModeState(value: ModeState) {
 
 // -------saveList-------
 
-let saveList: SaveEntry[] = $state([]);
+let saveList: string[] = $state([]);
 
-export function getSaveList(): SaveEntry[] {
+export function getSaveList(): string[] {
     return saveList;
 }
 
-export function setSaveList(value: SaveEntry[]) {
+export function setSaveList(value: string[]) {
     saveList = value;
 }
 
-// -------baseData-------
+// -------clubData-------
 
-let baseData: Base = $state(defaultBaseData);
+let clubData: Club = $state(defaultClubData);
 
-export function getBaseData(): Base {
-    return baseData;
+export function getClubData(): Club {
+    return clubData;
 }
 
-export function setBaseData(data: Base) {
-    baseData = data;
+export function setClubData(data: Club) {
+    clubData = data;
 }
 
 // -------selectedTab-------
 
-export type Tab = "Base" | "My Team" | "Other Teams" | "Scouts";
-export const allTabs: Tab[] = ["Base", "My Team", "Other Teams", "Scouts"];
+export type Tab = "Club" | "Players" | "Teams" | "Scouts";
+export const allTabs: Tab[] = ["Club", "Players", "Teams"];
 
-let selectedTab: Tab = $state("Base");
+let selectedTab: Tab = $state("Club");
 
 export function getSelectedTab() : Tab {
     return selectedTab;

@@ -9,7 +9,7 @@
     const rightCol = ["bg-cyan-400", "bg-orange-600", "bg-cyan-400"];
 </script>
 
-<div class="flex flex-col items-center p-2 rounded">
+<div class="flex flex-col items-center p-2 rounded-lg bg-white dark:bg-gray-700">
     <div class="text-gray-500 font-bold tracking-wide mb-1">POSITION</div>
 
     <div class="relative flex flex-col items-center w-[100px]">

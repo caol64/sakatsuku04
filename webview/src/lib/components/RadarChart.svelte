@@ -14,12 +14,12 @@
     }
 </script>
 
-<div class="flex items-center justify-center w-full h-full">
+<div class="flex justify-center w-full bg-white dark:bg-gray-700 rounded-lg">
     <svg
         width="240"
         height="240"
         viewBox="-120 -120 240 240"
-        class="bg-white rounded"
+        class="m-2"
     >
         <!-- 绘制雷达网格 -->
         {#each Array(5) as _, layer}
@@ -54,7 +54,7 @@
                 y={point(1.15, i).y}
                 text-anchor="middle"
                 alignment-baseline="middle"
-                class="text-xs fill-gray-700"
+                class="text-xs fill-gray-700 dark:fill-white"
             >
                 {labels[i]}
             </text>

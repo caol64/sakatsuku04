@@ -1,10 +1,12 @@
 <script lang="ts">
-    import { allTabs, getSelectedTab, setSelectedTab, type Tab, getSaveList, setBaseData, setModeState, setSaveList, getBaseData } from "$lib/globalState.svelte";
+    import { allTabs, getSelectedTab, setSelectedTab, type Tab, getSaveList, setClubData, setModeState, setSaveList, getClubData, getModeState } from "$lib/globalState.svelte";
     import HStack from "$lib/components/Stack/HStack.svelte";
-    import More from "$lib/icons/More.svelte";
     import Back from "$lib/icons/Back.svelte";
     import { onMount } from "svelte";
-    import { defaultBaseData } from "$lib/models";
+    import { defaultClubData } from "$lib/models";
+    import Refresh from "$lib/icons/Refresh.svelte";
+    import About from "./About.svelte";
+    import DropDown from "$lib/icons/DropDown.svelte";
 
     let selectedGame = $state("");
 
@@ -14,12 +16,13 @@
         }
     }
 
-    async function fetchSaveData() {
-        setSelectedTab("Base");
-        if (window.pywebview?.api?.fetch_save_data) {
-            const pageData = await window.pywebview.api.fetch_save_data(selectedGame);
+    async function selectGame() {
+        setSelectedTab("Club");
+        if (window.pywebview?.api?.select_game) {
+            await window.pywebview.api.select_game(selectedGame);
+            const pageData = await window.pywebview.api.fetch_club_data();
             if (pageData) {
-                setBaseData(pageData);
+                setClubData(pageData);
             }
         } else {
             alert('pywebview API 未加载');
@@ -27,28 +30,23 @@
     }
 
     async function reset() {
-        if (window.pywebview?.api?.reset) {
-            await window.pywebview.api.reset();
-        } else {
-            alert('pywebview API 未加载');
-        }
         setModeState("");
         setSaveList([]);
-        setBaseData(defaultBaseData);
-        setSelectedTab("Base");
+        setClubData(defaultClubData);
+        setSelectedTab("Club");
         selectedGame = "";
     }
 
     onMount(() => {
         if (getSaveList()) {
-            selectedGame = getSaveList()[0].name;
-            fetchSaveData();
+            selectedGame = getSaveList()[0];
         }
+        selectGame();
     });
 
     async function handleSave() {
         if (window.pywebview?.api?.save_club_data) {
-            console.log(getBaseData());
+            console.log(getClubData());
             // const pageData: Response = await window.pywebview.api.save_club_data(getBaseData(), selectedGame);
             // if (pageData) {
             //     console.log(pageData);
@@ -73,27 +71,27 @@
         {/each}
     </ul>
 
-    <div class="mx-auto">
-        <div class="relative">
-            <select bind:value={selectedGame} onchange={fetchSaveData} class="w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded pl-3 pr-8 py-2 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-400 shadow-sm focus:shadow-md appearance-none cursor-pointer">
-                {#each getSaveList() as item}
-                    <option>{ item.name }</option>
-                {/each}
-            </select>
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.2" stroke="currentColor" class="h-5 w-5 ml-1 absolute top-2.5 right-2.5 text-slate-700">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15 12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
-            </svg>
+    {#if getSaveList().length > 0}
+        <div class="mx-auto">
+            <div class="relative">
+                <select bind:value={selectedGame} onchange={selectGame} class="w-full bg-transparent placeholder:text-slate-400 text-slate-700 dark:text-gray-300 text-sm border border-slate-200 rounded pl-3 pr-8 py-2 transition duration-300 focus:outline-none focus:border-slate-400 hover:border-slate-400 shadow-sm focus:shadow-md appearance-none cursor-pointer">
+                    {#each getSaveList() as item}
+                        <option>{ item }</option>
+                    {/each}
+                </select>
+                <DropDown />
+            </div>
         </div>
-    </div>
+    {/if}
 
-    <button onclick={handleSave} class="w-18 h-8 rounded-md cursor-pointer mx-2 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium text-sm text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-        保存
-    </button>
+    {#if getModeState() === "memoryEditor"}
+        <button class="cursor-pointer ml-2">
+            <Refresh />
+            <span class="sr-only">Refresh</span>
+        </button>
+    {/if}
 
-    <button class="cursor-pointer mr-2">
-        <More />
-        <span class="sr-only">More</span>
-    </button>
+    <About />
 
 </HStack>
 

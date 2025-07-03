@@ -1,6 +1,6 @@
 import struct
 
-from .utils import get_resource_path
+from ..utils import get_resource_path
 
 class Blowfish:
 

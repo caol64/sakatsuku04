@@ -27,7 +27,7 @@
         <MemoryCard />
     </div>
     <div class="flex flex-col space-y-2">
-        <p class="text-gray-700 text-base font-medium">
+        <p class="text-gray-700 dark:text-gray-300 text-base font-medium">
             请打开存档文件。
         </p>
         <div class="flex items-center space-x-2 text-sm">

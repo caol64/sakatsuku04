@@ -2,21 +2,21 @@
     import { getSelectedTab } from "$lib/globalState.svelte";
     import VStack from "$lib/components/Stack/VStack.svelte";
     import Tabs from "./Tabs.svelte";
-    import ClubEditor from "./BaseEditor.svelte";
-    import MyTeamEditor from "./MyTeamEditor.svelte";
-    import OtherTeamsEditor from "./OtherTeamsEditor.svelte";
-    import ScoutsEditor from "./ScoutsEditor.svelte";
+    import ClubEditor from "./ClubEditor.svelte";
+    import PlayersView from "./PlayersView.svelte";
+    import TeamsView from "./TeamsView.svelte";
+    import ScoutsView from "./ScoutsView.svelte";
 </script>
 
 <VStack className="px-2 flex-1 h-screen">
     <Tabs />
-    {#if getSelectedTab() === "Base"}
+    {#if getSelectedTab() === "Club"}
         <ClubEditor />
-    {:else if getSelectedTab() === "My Team"}
-        <MyTeamEditor />
-    {:else if getSelectedTab() === "Other Teams"}
-        <OtherTeamsEditor />
+    {:else if getSelectedTab() === "Players"}
+        <PlayersView />
+    {:else if getSelectedTab() === "Teams"}
+        <TeamsView />
     {:else if getSelectedTab() === "Scouts"}
-        <ScoutsEditor />
+        <ScoutsView />
     {/if}
 </VStack>

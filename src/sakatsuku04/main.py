@@ -1,18 +1,17 @@
-import sys
-import subprocess
-import socket
-import time
-import webview
 import atexit
-import bottle
+import socket
+import subprocess
+import sys
+import time
 
-from .utils import get_resource_path, team_group_index
-from .bit_stream import InputBitStream, OutputBitStream
-from .readers import ClubReader, OtherTeamReader, TeamReader
-from .models import Club, MyTeam, OtherTeam, Saka04SaveEntry, IntBitField, StrBitField
-from .dtos import ClubDto, TeamDto, TeamsWithRegionDto
-from .save_reader import SaveHeadReader, SaveReader
-from .memcard_reader import MemcardReader
+import bottle
+import webview
+
+from .data_reader import DataReader
+from .dtos import ClubDto, MyPlayerDto
+from .savereader.readers import SaveDataReader
+from .pcsx2reader.readers import Pcsx2DataReader
+from .utils import get_resource_path
 
 
 class MainApp:
@@ -20,20 +19,14 @@ class MainApp:
         self.web_root = web_root
         self.dev_port = dev_port
         self.bottle_app: bottle.Bottle = None
-        self.mc_reader: MemcardReader = None
-        self.save_entries: dict[str, Saka04SaveEntry] = None
-        self.save_reader: SaveReader = None
-        self.in_bit_stream: InputBitStream = None
-        self.out_bit_stream: OutputBitStream = None
-        self.club: Club = None
-        self.my_team: MyTeam = None
-        self.other_teams: list[OtherTeam] = None
         self.window_size = (1024, 768)
         self.app_name = ""
         self.app_version = 0
+        self.data_raader: DataReader = None
 
     def get_project_info(self, pyproject_path="pyproject.toml") -> tuple:
         import tomllib
+
         with open(pyproject_path, "rb") as f:
             data = tomllib.load(f)
         return data["project"]["name"], data["project"]["version"]
@@ -52,7 +45,13 @@ class MainApp:
             vite_process.kill()
             sys.exit(1)
 
-        window = webview.create_window(self.app_name, url=f"http://localhost:{self.dev_port}", width=self.window_size[0], height=self.window_size[1], min_size=self.window_size)
+        window = webview.create_window(
+            self.app_name,
+            url=f"http://localhost:{self.dev_port}",
+            width=self.window_size[0],
+            height=self.window_size[1],
+            min_size=self.window_size,
+        )
         self._expose(window)
         webview.start(debug=True)
 
@@ -61,25 +60,22 @@ class MainApp:
         self._run_prod(False)
 
     def run_release(self):
-        self.app_name, self.app_version = self.get_project_info(get_resource_path("pyproject.toml").resolve())
+        self.app_name, self.app_version = self.get_project_info(
+            get_resource_path("pyproject.toml").resolve()
+        )
         self._run_prod(True)
 
     def _run_prod(self, is_release: bool):
         self.bottle_app = self._create_bottle_app(is_release)
-        window = webview.create_window(self.app_name, url=self.bottle_app, width=self.window_size[0], height=self.window_size[1], min_size=self.window_size)
+        window = webview.create_window(
+            self.app_name,
+            url=self.bottle_app,
+            width=self.window_size[0],
+            height=self.window_size[1],
+            min_size=self.window_size,
+        )
         self._expose(window)
         webview.start()
-
-    def _expose(self, window: webview.Window):
-        window.expose(
-            self.pick_file,
-            self.reset,
-            self.fetch_save_data,
-            self.save_club_data,
-            self.fetch_other_teams,
-            self.fetch_team_player,
-            self.fetch_my_team,
-        )
 
     def _wait_for_port(self, host: str, port: int, timeout: int = 30):
         """Wait until a port becomes available within a timeout"""
@@ -90,119 +86,96 @@ class MainApp:
                     return True
             except OSError:
                 time.sleep(0.1)
-        raise TimeoutError(f"Port {port} on {host} not available after {timeout} seconds")
+        raise TimeoutError(
+            f"Port {port} on {host} not available after {timeout} seconds"
+        )
 
     def _start_vite(self):
         """Start Vite development server"""
-        return subprocess.Popen(["pnpm", "--filter", "webview", "dev"],
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.STDOUT)
+        return subprocess.Popen(
+            ["pnpm", "--filter", "webview", "dev"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+        )
 
     def _create_bottle_app(self, is_release: bool) -> bottle.Bottle:
         app = bottle.Bottle()
 
-        @app.route('/')
-        @app.route('/<file:path>')
+        @app.route("/")
+        @app.route("/<file:path>")
         def index(file=None):
             if not file:
                 file = "index.html"
-            bottle.response.set_header('Cache-Control', 'no-cache, no-store, must-revalidate')
-            bottle.response.set_header('Pragma', 'no-cache')
-            bottle.response.set_header('Expires', 0)
-            web_root = get_resource_path("webview/build").resolve() if is_release else self.web_root
+            bottle.response.set_header(
+                "Cache-Control", "no-cache, no-store, must-revalidate"
+            )
+            bottle.response.set_header("Pragma", "no-cache")
+            bottle.response.set_header("Expires", 0)
+            web_root = (
+                get_resource_path("webview/build").resolve()
+                if is_release
+                else self.web_root
+            )
             return bottle.static_file(file, root=web_root)
 
         return app
 
+    def _expose(self, window: webview.Window):
+        window.expose(
+            self.pick_file,
+            self.connect_pcsx2,
+            self.reset,
+            self.select_game,
+            self.fetch_club_data,
+            self.save_club_data,
+            self.fetch_team_player,
+            self.fetch_my_team,
+            self.fetch_my_player,
+            self.save_my_player,
+        )
+
     def pick_file(self) -> list:
-        file_paths = webview.windows[0].create_file_dialog(webview.OPEN_DIALOG, allow_multiple=False)
+        file_paths = webview.windows[0].create_file_dialog(
+            webview.OPEN_DIALOG, allow_multiple=False
+        )
         if file_paths:
-            self.mc_reader = MemcardReader(file_paths[0])
-            save_entries = self.mc_reader.read_save_entries()
-            self.save_entries = { item.name: item for item in save_entries }
-            return [{ "name": e.name } for e in save_entries]
+            self.data_raader = SaveDataReader(file_paths[0])
+            return self.data_raader.games()
         else:
             return None
 
+    def connect_pcsx2(self) -> bool:
+        self.data_raader = Pcsx2DataReader()
+        return self.data_raader.check_connect()
+
     def reset(self):
-        self.mc_reader = None
-        self.save_entries = None
-        self.save_reader = None
-        self.in_bit_stream = None
-        self.out_bit_stream = None
-        self.club = None
-        self.my_team = None
-        self.other_teams = None
+        if self.data_raader:
+            self.data_raader.reset()
 
-    def fetch_save_data(self, selected_game: str) -> dict:
-        save_entry = self.save_entries.get(selected_game)
-        self.save_reader = SaveReader(save_entry.main_save_entry)
-        self.save_reader.check_crc()
-        self.save_reader.dec()
-        decoded_byte_array = self.save_reader.decoded_data()
-        self.in_bit_stream = InputBitStream(decoded_byte_array)
-        self.out_bit_stream = OutputBitStream(decoded_byte_array)
-        club_reader = ClubReader(self.in_bit_stream)
-        self.club = club_reader.read()
-        team_reader = TeamReader(self.in_bit_stream)
-        self.my_team = team_reader.read()
-        oteam_reader = OtherTeamReader(self.in_bit_stream)
-        self.other_teams = oteam_reader.read()
-        return self.club.to_dto().model_dump(by_alias=True)
+    def select_game(self, game: str):
+        self.data_raader.select_game(game)
 
-    def save_club_data(self, data: dict, selected_game: str) -> dict:
-        save_entry = self.save_entries.get(selected_game)
+    def fetch_club_data(self) -> dict:
+        return self.data_raader.read_club().model_dump(by_alias=True)
+
+    def save_club_data(self, data: dict) -> dict:
         club_data = ClubDto.model_validate(data)
-        self.club.set_funds(club_data.fund_heigh, club_data.fund_low)
-        self.club.year.value = club_data.year + 2003
-        self.club.difficulty.value = club_data.difficulty
-        bits_fields = list()
-        bits_fields.append(self.club.funds)
-        bits_fields.append(self.club.year)
-        bits_fields.append(self.club.difficulty)
-        head_reader = SaveHeadReader(save_entry.save_head_entry)
-        head_reader.check_crc()
-        head = head_reader.read()
-        head.year.value = club_data.year + 2003
-        head_reader.write(head.year)
-        head_bytes = head_reader.build_save_bytes()
-        self._save(selected_game, bits_fields, head_bytes)
-        return {
-            "message": "success"
-        }
+        self.data_raader.save_club(club_data)
+        return {"message": "success"}
 
     def fetch_my_team(self) -> list:
-        result = []
-        for player in [player for player in self.my_team.sorted_players if player.id.value != 0xffff]:
-            result.append(player.to_dto().model_dump(by_alias=True))
-        return result
-
-    def fetch_other_teams(self) -> list:
-        group_names = sorted(team_group_index.keys(), key=lambda k: team_group_index[k])
-        result = []
-        for i, group_name in enumerate(group_names):
-            start_index = team_group_index[group_name]
-            end_index = team_group_index[group_names[i + 1]] if i + 1 < len(group_names) else len(self.other_teams)
-            teams_with_region = TeamsWithRegionDto(region=group_name, teams=[])
-            for team in self.other_teams[start_index:end_index]:
-                teams_with_region.teams.append(TeamDto(index=team.index, name=team.name, friendly=team.friendly.value))
-            result.append(teams_with_region.model_dump(by_alias=True))
-        return result
+        return [f.model_dump(by_alias=True) for f in self.data_raader.read_myteam()]
 
     def fetch_team_player(self, team_index: int) -> list:
-        team = self.other_teams[team_index]
-        result = []
-        for player in [player for player in team.sorted_players if player.id.value != 0xffff]:
-            result.append(player.to_dto().model_dump(by_alias=True))
-        return result
+        return [f.model_dump(by_alias=True) for f in self.data_raader.read_other_team_players(team_index)]
 
-    def _save(self, selected_game: str, bit_fields: list[IntBitField | StrBitField], head_bytes: bytes):
-        for bit_field in bit_fields:
-            self.out_bit_stream.pack_bits(bit_field)
-        self.save_reader.update_decode_buffer(self.out_bit_stream.input_data)
-        encode_buffer = self.save_reader.enc()
-        save_bin = self.save_reader.build_save_bytes(encode_buffer)
-        self.mc_reader.write_save_entry(selected_game, save_bin, head_bytes)
+    def fetch_my_player(self, id: int) -> dict:
+        return self.data_raader.read_myplayer(id).model_dump(by_alias=True)
+
+    def save_my_player(self, data: dict) -> dict:
+        player_data = MyPlayerDto.model_validate(data)
+        self.data_raader.save_player(player_data)
+        return {"message": "success"}
 
 
 def main():

@@ -354,7 +354,7 @@ wheels = [
 ]
 
 [[package]]
-name = "saka04editor"
+name = "saka04-editor"
 version = "1.0.6"
 source = { editable = "." }
 dependencies = [

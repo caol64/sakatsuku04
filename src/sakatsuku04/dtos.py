@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, computed_field
 from pydantic.alias_generators import to_camel
 
 
@@ -15,10 +15,22 @@ class ClubDto(BaseDto):
     month: int
     date: int
     day: int
-    fund_heigh: int
-    fund_low: int
+    funds: int = None
     manager_name: str
     difficulty: int
+
+    @computed_field
+    @property
+    def funds_high(self) -> int:
+        return self.funds // 10000
+
+    @computed_field
+    @property
+    def funds_low(self) -> int:
+        return self.funds % 10000
+
+    def set_funds(self):
+        self.funds = self.funds_high * 10000 + self.funds_low
 
 
 class PlayerAbilityDto(BaseDto):
@@ -26,7 +38,9 @@ class PlayerAbilityDto(BaseDto):
     current: int
     current_max: int
     max: int
-    name: str
+    current_percent: float
+    current_max_percent: float
+    max_percent: float
 
 
 class MyPlayerDto(BaseDto):
@@ -35,46 +49,25 @@ class MyPlayerDto(BaseDto):
     age: int
     number: int
     name: str
-    # abilities: list[PlayerAbilityDto]
-    # born: int
-    # born2: int
-    # abroad_times: int
-    # abroad_days: int
-    # height: int
-    # foot: int
-    # rank: int
-    # pos: int
-    # pos2: int
-    # grow_type_phy: int
-    # grow_type_tec: int
-    # grow_type_bra: int
-    # tone_type: int
-    # cooperation_type: int
-    # style: int
-    # style_equip: int
-    # style_learned1: int
-    # style_learned2: int
-    # style_learned3: int
-    # style_learned4: int
-    # magic_value: int
-    # prefer_foot: str
-    # readable_rank: str
-    # readable_style: str
-    # readable_born: str
-    # readable_cooperation_type: str
-    # readable_pos: str
-    # readable_tone_type: str
+    born: int
+    abroad_times: int
+    height: int
+    foot: int
+    rank: int
+    pos: int
+    grow_type_phy: int
+    grow_type_tec: int
+    grow_type_sys: int
+    tone_type: int
+    cooperation_type: int
+    style: int
+    abilities: list[PlayerAbilityDto]
 
 
 class TeamDto(BaseDto):
     index: int
     name: str
     friendly: int
-
-
-class TeamsWithRegionDto(BaseDto):
-    region: str
-    teams: list[TeamDto]
 
 
 class OtherTeamPlayerDto(BaseDto):
@@ -85,8 +78,8 @@ class OtherTeamPlayerDto(BaseDto):
     name: str
     rank: str
     pos: str
-    team_work: str
+    cooperation_type: str
     tone_type: str
     grow_type_phy: str
-    grow_type_tech: str
+    grow_type_tec: str
     grow_type_sys: str

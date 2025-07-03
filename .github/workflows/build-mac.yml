@@ -8,13 +8,23 @@ jobs:
     runs-on: macos-latest
 
     steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
     - name: setup python
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v5
       with:
           python-version: "3.13"
 
-    - name: Checkout repository
-      uses: actions/checkout@v4
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: "22"
+
+    - name: Build webview
+      run: |
+        cd webview
+        npm install && vite build
 
     - name: Install dependencies
       run: |
@@ -29,4 +39,4 @@ jobs:
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
-        path: dist/Saka04SaveEditor.app
+        path: dist/Saka04Editor.app

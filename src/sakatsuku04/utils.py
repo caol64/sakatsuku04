@@ -4,33 +4,28 @@ import importlib.resources
 from pathlib import Path
 
 
-team_group_index = {
-    "日本": 0,
-    "亚太": 30,
-    "东欧": 54,
-    "英国": 69,
-    "法国": 93,
-    "西班牙": 114,
-    "葡萄牙": 134,
-    "比利时": 152,
-    "荷兰": 154,
-    "意大利": 172,
-    "德国": 190,
-    "欧洲": 208,
-    "非洲": 213,
-    "巴西": 221,
-    "阿根廷": 245,
-    "美洲": 248,
-}
+_cn_char_dict: dict[str, str] = None
 
-def decode_bytes_to_str(byte_array: bytes) -> str:
-    if CnVersion.CN_VER:
+def get_cn_char_dict() -> dict[str, str]:
+    global _cn_char_dict
+    if _cn_char_dict is None:
+        _cn_char_dict = {}
+        with open(get_resource_path('cn.csv'), 'r', encoding='utf8', newline='') as csvfile:
+            reader = csv.reader(csvfile)
+            for row in reader:
+                if len(row) == 2:
+                    key, value = row
+                    _cn_char_dict[key] = value
+    return _cn_char_dict
+
+def decode_bytes_to_str(byte_array: bytes, is_cn = False) -> str:
+    if is_cn:
         return decode_cn(byte_array)
     else:
         return decode_sjis(byte_array)
 
-def encode_str_to_bytes(string: str) -> bytes:
-    if CnVersion.CN_VER:
+def encode_str_to_bytes(string: str, is_cn = False) -> bytes:
+    if is_cn:
         return encode_cn(string)
     else:
         return encode_sjis(string)
@@ -78,7 +73,7 @@ def encode_sjis(s: str) -> bytes:
 
 def decode_cn(s: bytes) -> str:
     decoded_str = []
-    code_map = CnVersion.get_char_dict()
+    code_map = get_cn_char_dict()
     i = 0
     length = len(s)
 
@@ -99,7 +94,7 @@ def decode_cn(s: bytes) -> str:
 
 def encode_cn(s: str) -> bytes:
     encoded_bytes = bytearray()
-    code_map_reversed = {v: k for k, v in CnVersion.get_char_dict.items()} # 反转字典，方便查找
+    code_map_reversed = {v: k for k, v in get_cn_char_dict().items()} # 反转字典，方便查找
     for char in s:
         if char in code_map_reversed:
             encoded_bytes.extend(bytes.fromhex(code_map_reversed[char]))
@@ -114,43 +109,3 @@ def encode_cn(s: str) -> bytes:
 def get_resource_path(relative_path) -> Path:
     with importlib.resources.path("sakatsuku04.resource", relative_path) as file_path:
         return file_path
-    # if hasattr(sys, "_MEIPASS"):
-    #     # 打包环境：资源文件位于 _MEIPASS 指定的临时目录
-    #     return Path(sys._MEIPASS).resolve() / relative_path
-    # else:
-    #     # 开发环境：资源文件位于当前脚本所在的目录
-    #     return Path(__file__).resolve().parent.parent / relative_path
-
-
-def convert_rank(rank: int) -> str:
-    rank_dict = {
-        0: 'SSS',
-        1: 'SS',
-        2: 'S',
-        3: 'A',
-        4: 'B',
-        5: 'C',
-        6: 'D',
-        7: 'E',
-        8: 'F',
-        9: 'G',
-        10: 'H',
-    }
-    return rank_dict.get(rank)
-
-
-class CnVersion:
-    CN_VER = False
-    _cn_char_dict = None
-
-    @classmethod
-    def get_char_dict(cls) -> dict[str, str]:
-        if cls._cn_char_dict is None:
-            cls._cn_char_dict = {}
-            with open(get_resource_path('cn.csv'), 'r', encoding='utf8', newline='') as csvfile:
-                reader = csv.reader(csvfile)
-                for row in reader:
-                    if len(row) == 2:
-                        key, value = row
-                        cls._cn_char_dict[key] = value
-        return cls._cn_char_dict

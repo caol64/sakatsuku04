@@ -1,4 +1,4 @@
-from .models import IntBitField, StrBitField
+from ..io import IntBitField, StrBitField
 
 
 class InputBitStream:
