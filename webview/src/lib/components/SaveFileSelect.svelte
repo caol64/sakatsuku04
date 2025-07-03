@@ -23,7 +23,7 @@
 </script>
 
 <div class="flex items-center justify-center space-x-20 w-full">
-    <div class="text-gray-300 text-6xl">
+    <div class="text-gray-500 dark:text-gray-300 text-6xl">
         <MemoryCard />
     </div>
     <div class="flex flex-col space-y-2">

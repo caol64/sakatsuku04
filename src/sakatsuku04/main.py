@@ -1,4 +1,5 @@
 import atexit
+import platform
 import socket
 import subprocess
 import sys
@@ -19,7 +20,10 @@ class MainApp:
         self.web_root = web_root
         self.dev_port = dev_port
         self.bottle_app: bottle.Bottle = None
-        self.window_size = (1024, 768)
+        if platform.system() == "Darwin":
+            self.window_size = (1024, 768)
+        else:
+            self.window_size = (1280, 800)
         self.app_name = ""
         self.app_version = 0
         self.data_raader: DataReader = None
