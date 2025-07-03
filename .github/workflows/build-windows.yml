@@ -24,7 +24,8 @@ jobs:
     - name: Build webview
       run: |
         cd webview
-        npm install && vite build
+        npm install
+        npx vite build
 
     - name: Install dependencies
       run: |
