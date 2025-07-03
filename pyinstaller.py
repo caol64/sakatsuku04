@@ -2,7 +2,7 @@ import tomllib
 import PyInstaller.__main__
 from pathlib import Path
 
-config = tomllib.loads(Path("pyproject.toml").read_text())
+config = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
 
 pyi_cfg = config["tool"]["pyinstaller"]
 
