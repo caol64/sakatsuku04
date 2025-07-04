@@ -66,6 +66,7 @@ onefile = true
 windowed = true
 add_data = [
     "src/sakatsuku04/resource:sakatsuku04/resource",
+    "src/sakatsuku04/libs:sakatsuku04/libs",
     "webview/build:sakatsuku04/resource/webview/build",
     "pyproject.toml:sakatsuku04/resource",
 ]
