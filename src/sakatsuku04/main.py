@@ -15,6 +15,9 @@ from .pcsx2reader.readers import Pcsx2DataReader
 from .utils import get_resource_path
 
 
+APP_NAME = "球会04修改器"
+
+
 class MainApp:
     def __init__(self, web_root: str = "./webview/build", dev_port: int = 1420):
         self.web_root = web_root
@@ -24,8 +27,8 @@ class MainApp:
             self.window_size = (1024, 768)
         else:
             self.window_size = (1080, 830)
-        self.app_name = ""
-        self.app_version = 0
+        self.app_name = APP_NAME
+        self.app_version = ""
         self.data_raader: DataReader = None
 
     def get_project_info(self, pyproject_path="pyproject.toml") -> tuple:
@@ -36,7 +39,7 @@ class MainApp:
         return data["project"]["name"], data["project"]["version"]
 
     def run_dev(self):
-        self.app_name, self.app_version = self.get_project_info()
+        _, self.app_version = self.get_project_info()
         print("🔧 Starting Vite dev server...")
         vite_process = self._start_vite()
         atexit.register(vite_process.terminate)
@@ -60,11 +63,11 @@ class MainApp:
         webview.start(debug=True)
 
     def run_prod(self):
-        self.app_name, self.app_version = self.get_project_info()
+        _, self.app_version = self.get_project_info()
         self._run_prod(False)
 
     def run_release(self):
-        self.app_name, self.app_version = self.get_project_info(
+        _, self.app_version = self.get_project_info(
             get_resource_path("pyproject.toml").resolve()
         )
         self._run_prod(True)
@@ -126,6 +129,7 @@ class MainApp:
 
     def _expose(self, window: webview.Window):
         window.expose(
+            self.get_version,
             self.pick_file,
             self.connect_pcsx2,
             self.reset,
@@ -139,6 +143,9 @@ class MainApp:
             self.fetch_team_friendly,
             self.save_team_friendly,
         )
+
+    def get_version(self) -> str:
+        return self.app_version
 
     def pick_file(self) -> list:
         file_paths = webview.windows[0].create_file_dialog(

@@ -1,12 +1,12 @@
 <script lang="ts">
-    const leftCol = ["bg-orange-600", "bg-red-600", "bg-orange-600"];
+    const leftCol = ["bg-white", "bg-white", "bg-white"];
     const middleCol = [
-        "bg-orange-600",
-        "bg-cyan-400",
-        "bg-cyan-400",
-        "bg-cyan-400",
+        "bg-white",
+        "bg-white",
+        "bg-white",
+        "bg-white",
     ];
-    const rightCol = ["bg-cyan-400", "bg-orange-600", "bg-cyan-400"];
+    const rightCol = ["bg-white", "bg-white", "bg-cwhite"];
 </script>
 
 <div class="flex flex-col items-center p-2 rounded-lg bg-white dark:bg-gray-700">
@@ -44,7 +44,7 @@
         <!-- 额外的中间格子：直接位于主图形下方 -->
         <div class="w-1/3 flex-none">
             <div
-                class="bg-green-500 flex-1 h-[25px] border border-slate-800"
+                class="bg-white flex-1 h-[25px] border-2 border-slate-800"
             ></div>
         </div>
     </div>

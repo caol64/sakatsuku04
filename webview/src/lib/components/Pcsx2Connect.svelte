@@ -29,6 +29,12 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                 </svg>
             </button>
+            <a href="https://yuzhi.tech/docs/saka04/pcsx2" target="_blank" class="text-blue-600 cursor-pointer flex items-center">
+                遇到问题？
+                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            </a>
         </div>
     </div>
 </div>

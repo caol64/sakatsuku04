@@ -15,8 +15,8 @@
     let myPlayers: MyTeamPlayer[] = $state([]);
     let selectedPlayer = $state(0);
     let myPlayer: MyPlayer = $state({ abilities: [] });
-    let stats = [0.9, 0.7, 0.6, 0.5, 0.8, 0.4];
-    let bars = [0.9, 0.5, 0.7];
+    let stats = [0, 0, 0, 0, 0, 0];
+    let bars = [0, 0, 0];
 
     let abilityPairs = $derived(
         sortedAbilities.map((label, i) => ({
@@ -100,11 +100,11 @@
 
 <HStack className="flex-1 overflow-hidden m-2.5">
     <VStack className="w-1/5 mr-1">
-        <HStack className="space-x-4 mb-2 mx-2">
+        <!-- <HStack className="space-x-4 mb-2 mx-2">
             <button class="badges">一线队</button>
             <button class="badges">青年队</button>
             <button class="badges">转会市场</button>
-        </HStack>
+        </HStack> -->
         <div class="sidebar">
             {#each myPlayers as item}
                 <button onclick={() => fetchMyPlayer(item.id)} class={ selectedPlayer === item.id ? "activate" : "" }>
@@ -136,7 +136,7 @@
             </div>
             <p>隐藏属性</p>
             <div class="pl-4">
-                <p>逆境<span>{myPlayer?.desire}</span></p>
+                <p>进取<span>{myPlayer?.desire}</span></p>
                 <p>高傲<span>{myPlayer?.pride}</span></p>
                 <p>野心<span>{myPlayer?.ambition}</span></p>
                 <p>毅力<span>{myPlayer?.persistence}</span></p>

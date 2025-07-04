@@ -1,9 +1,11 @@
 <script lang="ts">
-    import More from "$lib/icons/More.svelte";
+    import Info from "$lib/icons/Info.svelte";
+    import { onMount } from "svelte";
     import GithubButton from "./GithubButton.svelte";
     import Modal from "./Modal.svelte";
 
     let isModalOpen = $state(false);
+    let version = $state("");
 
     function openModal() {
         isModalOpen = true;
@@ -12,10 +14,18 @@
     function closeModal() {
         isModalOpen = false;
     }
+
+    onMount(async () => {
+        if (window.pywebview?.api?.get_version) {
+            version = await window.pywebview.api.get_version();
+        } else {
+            alert('API 未加载');
+        }
+    });
 </script>
 
 <button class="cursor-pointer mx-2" onclick={openModal}>
-    <More />
+    <Info />
     <span class="sr-only">More</span>
 </button>
 
@@ -36,7 +46,7 @@
                 <span class="font-semibold">作者：</span> <a href="https://babyno.top/" class="text-blue-600 dark:text-blue-500 hover:underline" target="_blank">路边的阿不</a>
             </p>
             <p class="text-base">
-                <span class="font-semibold">版本：</span> 1.0.6
+                <span class="font-semibold">版本：</span> {version}
             </p>
         </div>
 

@@ -13,7 +13,7 @@ from .models import (
     OtherTeam,
 )
 from .entry_reader import EntryReader, HeadEntryReader
-from ..io import IntBitField, StrBitField
+from ..io import CnVer, IntBitField, StrBitField
 
 
 class BaseReader:
@@ -743,6 +743,7 @@ class SaveDataReader(DataReader):
         self.my_team = team_reader.read()
         oteam_reader = OtherTeamReader(in_bit_stream)
         self.other_teams = oteam_reader.read()
+        CnVer.is_cn = self.is_cn()
 
     def read_club(self) -> ClubDto:
         if not self.selected_game:
@@ -848,7 +849,7 @@ class SaveDataReader(DataReader):
     def reset(self): ...
 
     def is_cn(self) -> bool:
-        return False
+        return True
 
     def _save(
         self,
