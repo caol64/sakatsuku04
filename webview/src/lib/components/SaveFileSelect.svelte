@@ -1,16 +1,17 @@
 <script lang="ts">
-    import { setSaveList, setModeState } from "$lib/globalState.svelte";
+    import { setSaveList, setModeState, setIsLoading } from "$lib/globalState.svelte";
     import MemoryCard from "$lib/icons/MemoryCard.svelte";
 
     async function openFileDialog() {
         const api = window.pywebview?.api;
 
         if (!api?.pick_file) {
-            alert('pywebview API 未加载');
+            alert('API 未加载');
             return;
         }
 
         try {
+            setIsLoading(true);
             const pageData = await api.pick_file();
             if (!pageData || pageData.length === 0) return;
             setSaveList(pageData);
@@ -18,6 +19,8 @@
         } catch (err) {
             console.error("Error during file open:", err);
             alert("文件读取失败");
+        } finally {
+            setIsLoading(false);
         }
     }
 </script>

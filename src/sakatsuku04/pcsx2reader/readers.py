@@ -3,10 +3,10 @@ import platform
 import importlib.resources
 from ctypes import c_char_p, c_void_p, c_uint, c_ulong, c_char, c_bool
 
-from .models import Club, MyPlayer, OtherTeam, OtherPlayer
-from ..io import IntByteField, StrByteField
+from .models import Club, MyPlayer, OtherTeam, OtherPlayer, MyPlayerAbility
+from ..io import IntByteField, StrByteField, CnVer
 from ..data_reader import DataReader
-from ..dtos import ClubDto, MyPlayerDto, OtherTeamPlayerDto
+from ..dtos import ClubDto, MyPlayerDto, MyTeamPlayerDto, OtherTeamPlayerDto
 from ..objs import Position
 
 
@@ -19,7 +19,7 @@ class Pcsx2DataReader(DataReader):
         if(cur_os == "Linux"):
             lib="libpine_c.so"
         elif(cur_os == "Windows"):
-            lib="libpine_c.dll"
+            lib="pine_c.dll"
         elif(cur_os == "Darwin"):
             lib="libpine_c.dylib"
         with importlib.resources.path("sakatsuku04.libs", lib) as file_path:
@@ -49,6 +49,11 @@ class Pcsx2DataReader(DataReader):
             2: self._read_16bit,
             4: self._read_32bit,
         }
+        self._write_funcs = {
+            1: self._write_8bit,
+            2: self._write_16bit,
+            4: self._write_32bit,
+        }
 
     def _read_8bit(self, address: int) -> int:
         return self.libipc.pine_read(self.ipc, address, c_char(0), False)
@@ -66,8 +71,18 @@ class Pcsx2DataReader(DataReader):
             result += int_value.to_bytes(1, 'little')
         return bytes(result)
 
+    def _write_8bit(self, address: int, value: int):
+        self.libipc.pine_write(self.ipc, address, c_ulong(value), c_char(4), False)
+
+    def _write_16bit(self, address: int, value: int):
+        self.libipc.pine_write(self.ipc, address, c_ulong(value), c_char(5), False)
+
     def _write_32bit(self, address: int, value: int):
         self.libipc.pine_write(self.ipc, address, c_ulong(value), c_char(6), False)
+
+    def _write_str(self, address: int, value: bytes):
+        for i in range(len(value)):
+            self._write_8bit(address + i, value[i])
 
     def _get_error(self) -> int:
         return self.libipc.pine_get_error(self.ipc)
@@ -81,9 +96,15 @@ class Pcsx2DataReader(DataReader):
         value = self._read_funcs[byte_length](address)
         return IntByteField(byte_length, value, address)
 
+    def _write_int_byte(self, byte_field: IntByteField):
+        self._write_funcs[byte_field.byte_length](byte_field.byte_offset, byte_field.value)
+
     def _read_str_byte(self, address: int, byte_length: int = 1) -> StrByteField:
         value = self._read_str(address, byte_length)
         return StrByteField(value, address)
+
+    def _write_str_byte(self, byte_field: StrByteField):
+        self._write_str(byte_field.byte_offset, byte_field.byte_array)
 
     def _read_club(self) -> Club:
         club = Club()
@@ -95,6 +116,7 @@ class Pcsx2DataReader(DataReader):
         club.difficulty = self._read_int_byte(0x7050D5)
         club.manager_name = self._read_str_byte(0x703D5C, 0x10)
         club.club_name = self._read_str_byte(0x703D7C, 0x15)
+        club.seed = self._read_int_byte(0x7050CC, 4)
         return club
 
     def _read_myteam(self) -> list[MyPlayer]:
@@ -104,9 +126,7 @@ class Pcsx2DataReader(DataReader):
             player.index = i
             player.id = self._read_int_byte(0x7051E0 + i * 0x240, 2)
             player.pos = self._read_int_byte(0x7051E2 + i * 0x240)
-            player.age = self._read_int_byte(0x7051E3 + i * 0x240)
             player.name = self._read_str_byte(0x705366 + i * 0x240, 0xd)
-            player.number = self._read_int_byte(0x70537A + i * 0x240)
             my_players.append(player)
         return my_players
 
@@ -133,6 +153,53 @@ class Pcsx2DataReader(DataReader):
             players.append(player)
         return players
 
+    def _read_other_team_friendly(self, team_index: int) -> IntByteField:
+        return self._read_int_byte(0x72c85a + team_index * 0x6C, 2)
+
+    def _read_myplayer(self, id: int) -> MyPlayer:
+        my_players = self._read_myteam()
+        target_player = list(filter(lambda p: p.id.value == id, my_players)).pop()
+        player = MyPlayer()
+        player.index = target_player.index
+        i = player.index
+        player.id = self._read_int_byte(0x7051E0 + i * 0x240, 2)
+        player.pos = self._read_int_byte(0x7051E2 + i * 0x240)
+        player.age = self._read_int_byte(0x7051E3 + i * 0x240)
+        player.name = self._read_str_byte(0x705366 + i * 0x240, 0xd)
+        player.born = self._read_int_byte(0x705373 + i * 0x240)
+        player.born2 = self._read_int_byte(0x705374 + i * 0x240)
+        player.rank = self._read_int_byte(0x705375 + i * 0x240)
+        player.pos2 = self._read_int_byte(0x705376 + i * 0x240)
+        player.height = self._read_int_byte(0x705378 + i * 0x240)
+        player.number = self._read_int_byte(0x70537A + i * 0x240)
+        player.foot = self._read_int_byte(0x70537B + i * 0x240)
+        player.desire = self._read_int_byte(0x70538B + i * 0x240)
+        player.pride = self._read_int_byte(0x70538C + i * 0x240)
+        player.ambition = self._read_int_byte(0x70538D + i * 0x240)
+        player.persistence = self._read_int_byte(0x70538E + i * 0x240)
+        player.tone_type = self._read_int_byte(0x705391 + i * 0x240)
+        player.patient = self._read_int_byte(0x705397 + i * 0x240)
+        player.cooperation_type = self._read_int_byte(0x70539A + i * 0x240)
+        player.grow_type_phy = self._read_int_byte(0x70539C + i * 0x240)
+        player.grow_type_tec = self._read_int_byte(0x70539D + i * 0x240)
+        player.grow_type_sys = self._read_int_byte(0x70539E + i * 0x240)
+        player.style = self._read_int_byte(0x7053A5 + i * 0x240)
+        player.magic_value = self._read_int_byte(0x7053AC + i * 0x240, 4)
+        player.abroad_days = self._read_int_byte(0x7053E8 + i * 0x240, 2)
+        player.abroad_times = self._read_int_byte(0x7053F1 + i * 0x240)
+        player.style_equip = self._read_int_byte(0x705408 + i * 0x240)
+        player.style_learned1 = self._read_int_byte(0x70540c + i * 0x240, 4)
+        player.style_learned2 = self._read_int_byte(0x705410 + i * 0x240, 4)
+        player.style_learned3 = self._read_int_byte(0x705414 + i * 0x240, 4)
+        player.style_learned4 = self._read_int_byte(0x705418 + i * 0x240, 4)
+        player.abilities = []
+        for j in range(0x40):
+            current = self._read_int_byte(0x7051E4 + i * 0x240 + j * 6, 2)
+            current_max = self._read_int_byte(0x7051E6 + i * 0x240 + j * 6, 2)
+            max = self._read_int_byte(0x7051E8 + i * 0x240 + j * 6, 2)
+            player.abilities.append(MyPlayerAbility(j, current, current_max, max))
+        return player
+
     def check_connect(self) -> bool:
         is_connected = False
         try:
@@ -146,6 +213,8 @@ class Pcsx2DataReader(DataReader):
         finally:
             if not is_connected:
                 self.reset()
+            else:
+                CnVer.is_cn = self.is_cn()
 
     def games(self) -> list[str]:
         return []
@@ -157,7 +226,7 @@ class Pcsx2DataReader(DataReader):
         club = self._read_club()
         return club.to_dto()
 
-    def read_myteam(self) -> list[MyPlayerDto]:
+    def read_myteam(self) -> list[MyTeamPlayerDto]:
         my_players = self._read_myteam()
         result = []
         for player in [
@@ -165,7 +234,7 @@ class Pcsx2DataReader(DataReader):
             for player in my_players
             if player.id.value != 0xFFFF
         ]:
-            result.append(player.to_dto())
+            result.append(MyTeamPlayerDto(id=player.id.value, name=player.name.value, pos=player.pos.value))
         return sorted(result, key=lambda player: player.pos)
 
     def read_other_team_players(self, team_index: int) -> list[OtherTeamPlayerDto]:
@@ -177,11 +246,91 @@ class Pcsx2DataReader(DataReader):
             result.append(player.to_dto())
         return sorted(result, key=lambda player: Position.ITEMS_REVERSE[player.pos])
 
-    def save_club(self, data: ClubDto) -> bool:
-        ...
+    def read_other_team_friendly(self, team_index: int) -> int:
+        return self._read_other_team_friendly(team_index).value
+
+    def read_myplayer(self, id: int) -> MyPlayerDto:
+        return self._read_myplayer(id).to_dto()
+
+    def save_club(self, club_data: ClubDto) -> bool:
+        club = self._read_club()
+        club.funds.value = club_data.combo_funds()
+        club.year.value = club_data.year + 2003
+        club.difficulty.value = club_data.difficulty
+        bytes_fields = list()
+        bytes_fields.append(club.funds)
+        bytes_fields.append(club.year)
+        bytes_fields.append(club.difficulty)
+        self._save(bytes_fields)
+        return True
+
+    def save_player(self, data: MyPlayerDto) -> bool:
+        player = self._read_myplayer(data.id)
+        if player:
+            player.age.value = data.age
+            player.abroad_times.value = data.abroad_times
+            player.born.value = data.born
+            player.born2.value = data.born
+            player.pos.value = data.pos
+            player.pos2.value = data.pos
+            player.style.value = data.style
+            player.style_equip.value = data.style
+            player.set_style(data.style)
+            player.cooperation_type.value = data.cooperation_type
+            player.tone_type.value = data.tone_type
+            player.grow_type_phy.value = data.grow_type_phy
+            player.grow_type_tec.value = data.grow_type_tec
+            player.grow_type_sys.value = data.grow_type_sys
+            bits_fields = list()
+            bits_fields.append(player.age)
+            bits_fields.append(player.abroad_times)
+            bits_fields.append(player.born)
+            bits_fields.append(player.born2)
+            bits_fields.append(player.pos)
+            bits_fields.append(player.pos2)
+            bits_fields.append(player.style)
+            bits_fields.append(player.style_equip)
+            bits_fields.append(player.style_learned1)
+            bits_fields.append(player.style_learned2)
+            bits_fields.append(player.cooperation_type)
+            bits_fields.append(player.tone_type)
+            bits_fields.append(player.grow_type_phy)
+            bits_fields.append(player.grow_type_tec)
+            bits_fields.append(player.grow_type_sys)
+
+            for ability, new_ability in zip(player.abilities, data.abilities):
+                ability.current.value = new_ability.current
+                ability.current_max.value = new_ability.current_max
+                ability.max.value = new_ability.max
+
+            for ability in player.abilities:
+                bits_fields.append(ability.current)
+                bits_fields.append(ability.current_max)
+                bits_fields.append(ability.max)
+            self._save(bits_fields)
+        return True
+
+    def save_other_team_friendly(self, team_index: int, friendly: int) -> bool:
+        byte_field = self._read_other_team_friendly(team_index)
+        byte_field.value = friendly
+        bits_fields = list()
+        bits_fields.append(byte_field)
+        self._save(bits_fields)
+        return True
 
     def reset(self):
         self.libipc.pine_pcsx2_delete(self.ipc)
 
     def is_cn(self) -> bool:
         return self.libipc.pine_getgameuuid(self.ipc, False) != b'd70c3195'
+
+    def _save(
+        self,
+        bytes_fields: list[IntByteField | StrByteField]
+    ):
+        for field in bytes_fields:
+            if isinstance(field, IntByteField):
+                self._write_int_byte(field)
+            else:
+                self._write_str_byte(field)
+

@@ -1,4 +1,4 @@
-import { defaultClubData, type Club } from "./models";
+import { type Club } from "./models";
 
 // -------mode-------
 
@@ -28,7 +28,7 @@ export function setSaveList(value: string[]) {
 
 // -------clubData-------
 
-let clubData: Club = $state(defaultClubData);
+let clubData: Club = $state({});
 
 export function getClubData(): Club {
     return clubData;
@@ -40,10 +40,10 @@ export function setClubData(data: Club) {
 
 // -------selectedTab-------
 
-export type Tab = "Club" | "Players" | "Teams" | "Scouts";
-export const allTabs: Tab[] = ["Club", "Players", "Teams"];
+export type Tab = "Game" | "Players" | "Teams" | "Scouts";
+export const allTabs: Tab[] = ["Game", "Players", "Teams"];
 
-let selectedTab: Tab = $state("Club");
+let selectedTab: Tab = $state("Game");
 
 export function getSelectedTab() : Tab {
     return selectedTab;
@@ -51,4 +51,32 @@ export function getSelectedTab() : Tab {
 
 export function setSelectedTab(value: Tab) {
     selectedTab = value;
+}
+
+export function setDefaultTab() {
+    selectedTab = "Game";
+}
+
+// -------isLoading-------
+
+let isLoading = $state(false);
+
+export function getIsLoading() {
+    return isLoading;
+}
+
+export function setIsLoading(value: boolean) {
+    isLoading = value;
+}
+
+// -------refreshFlag-------
+
+let refreshFlag = $state(false);
+
+export function getRefreshFlag() {
+    return refreshFlag;
+}
+
+export function setRefreshFlag(value: boolean) {
+    refreshFlag = value;
 }

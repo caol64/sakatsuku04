@@ -1,9 +1,8 @@
 <script lang="ts">
-    import { allTabs, getSelectedTab, setSelectedTab, type Tab, getSaveList, setClubData, setModeState, setSaveList, getClubData, getModeState } from "$lib/globalState.svelte";
+    import { allTabs, setIsLoading, getSelectedTab, setSelectedTab, setDefaultTab, type Tab, getSaveList, setClubData, setModeState, setSaveList, getClubData, getModeState, setRefreshFlag } from "$lib/globalState.svelte";
     import HStack from "$lib/components/Stack/HStack.svelte";
     import Back from "$lib/icons/Back.svelte";
     import { onMount } from "svelte";
-    import { defaultClubData } from "$lib/models";
     import Refresh from "$lib/icons/Refresh.svelte";
     import About from "./About.svelte";
     import DropDown from "$lib/icons/DropDown.svelte";
@@ -17,24 +16,38 @@
     }
 
     async function selectGame() {
-        setSelectedTab("Club");
-        if (window.pywebview?.api?.select_game) {
-            await window.pywebview.api.select_game(selectedGame);
-            const pageData = await window.pywebview.api.fetch_club_data();
-            if (pageData) {
-                setClubData(pageData);
+        try {
+            setIsLoading(true);
+            setDefaultTab();
+            if (window.pywebview?.api?.select_game) {
+                await window.pywebview.api.select_game(selectedGame);
+                const pageData = await window.pywebview.api.fetch_club_data();
+                if (pageData) {
+                    setClubData(pageData);
+                }
+            } else {
+                alert('API 未加载');
             }
-        } else {
-            alert('pywebview API 未加载');
+        } finally {
+            setIsLoading(false);
         }
+
     }
 
     async function reset() {
         setModeState("");
         setSaveList([]);
-        setClubData(defaultClubData);
-        setSelectedTab("Club");
+        setClubData({});
+        setDefaultTab();
         selectedGame = "";
+    }
+
+    async function refresh() {
+        if (getSelectedTab() === "Game") {
+            selectGame();
+        } else {
+            setRefreshFlag(true);
+        }
     }
 
     onMount(() => {
@@ -43,18 +56,6 @@
         }
         selectGame();
     });
-
-    async function handleSave() {
-        if (window.pywebview?.api?.save_club_data) {
-            console.log(getClubData());
-            // const pageData: Response = await window.pywebview.api.save_club_data(getBaseData(), selectedGame);
-            // if (pageData) {
-            //     console.log(pageData);
-            // }
-        } else {
-            alert('pywebview API 未加载');
-        }
-    }
 </script>
 
 <HStack className="items-center w-full">
@@ -85,7 +86,7 @@
     {/if}
 
     {#if getModeState() === "memoryEditor"}
-        <button class="cursor-pointer ml-2">
+        <button onclick={refresh} class="cursor-pointer ml-2">
             <Refresh />
             <span class="sr-only">Refresh</span>
         </button>

@@ -1,6 +1,10 @@
 from .utils import decode_bytes_to_str, encode_str_to_bytes, zero_pad, zero_terminate
 
 
+class CnVer:
+    is_cn = False
+
+
 class IntBitField:
     def __init__(self, bit_length: int, value: int, bit_offset: int):
         self.bit_length = bit_length
@@ -16,11 +20,11 @@ class StrBitField:
 
     @property
     def value(self) -> str:
-        return zero_terminate(decode_bytes_to_str(self.byte_array))
+        return zero_terminate(decode_bytes_to_str(self.byte_array, CnVer.is_cn))
 
     @value.setter
     def value(self, string: str):
-        self.byte_array = zero_pad(encode_str_to_bytes(string), self.byte_length)
+        self.byte_array = zero_pad(encode_str_to_bytes(string, CnVer.is_cn), self.byte_length)
 
 
 class IntByteField:
@@ -38,8 +42,8 @@ class StrByteField:
 
     @property
     def value(self) -> str:
-        return zero_terminate(decode_bytes_to_str(self.byte_array))
+        return zero_terminate(decode_bytes_to_str(self.byte_array, CnVer.is_cn))
 
     @value.setter
     def value(self, string: str):
-        self.byte_array = zero_pad(encode_str_to_bytes(string), self.byte_length)
+        self.byte_array = zero_pad(encode_str_to_bytes(string, CnVer.is_cn), self.byte_length)

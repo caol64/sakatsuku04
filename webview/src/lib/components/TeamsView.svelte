@@ -5,15 +5,16 @@
     import { onMount } from "svelte";
     import teamsData from "$locales/teams_zh.json";
     import teamGroupsData from "$locales/team_groups_zh.json";
+    import { getRefreshFlag, getSelectedTab, setRefreshFlag } from "$lib/globalState.svelte";
 
     let treeData: TeamsWithRegion[] = $state([]);
     let openedRegion = $state("");
     let selectedTeam: Team = $state({
         index: 0,
-        name: "",
-        friendly: 0
+        name: ""
     });
     let teamPlayers: TeamPlayer[] = $state([]);
+    let teamFriendly = $state(0);
 
 	function toggleRegion(region: string) {
 		openedRegion = openedRegion === region ? "" : region;
@@ -23,12 +24,14 @@
 		selectedTeam = team;
         if (window.pywebview?.api?.fetch_team_player) {
             teamPlayers = await window.pywebview.api.fetch_team_player(selectedTeam.index);
+            teamFriendly = await window.pywebview.api.fetch_team_friendly(selectedTeam.index);
         } else {
-            alert('pywebview API 未加载');
+            alert('API 未加载');
         }
 	}
 
-	onMount(async () => {
+    async function featchTeams() {
+        treeData = [];
         let index = 0;
         for (let i = 0; i < teamGroupsData.length; i++) {
             const item = teamGroupsData[i];
@@ -38,8 +41,7 @@
             for (let i = index; i < max; i++) {
                 teams.push({
                     index,
-                    name: teamsData[index],
-                    friendly: 0
+                    name: teamsData[index]
                 });
                 index++;
             }
@@ -51,7 +53,35 @@
         openedRegion = treeData[0].region;
         selectedTeam = treeData[0].teams[0];
         await selectTeam(selectedTeam);
+    }
+
+	onMount(async () => {
+        featchTeams();
 	});
+
+    $effect(() => {
+        if(getRefreshFlag() && getSelectedTab() === "Teams") {
+            try {
+                featchTeams();
+            } finally {
+                setRefreshFlag(false);
+            }
+        }
+    });
+
+    async function save() {
+        if (window.pywebview?.api?.save_team_friendly) {
+            const { message } = await window.pywebview.api.save_team_friendly(selectedTeam.index, teamFriendly);
+            if (message === "success") {
+                alert("修改成功");
+                await selectTeam(selectedTeam);
+            } else {
+                alert(message);
+            }
+        } else {
+            alert('API 未加载');
+        }
+    }
 
 </script>
 
@@ -80,7 +110,7 @@
                 <div class="">
                     {#each item.teams as team}
                         <div class="ps-7 relative before:absolute before:top-0 before:start-3 before:w-0.5 before:-ms-px before:h-full before:bg-gray-100 dark:before:bg-neutral-700">
-                            <button onclick={() => selectTeam(team)} class={ selectedTeam.name === team.name ? "activate px-1.5 rounded-md cursor-pointer hover:bg-gray-100" : "px-1.5 rounded-md cursor-pointer hover:bg-gray-100" }>
+                            <button onclick={() => selectTeam(team)} class={ selectedTeam.index === team.index ? "activate px-1.5 rounded-md cursor-pointer hover:bg-gray-100" : "px-1.5 rounded-md cursor-pointer hover:bg-gray-100" }>
                                 <span class="text-sm text-gray-800 dark:text-neutral-200">
                                     {team.name}
                                 </span>
@@ -95,9 +125,9 @@
     <VStack className="relative overflow-x-auto grow mx-2">
         <HStack className="items-center mb-1">
             <label for="gameDifficulty" class="w-16">友好度</label>
-            <span class="text-sm w-16">{ selectedTeam.friendly }</span>
-            <input id="gameDifficulty" type="range" min="0" max="255" bind:value={ selectedTeam.friendly } class="w-52 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700">
-            <button class="w-18 h-8 rounded-md cursor-pointer mx-2 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium text-sm text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+            <span class="text-sm w-16">{ teamFriendly }</span>
+            <input id="gameDifficulty" type="range" min="0" max="255" bind:value={ teamFriendly } class="w-52 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700">
+            <button onclick={save} class="w-18 h-8 rounded-md cursor-pointer mx-2 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium text-sm text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
                 保存
             </button>
         </HStack>

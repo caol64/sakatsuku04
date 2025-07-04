@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from ..io import IntBitField, IntByteField, StrBitField, StrByteField
 from ..objs import Player
-from ..dtos import ClubDto, MyPlayerDto, OtherTeamPlayerDto, PlayerAbilityDto
+from ..dtos import ClubDto, MyPlayerDto, MyTeamPlayerDto, OtherTeamPlayerDto, PlayerAbilityDto
 
 
 @dataclass
@@ -33,6 +33,7 @@ class Club:
     manager_name: StrBitField
     club_name: StrBitField
     difficulty: IntBitField
+    seed: IntBitField
 
     def to_dto(self):
         return ClubDto(
@@ -41,9 +42,11 @@ class Club:
             month=self.month.value,
             date=self.date.value,
             day=self.day.value,
-            funds=self.funds.value,
+            funds_high=self.funds.value // 10000,
+            funds_low=self.funds.value % 10000,
             manager_name=self.manager_name.value,
             difficulty=self.difficulty.value,
+            seed=self.seed.value,
         )
 
 
@@ -83,6 +86,11 @@ class MyPlayer:
     style_learned3: IntBitField
     style_learned4: IntBitField
     magic_value: IntBitField
+    desire: IntBitField
+    pride: IntBitField
+    ambition: IntBitField
+    patient: IntBitField
+    persistence: IntBitField
     test: IntBitField = IntBitField(0, 0, 0)
     un: list[int]
 
@@ -129,7 +137,13 @@ class MyPlayer:
             cooperation_type=self.cooperation_type.value,
             style=self.style.value,
             abilities=abilities,
+            desire=self.desire.value,
+            pride=self.pride.value,
+            ambition=self.ambition.value,
+            patient=self.patient.value,
+            persistence=self.persistence.value,
         )
+
 
 class MyTeam:
     english_name: StrBitField

@@ -23,7 +23,7 @@ class MainApp:
         if platform.system() == "Darwin":
             self.window_size = (1024, 768)
         else:
-            self.window_size = (1280, 800)
+            self.window_size = (1080, 830)
         self.app_name = ""
         self.app_version = 0
         self.data_raader: DataReader = None
@@ -136,6 +136,8 @@ class MainApp:
             self.fetch_my_team,
             self.fetch_my_player,
             self.save_my_player,
+            self.fetch_team_friendly,
+            self.save_team_friendly,
         )
 
     def pick_file(self) -> list:
@@ -173,12 +175,19 @@ class MainApp:
     def fetch_team_player(self, team_index: int) -> list:
         return [f.model_dump(by_alias=True) for f in self.data_raader.read_other_team_players(team_index)]
 
+    def fetch_team_friendly(self, team_index: int) -> int:
+        return self.data_raader.read_other_team_friendly(team_index)
+
     def fetch_my_player(self, id: int) -> dict:
         return self.data_raader.read_myplayer(id).model_dump(by_alias=True)
 
     def save_my_player(self, data: dict) -> dict:
         player_data = MyPlayerDto.model_validate(data)
         self.data_raader.save_player(player_data)
+        return {"message": "success"}
+
+    def save_team_friendly(self, team_index: int, friendly: int) -> dict:
+        self.data_raader.save_other_team_friendly(team_index, friendly)
         return {"message": "success"}
 
 

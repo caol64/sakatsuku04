@@ -11,6 +11,6 @@ test/
 .pytest_cache
 .venv
 bin/
-Saka04SaveEditor.spec
+*.spec
 .env
 node_modules

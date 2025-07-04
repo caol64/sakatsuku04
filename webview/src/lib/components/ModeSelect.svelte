@@ -7,8 +7,6 @@
     onMount(async () => {
         if (window.pywebview?.api?.reset) {
             await window.pywebview.api.reset();
-        } else {
-            alert('pywebview API 未加载');
         }
     });
 </script>

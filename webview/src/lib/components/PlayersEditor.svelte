@@ -86,7 +86,7 @@
                     alert(message);
                 }
             } else {
-                alert('pywebview API 未加载');
+                alert('API 未加载');
             }
         }
     }

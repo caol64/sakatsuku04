@@ -1,35 +1,19 @@
-export interface Response {
-    message: string;
-}
-
 export interface Club {
-    year: number;
-    month: number;
-    date: number;
-    day: number;
-    fundsHigh: number;
-    fundsLow: number;
-    managerName: string;
-    clubName: string;
-    difficulty: number;
-}
-
-export const defaultClubData = {
-    year: 0,
-    month: 0,
-    date: 0,
-    day: 0,
-    fundsHigh: 0,
-    fundsLow: 0,
-    managerName: "",
-    clubName: "",
-    difficulty: 0,
+    year?: number;
+    month?: number;
+    date?: number;
+    day?: number;
+    fundsHigh?: number;
+    fundsLow?: number;
+    managerName?: string;
+    clubName?: string;
+    difficulty?: number;
+    seed?: number;
 }
 
 export interface Team {
     index: number;
     name: string;
-    friendly: number;
 }
 
 export interface TeamsWithRegion {
@@ -52,25 +36,35 @@ export interface TeamPlayer {
     growTypeSys: string;
 }
 
-export interface MyPlayer {
-    index: number;
+export interface MyTeamPlayer {
     id: number;
-    age: number;
-    number: number;
     name: string;
-    born: number;
-    abroadTimes: number;
-    height: number;
-    foot: number;
-    rank: number;
-    pos: number;
-    growTypePhy: number;
-    growTypeTec: number;
-    growTypeSys: number;
-    toneType: number;
-    cooperationType: number;
-    style: number;
-    abilities: MyPlayerAbility[]
+}
+
+export interface MyPlayer {
+    index?: number;
+    id?: number;
+    age?: number;
+    number?: number;
+    name?: string;
+    born?: number;
+    abroadTimes?: number;
+    height?: number;
+    foot?: number;
+    rank?: number;
+    pos?: number;
+    growTypePhy?: number;
+    growTypeTec?: number;
+    growTypeSys?: number;
+    toneType?: number;
+    cooperationType?: number;
+    style?: number;
+    abilities: MyPlayerAbility[];
+    desire?: number;
+    pride?: number;
+    ambition?: number;
+    patient?: number;
+    persistence?: number;
 }
 
 export interface MyPlayerAbility {

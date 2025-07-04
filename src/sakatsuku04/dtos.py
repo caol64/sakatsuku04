@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, computed_field
+from pydantic import BaseModel, ConfigDict
 from pydantic.alias_generators import to_camel
 
 
@@ -15,22 +15,20 @@ class ClubDto(BaseDto):
     month: int
     date: int
     day: int
-    funds: int = None
+    funds_high: int
+    funds_low: int
     manager_name: str
     difficulty: int
+    seed: int
 
-    @computed_field
-    @property
-    def funds_high(self) -> int:
-        return self.funds // 10000
+    def combo_funds(self) -> int:
+        return self.funds_high * 10000 + self.funds_low
 
-    @computed_field
-    @property
-    def funds_low(self) -> int:
-        return self.funds % 10000
 
-    def set_funds(self):
-        self.funds = self.funds_high * 10000 + self.funds_low
+class MyTeamPlayerDto(BaseDto):
+    id: int
+    name: str
+    pos: int
 
 
 class PlayerAbilityDto(BaseDto):
@@ -62,6 +60,11 @@ class MyPlayerDto(BaseDto):
     cooperation_type: int
     style: int
     abilities: list[PlayerAbilityDto]
+    desire: int
+    pride: int
+    ambition: int
+    patient: int
+    persistence: int
 
 
 class TeamDto(BaseDto):

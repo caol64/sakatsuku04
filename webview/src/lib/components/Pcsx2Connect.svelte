@@ -12,7 +12,7 @@
                 alert("请先运行游戏");
             }
         } else {
-            alert('pywebview API 未加载');
+            alert('API 未加载');
         }
     }
 </script>

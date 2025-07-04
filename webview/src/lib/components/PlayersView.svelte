@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { MyPlayer } from "$lib/models";
+    import type { MyPlayer, MyTeamPlayer } from "$lib/models";
     import { onMount } from "svelte";
     import HStack from "./Stack/HStack.svelte";
     import RadarChart from "./RadarChart.svelte";
@@ -10,17 +10,26 @@
     import Modal from "./Modal.svelte";
     import PlayersEditor from "./PlayersEditor.svelte";
     import { getCooperationType, getGrowType, getPosition, getRank, getRegion, getStyle, getToneType, preferFoot, sortedAbilities } from "$lib/utils";
+    import { getRefreshFlag, getSelectedTab, setRefreshFlag } from "$lib/globalState.svelte";
 
-    let myPlayers: MyPlayer[] = $state([]);
+    let myPlayers: MyTeamPlayer[] = $state([]);
     let selectedPlayer = $state(0);
-    let myPlayer: MyPlayer = $derived(myPlayers[0]);
+    let myPlayer: MyPlayer = $state({ abilities: [] });
     let stats = [0.9, 0.7, 0.6, 0.5, 0.8, 0.4];
     let bars = [0.9, 0.5, 0.7];
 
     let abilityPairs = $derived(
         sortedAbilities.map((label, i) => ({
             label,
-            value: myPlayer?.abilities[i]
+            value: myPlayer?.abilities?.[i] ?? {
+                index: 0,
+                current: 0,
+                currentMax: 0,
+                max: 0,
+                currentPercent: 0,
+                currentMaxPercent: 0,
+                maxPercent: 0
+            }
         }))
     );
 
@@ -34,15 +43,16 @@
 
     async function fetchMyPlayer(id: number) {
         if (selectedPlayer !== id) {
+            selectedPlayer = id;
             if (window.pywebview?.api?.fetch_my_player) {
                 myPlayer = await window.pywebview.api.fetch_my_player(id);
             } else {
-                alert('pywebview API 未加载');
+                alert('API 未加载');
             }
         }
     }
 
-    onMount(async () => {
+    async function fetchMyTeam() {
         if (window.pywebview?.api?.fetch_my_team) {
             myPlayers = await window.pywebview.api.fetch_my_team();
             if (myPlayers) {
@@ -50,8 +60,22 @@
                 myPlayer = await window.pywebview.api.fetch_my_player(selectedPlayer);
             }
         } else {
-            alert('pywebview API 未加载');
+            alert('API 未加载');
         }
+    }
+
+    $effect(() => {
+        if(getRefreshFlag() && getSelectedTab() === "Players") {
+            try {
+                fetchMyTeam();
+            } finally {
+                setRefreshFlag(false);
+            }
+        }
+    });
+
+    onMount(async () => {
+        fetchMyTeam();
 	});
 
     let isModalOpen = $state(false);
@@ -69,7 +93,7 @@
         if (window.pywebview?.api?.fetch_my_player) {
             myPlayer = await window.pywebview.api.fetch_my_player(selectedPlayer);
         } else {
-            alert('pywebview API 未加载');
+            alert('API 未加载');
         }
     }
 </script>
@@ -109,6 +133,14 @@
                 <p>身体<span>{getGrowType(myPlayer?.growTypePhy)}</span></p>
                 <p>技术<span>{getGrowType(myPlayer?.growTypeTec)}</span></p>
                 <p>头脑<span>{getGrowType(myPlayer?.growTypeSys)}</span></p>
+            </div>
+            <p>隐藏属性</p>
+            <div class="pl-4">
+                <p>逆境<span>{myPlayer?.desire}</span></p>
+                <p>高傲<span>{myPlayer?.pride}</span></p>
+                <p>野心<span>{myPlayer?.ambition}</span></p>
+                <p>毅力<span>{myPlayer?.persistence}</span></p>
+                <p>耐心<span>{myPlayer?.patient}</span></p>
             </div>
         </div>
 
