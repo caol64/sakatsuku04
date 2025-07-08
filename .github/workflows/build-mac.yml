@@ -40,7 +40,7 @@ jobs:
     - name: Get version from pyproject.toml
       id: get_version
       run: |
-        version=$(grep '^version\s*=' pyproject.toml | sed -E 's/^version\s*=\s*"([^"]+)"/\1/')
+        version=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
         echo "version=$version" >> "$GITHUB_OUTPUT"
 
     - name: Package .app as zip
