@@ -51,7 +51,7 @@ jobs:
     - name: Package artifact as zip
       run: |
         $version = "${{ steps.get_version.outputs.version }}"
-        $zipName = "Saka04Editor_{$version}_win.zip"
+        $zipName = "Saka04Editor_${version}_win.zip"
         Compress-Archive -Path dist/Saka04Editor.exe -DestinationPath $zipName
 
     - name: Upload build artifact
