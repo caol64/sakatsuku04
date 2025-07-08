@@ -47,7 +47,7 @@ jobs:
       run: |
         mkdir -p out
         cp assets/README.txt out/
-        cp dist/Saka04Editor.app out/
+        cp -r dist/Saka04Editor.app out/
 
     - name: Upload build artifact
       uses: actions/upload-artifact@v4
