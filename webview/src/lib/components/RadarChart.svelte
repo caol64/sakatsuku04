@@ -1,5 +1,5 @@
 <script lang="ts">
-    export let abilities = [0.8, 0.6, 0.7, 0.9, 0.4, 0.5]; // 六项能力值，0-1
+    let { abilities = Array(18).fill(0) }: { abilities: number[] } = $props();
     const labels = ["进攻", "防守", "体能", "身体", "阵型", "战术"];
     const numSides = 6;
     const angleStep = (2 * Math.PI) / numSides;
@@ -11,6 +11,10 @@
             x: radius * factor * Math.cos(angle),
             y: radius * factor * Math.sin(angle),
         };
+    }
+
+    function playerHexagonConvert(input_value: number) {
+        return Math.floor(Math.min(input_value + 10, 90) * 100 / 90);
     }
 </script>
 
@@ -60,14 +64,43 @@
             </text>
         {/each}
 
-        <!-- 能力区域 -->
+        <!-- 能力区域 1：当前值 -->
         <polygon
-            fill="rgba(59,130,246,0.5)"
+            fill="rgba(185, 248, 207,0.3)"
             stroke="rgba(37,99,235,1)"
-            stroke-width="2"
-            points={abilities
+            stroke-width="1"
+            points={abilities.slice(0, 6)
                 .map((factor, i) => {
-                    const p = point(factor, i);
+                    const value = playerHexagonConvert(factor) / 100;
+                    const p = point(value, i);
+                    return `${p.x},${p.y}`;
+                })
+                .join(" ")}
+        />
+
+        <!-- 能力区域 2：当前最大值 -->
+        <polygon
+            fill="rgba(34, 211, 238,0.3)"
+            stroke="rgba(21,128,61,1)"
+            stroke-width="1"
+            points={abilities.slice(6, 12)
+                .map((factor, i) => {
+                    const value = playerHexagonConvert(factor) / 100;
+                    const p = point(value, i);
+                    return `${p.x},${p.y}`;
+                })
+                .join(" ")}
+        />
+
+        <!-- 能力区域 3：最终最大值 -->
+        <polygon
+            fill="rgba(255, 202, 40,0.3)"
+            stroke="rgba(202,138,4,1)"
+            stroke-width="1"
+            points={abilities.slice(12, 18)
+                .map((factor, i) => {
+                    const value = playerHexagonConvert(factor) / 100;
+                    const p = point(value, i);
                     return `${p.x},${p.y}`;
                 })
                 .join(" ")}

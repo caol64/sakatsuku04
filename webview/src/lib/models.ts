@@ -39,6 +39,7 @@ export interface TeamPlayer {
 export interface MyTeamPlayer {
     id: number;
     name: string;
+    pos: number;
 }
 
 export interface MyPlayer {
@@ -65,6 +66,7 @@ export interface MyPlayer {
     ambition?: number;
     patient?: number;
     persistence?: number;
+    hexagon: number[];
 }
 
 export interface MyPlayerAbility {
@@ -72,7 +74,4 @@ export interface MyPlayerAbility {
     current: number;
     currentMax: number;
     max: number;
-    currentPercent: number;
-    currentMaxPercent: number;
-    maxPercent: number;
 }

@@ -468,7 +468,9 @@ class TeamReader(BaseReader):
                 0
             ]  # 7053AC a magick value contains many information
             # print(magic_value.value & 0x2000)
+            # 0x7053B2
             a = self.bit_stream.unpack_bits([0xA, 8, 8, 0x10], 6)
+            tired = a[0] # 0x7053B2
             salary = a[3]  # 007053B6
             # 7053B8
             a = self.bit_stream.unpack_bits([8, 3, 3, 8, 8, 8], 6)
@@ -477,7 +479,7 @@ class TeamReader(BaseReader):
             # 0x7053be
             a = self.bit_stream.unpack_bits([0x10] * 14, 30)
             un = a[0]  # 0x7053be dissatisfied?
-            tired = a[10]  # 7053D2
+            # tired = a[10]  # 7053D2
             # 7053DC
             a = self.bit_stream.unpack_bits(
                 [0x20, 0x10, 0x10, 0x10, 0x10, 0x10, 4, 7, 4, 7, 6, 4, 8, 4], 22

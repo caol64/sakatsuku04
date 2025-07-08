@@ -1,6 +1,6 @@
 [project]
 name = "saka04-editor"
-version = "1.0.6"
+version = "1.0.7"
 description = "Open-source real-time game trainer and save editor for J.League Pro Soccer Club o Tsukurou! 04 (サカつく04)."
 authors = [{ name = "Lei", email = "caol64@gmail.com" }]
 readme = "README.md"
@@ -43,7 +43,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build]
-exclude = ["/data", "/docs", "resources", "assets"]
+exclude = ["/data", "/docs", "/resources", "/assets", "tools"]
 
 [tool.hatch.build.targets.sdist]
 include = [

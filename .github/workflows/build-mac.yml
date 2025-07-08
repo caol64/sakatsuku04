@@ -37,7 +37,22 @@ jobs:
           PYTHONPATH: "${{ github.workspace }}:${{ github.workspace }}/src:${{ github.workspace }}/tests"
       run: python pyinstaller.py
 
-    - name: Upload build artifacts
+    - name: Get version from pyproject.toml
+      id: get_version
+      run: |
+        version=$(grep '^version\s*=' pyproject.toml | sed -E 's/version\s*=\s*"([^"]+)"/\1/')
+        echo "version=$version" >> "$GITHUB_OUTPUT"
+
+    - name: Package .app as zip
+      run: |
+        version="${{ steps.get_version.outputs.version }}"
+        zipName="Saka04Editor_${version}_mac.zip"
+        cp assets/README.txt dist/
+        cd dist
+        zip -r "../$zipName" "Saka04Editor.app" "README.txt"
+
+    - name: Upload build artifact
       uses: actions/upload-artifact@v4
       with:
-        path: dist/Saka04Editor.app
+        name: Saka04Editor_${{ steps.get_version.outputs.version }}_mac
+        path: Saka04Editor_${{ steps.get_version.outputs.version }}_mac.zip

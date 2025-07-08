@@ -9,46 +9,30 @@
     import Tooltip from "./Tooltip.svelte";
     import Modal from "./Modal.svelte";
     import PlayersEditor from "./PlayersEditor.svelte";
-    import { getCooperationType, getGrowType, getPosition, getRank, getRegion, getStyle, getToneType, preferFoot, sortedAbilities } from "$lib/utils";
+    import { getCooperationType, getGrowType, getPlayerColor, getPosition, getRank, getRegion, getStyle, getToneType, preferFoot, sortedAbilities } from "$lib/utils";
     import { getRefreshFlag, getSelectedTab, setRefreshFlag } from "$lib/globalState.svelte";
+    import AbilityBar from "./AbilityBar.svelte";
 
     let myPlayers: MyTeamPlayer[] = $state([]);
     let selectedPlayer = $state(0);
-    let myPlayer: MyPlayer = $state({ abilities: [] });
-    let stats = [0, 0, 0, 0, 0, 0];
-    let bars = [0, 0, 0];
+    let myPlayer: MyPlayer = $state({ abilities: [], hexagon: [] });
+    let stats = $state(Array(18).fill(0));
+    let bars = $state([0, 0, 0]);
 
     let abilityPairs = $derived(
         sortedAbilities.map((label, i) => ({
             label,
-            value: myPlayer?.abilities?.[i] ?? {
-                index: 0,
-                current: 0,
-                currentMax: 0,
-                max: 0,
-                currentPercent: 0,
-                currentMaxPercent: 0,
-                maxPercent: 0
-            }
+            value: myPlayer.abilities[i]
         }))
     );
 
-    function toPercentString(value: number): string {
-        if (value === undefined) {
-            return "";
-        }
-        const percent = Math.round(value * 100);
-        return `${percent}%`;
-    }
-
     async function fetchMyPlayer(id: number) {
-        if (selectedPlayer !== id) {
-            selectedPlayer = id;
-            if (window.pywebview?.api?.fetch_my_player) {
-                myPlayer = await window.pywebview.api.fetch_my_player(id);
-            } else {
-                alert('API 未加载');
-            }
+        if (window.pywebview?.api?.fetch_my_player) {
+            myPlayer = await window.pywebview.api.fetch_my_player(id);
+            stats = myPlayer.hexagon;
+            bars = [myPlayer.hexagon[0], myPlayer.hexagon[1], 0];
+        } else {
+            alert('API 未加载');
         }
     }
 
@@ -57,7 +41,7 @@
             myPlayers = await window.pywebview.api.fetch_my_team();
             if (myPlayers) {
                 selectedPlayer = myPlayers[0].id;
-                myPlayer = await window.pywebview.api.fetch_my_player(selectedPlayer);
+                await fetchMyPlayer(selectedPlayer);
             }
         } else {
             alert('API 未加载');
@@ -90,25 +74,27 @@
 
     async function onSaveSuccess() {
         closeModal();
-        if (window.pywebview?.api?.fetch_my_player) {
-            myPlayer = await window.pywebview.api.fetch_my_player(selectedPlayer);
-        } else {
-            alert('API 未加载');
+        await fetchMyPlayer(selectedPlayer);
+    }
+
+    async function onPlayerClick(id: number) {
+        if (selectedPlayer !== id) {
+            selectedPlayer = id;
+            await fetchMyPlayer(id);
         }
     }
 </script>
 
 <HStack className="flex-1 overflow-hidden m-2.5">
     <VStack className="w-1/5 mr-1">
-        <!-- <HStack className="space-x-4 mb-2 mx-2">
-            <button class="badges">一线队</button>
-            <button class="badges">青年队</button>
-            <button class="badges">转会市场</button>
-        </HStack> -->
         <div class="sidebar">
             {#each myPlayers as item}
-                <button onclick={() => fetchMyPlayer(item.id)} class={ selectedPlayer === item.id ? "activate" : "" }>
-                    { item.name }
+                <button
+                    onclick={() => onPlayerClick(item.id)}
+                    class={selectedPlayer === item.id ? "activate" : ""}
+                    style={`background-image: linear-gradient(to right, transparent 66%, ${getPlayerColor(item.pos)} 100%)`}
+                >
+                    {item.name}
                 </button>
             {/each}
         </div>
@@ -153,22 +139,20 @@
 
     <VStack className="w-1/4 mx-1">
         <RadarChart abilities={stats} />
-        <StatusBars values={bars} />
+        <StatusBars values={bars} pos={myPlayer.pos} />
         <PositionGrid />
     </VStack>
 
     <VStack className="grow h-full overflow-auto ml-1 pl-1">
         {#each abilityPairs as { label, value }}
-            {@const tooltipText = `当前: ${value?.current ?? 'N/A'}<br>潜力: ${value?.currentMax ?? 'N/A'}<br>上限: ${value?.max ?? 'N/A'}`}
             <HStack className="items-center">
                 <span class="w-24 text-sm">{label}</span>
-                <Tooltip text={tooltipText} className="w-full">
-                    <div class="flex w-full h-3 bg-gray-200 overflow-hidden dark:bg-neutral-700">
-                        <div class="flex flex-col justify-center overflow-hidden bg-green-200 text-xs text-white text-center whitespace-nowrap" style="width: {toPercentString(value?.currentPercent)}"></div>
-                        <div class="flex flex-col justify-center overflow-hidden bg-amber-400 text-xs text-white text-center whitespace-nowrap" style="width: {toPercentString(value?.currentMaxPercent)}"></div>
-                        <div class="flex flex-col justify-center overflow-hidden bg-sky-300 text-xs text-white text-center whitespace-nowrap" style="width: {toPercentString(value?.maxPercent)}"></div>
-                    </div>
-                </Tooltip>
+                {#if value}
+                    {@const tooltipText = `当前: ${value.current}<br>潜力: ${value.currentMax}<br>上限: ${value.max}`}
+                    <Tooltip text={tooltipText} className="w-full">
+                        <AbilityBar abilities={[value.current, value.currentMax, value.max]} />
+                    </Tooltip>
+                {/if}
             </HStack>
         {/each}
     </VStack>

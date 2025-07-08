@@ -44,3 +44,31 @@ export const sortedCooperationType = Object.entries(cooperation).sort((a, b) => 
 export const sortedGrowType = Object.entries(grow).sort((a, b) => a[0].localeCompare(b[0]));
 export const sortedPosition = Object.entries(position).sort((a, b) => a[0].localeCompare(b[0]));
 export const sortedAbilities = ability;
+
+export function getPlayerColor(pos: number): string {
+    switch (pos) {
+        case 0: return "#f87171"; // red-400
+        case 1: return "#60a5fa"; // blue-400
+        case 2: return "#22d3ee"; // cyan-400
+        case 3: return "#facc15"; // yellow-400
+        case 4: return "#fde68a"; // yellow-200
+        case 5: return "#fde68a"; // yellow-200
+        case 6: return "#34d399"; // green-400
+        case 7: return "#34d399"; // green-400
+        default: return "#e5e7eb"; // gray-200 fallback
+    }
+}
+
+export function getPlayerColorStr(pos: string): string {
+    switch (pos) {
+        case "GK": return "#f87171"; // red-400
+        case "CDF": return "#60a5fa"; // blue-400
+        case "SDF": return "#22d3ee"; // cyan-400
+        case "DMF": return "#facc15"; // yellow-400
+        case "SMF": return "#fde68a"; // yellow-200
+        case "OMF": return "#fde68a"; // yellow-200
+        case "FW": return "#34d399"; // green-400
+        case "WING": return "#34d399"; // green-400
+        default: return "#e5e7eb"; // gray-200 fallback
+    }
+}

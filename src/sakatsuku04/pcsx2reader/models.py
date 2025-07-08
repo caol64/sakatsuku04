@@ -87,9 +87,6 @@ class MyPlayer:
                 current=a.current.value,
                 current_max=a.current_max.value,
                 max=a.max.value,
-                current_percent=(cur := a.current.value / 65535),
-                current_max_percent=(cur_max := a.current_max.value / 65535) - cur,
-                max_percent=(a.max.value / 65535) - cur_max,
             )
             for a in self.abilities
         ]
