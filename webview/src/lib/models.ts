@@ -34,12 +34,14 @@ export interface TeamPlayer {
     growTypePhy: string;
     growTypeTec: string;
     growTypeSys: string;
+    isAlbum: boolean;
 }
 
 export interface MyTeamPlayer {
     id: number;
     name: string;
     pos: number;
+    isAlbum: boolean;
 }
 
 export interface MyPlayer {
@@ -66,6 +68,7 @@ export interface MyPlayer {
     ambition?: number;
     patient?: number;
     persistence?: number;
+    jlFactor?: number;
     hexagon: number[];
 }
 

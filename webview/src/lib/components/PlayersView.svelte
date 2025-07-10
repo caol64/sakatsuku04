@@ -12,6 +12,7 @@
     import { getCooperationType, getGrowType, getPlayerColor, getPosition, getRank, getRegion, getStyle, getToneType, preferFoot, sortedAbilities } from "$lib/utils";
     import { getRefreshFlag, getSelectedTab, setRefreshFlag } from "$lib/globalState.svelte";
     import AbilityBar from "./AbilityBar.svelte";
+    import Football from "$lib/icons/Football.svelte";
 
     let myPlayers: MyTeamPlayer[] = $state([]);
     let selectedPlayer = $state(0);
@@ -94,7 +95,12 @@
                     class={selectedPlayer === item.id ? "activate" : ""}
                     style={`background-image: linear-gradient(to right, transparent 66%, ${getPlayerColor(item.pos)} 100%)`}
                 >
-                    {item.name}
+                    <span class="flex items-center justify-between w-full">
+                        {item.name}
+                        {#if item.isAlbum}
+                            <div class="mx-2"><Football /></div>
+                        {/if}
+                    </span>
                 </button>
             {/each}
         </div>
@@ -120,6 +126,7 @@
                 <p>技术<span>{getGrowType(myPlayer?.growTypeTec)}</span></p>
                 <p>头脑<span>{getGrowType(myPlayer?.growTypeSys)}</span></p>
             </div>
+            <!-- <p>修正指数<span>{myPlayer?.jlFactor}</span></p> -->
             <p>隐藏属性</p>
             <div class="pl-4">
                 <p>进取<span>{myPlayer?.desire}</span></p>

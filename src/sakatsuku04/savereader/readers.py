@@ -1,4 +1,4 @@
-from ..objs import Position
+from ..objs import Player, Position
 from ..data_reader import DataReader
 from ..dtos import ClubDto, MyPlayerDto, OtherTeamPlayerDto
 from ..savereader.memcard_reader import MemcardReader
@@ -22,12 +22,13 @@ class BaseReader:
     def __init__(self, bit_stream: InputBitStream):
         self.bit_stream = bit_stream
 
-    def print_mem_offset(self):
+    def print_mem_offset(self, start: int = 0):
         print(
             hex(
                 self.bit_stream.unpacked_bytes_length
                 + ClubReader.start
                 + BaseReader.base_offset
+                - start
             )
         )
 
@@ -404,7 +405,8 @@ class TeamReader(BaseReader):
         # 0x7051c0
         players: list[MyPlayer] = [MyPlayer(i) for i in range(0x19)]
         self.bit_stream.unpack_bits([16, 16, 1], 5)
-        a = self.bit_stream.unpack_bits([-6] * 0x19, 0x19 + 2)  # 7051E0
+        a = self.bit_stream.unpack_bits([-6] * 0x19, 0x19 + 2)
+        # 0x7051e0
         # each player produce 0x240 bytes
         for i in range(0x19):  # 0x19
             players[i].id, players[i].pos, players[i].age = self.bit_stream.unpack_bits(
@@ -455,50 +457,53 @@ class TeamReader(BaseReader):
             un = a[12]  # 0x705398
             un = a[13]  # 00705399
             players[i].cooperation_type = a[14]  # 0x70539A
-            un = a[15]  # 0070539B
+            players[i].jl_factor = a[15]  # 0x70539B 1bb(1)
             players[i].grow_type_phy = self.bit_stream.unpack_bits(4, 1)  # 0x70539C
             players[i].grow_type_tec = self.bit_stream.unpack_bits(4, 1)  # 0x70539D
             players[i].grow_type_sys = self.bit_stream.unpack_bits(4, 1)  # 0x70539E
-            a = self.bit_stream.unpack_bits(
-                [7, 4, 7, 3, 3, 7, 5, 1, 3, 4], 13
-            )  # 7053AC
-            players[i].style = a[6]  # 0x7053A5
+            a = self.bit_stream.unpack_bits([7, 4, 7, 3, 3, 7], 6)
+            players[i].style = self.bit_stream.unpack_bits(5, 1) # 0x7053a5 1c5(1)
+            a = self.bit_stream.unpack_bits([1, 3, 4], 6)
+            # 0x7053ac
             a = self.bit_stream.unpack_bits([0x20, 2], 6)
-            players[i].magic_value = a[
-                0
-            ]  # 7053AC a magick value contains many information
-            # print(magic_value.value & 0x2000)
+            players[i].magic_value = a[0]  # 0x7053ac 1cc(4)
             # 0x7053B2
             a = self.bit_stream.unpack_bits([0xA, 8, 8, 0x10], 6)
-            tired = a[0] # 0x7053B2
-            salary = a[3]  # 007053B6
+            tired = a[0] # 0x7053B2 1d2(2)
+            salary = a[3]  # 0x7053B6 1d6(2)
             # 7053B8
             a = self.bit_stream.unpack_bits([8, 3, 3, 8, 8, 8], 6)
-            offer_years_passed = a[1]
-            offer_years_total = a[2]
+            offer_years_passed = a[1] # 0x7053B9 1d9(1)
+            offer_years_total = a[2] # 0x7053B9A 1da(1)
             # 0x7053be
             a = self.bit_stream.unpack_bits([0x10] * 14, 30)
-            un = a[0]  # 0x7053be dissatisfied?
+            un = a[0]  # 0x7053be dissatisfied? 1de(2)
             # tired = a[10]  # 7053D2
             # 7053DC
+            a = self.bit_stream.unpack_bits([0x20, 0x10, 0x10, 0x10])
+            # 0x7053e6
             a = self.bit_stream.unpack_bits(
-                [0x20, 0x10, 0x10, 0x10, 0x10, 0x10, 4, 7, 4, 7, 6, 4, 8, 4], 22
+                [0x10, 0x10, 4, 7, 4, 7, 6, 4, 8, 4], 12
             )
-            un = a[0]  # another magic value
-            players[i].abroad_days = a[5]  # 7053E8
-            players[i].abroad_times = a[13]  # 7053F1
+            # self.print_mem_offset(0x7051e0)
+            un = a[0]  # 0x7053e6 206(2)
+            players[i].abroad_days = a[1]  # 0x7053e8 208(2)
+            players[i].abroad_times = a[9]  # 0x7053f1 211(1)
+            # 0x7053f2
             a = self.bit_stream.unpack_bits([0x10, 0x10, 7])
+            captain_exp = a[0] # 0x7053f2 212(2)
+            keyman_exp = a[1] # 0x7053f4 214(2)
             a = self.bit_stream.unpack_bits([-8] * 9, 9)  # not use
             # 0x705400
             a = self.bit_stream.unpack_bits([0x10, 0x10, 8, -8, 5, 5, 6], 12)
-            players[i].style_equip = a[6]  # 0x705408
+            players[i].style_equip = a[6]  # 0x705408 228(4)
             # 0x70540c
             a = self.bit_stream.unpack_bits([0x20, 0x20, 0x20, 0x20, 0x10], 20)
-            players[i].style_learned1 = a[0]  # 0x70540c
-            players[i].style_learned2 = a[1]  # 0x705410
-            players[i].style_learned3 = a[2]  # 0x705414
-            players[i].style_learned4 = a[3]  # 0x705418
-            un = a[4]  # 0x70541a
+            players[i].style_learned1 = a[0]  # 0x70540c 22c(4)
+            players[i].style_learned2 = a[1]  # 0x705410 230(4)
+            players[i].style_learned3 = a[2]  # 0x705414 234(4)
+            players[i].style_learned4 = a[3]  # 0x705418 238(4)
+            un = a[4]  # 0x70541c 23c(4)
             players[i].un = [hex(z.value) for z in a]
             # 705420
         self.bit_stream.unpack_bits(0x10)
@@ -746,6 +751,7 @@ class SaveDataReader(DataReader):
         oteam_reader = OtherTeamReader(in_bit_stream)
         self.other_teams = oteam_reader.read()
         CnVer.is_cn = self.is_cn()
+        Player.reset_player_dict()
 
     def read_club(self) -> ClubDto:
         if not self.selected_game:

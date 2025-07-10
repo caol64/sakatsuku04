@@ -1,6 +1,8 @@
 from pydantic import BaseModel, ConfigDict, computed_field
 from pydantic.alias_generators import to_camel
 
+from .utils import is_album_player
+
 
 EXP2LV = (0, 65, 140, 225, 320, 425, 540, 665, 800, 945, 1105, 1275, 1455, 1645, 1845, 2055, 2275, 2505, 2745, 2995, 3255, 3525, 3805, 4095, 4395, 4705, 5025, 5355, 5695, 6045, 6420, 6805, 7200, 7605, 8020, 8445, 8880, 9325, 9780, 10245, 10725, 11215, 11715, 12225, 12745, 13275, 13815, 14365, 14925, 15495, 16130, 16776, 17433, 18101, 18780, 19470, 20171, 20883, 21606, 22340, 23145, 23962, 24791, 25632, 26485, 27350, 28227, 29116, 30017, 30930, 31855, 32792, 33741, 34702, 35675, 36660, 37657, 38666, 39687, 40720, 41765, 42822, 43891, 44972, 46065, 47170, 48287, 49416, 50557, 51710, 52880, 54063, 55259, 56468, 57690, 58925, 60173, 61434, 62708, 63995, 65295, 65535)
 ABI_PHY = (20, 21, 22, 23)
@@ -11,6 +13,9 @@ ABI_GK = (2, 3, 17, 18, 19, 28)
 ABI_DEF = (3, 7, 14, 15, 16, 20)
 ABI_STA = (24, )
 ABI_MEN = (0, 1, 2, 3, 4, 5, 6, 7, 24)
+GROW_PHY = (20, 21, 22, 23, 24)
+GROW_TEC = (5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19)
+GROW_MEN = (0, 1, 2, 3, 4, 25, 63)
 
 
 class BaseDto(BaseModel):
@@ -40,6 +45,11 @@ class MyTeamPlayerDto(BaseDto):
     id: int
     name: str
     pos: int
+
+    @computed_field
+    @property
+    def is_album(self) -> bool:
+        return is_album_player(self.id)
 
 
 class PlayerAbilityDto(BaseDto):
@@ -73,6 +83,12 @@ class MyPlayerDto(BaseDto):
     ambition: int
     patient: int
     persistence: int
+    jl_factor: int
+
+    @computed_field
+    @property
+    def is_album(self) -> bool:
+        return is_album_player(self.id)
 
     @computed_field
     @property
@@ -118,6 +134,11 @@ class OtherTeamPlayerDto(BaseDto):
     grow_type_phy: str
     grow_type_tec: str
     grow_type_sys: str
+
+    @computed_field
+    @property
+    def is_album(self) -> bool:
+        return is_album_player(self.id)
 
 
 def player_hexagon_convert(input_value: int) -> int:

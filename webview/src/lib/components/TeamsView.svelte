@@ -7,6 +7,7 @@
     import teamGroupsData from "$locales/team_groups_zh.json";
     import { getRefreshFlag, getSelectedTab, setRefreshFlag } from "$lib/globalState.svelte";
     import { getPlayerColorStr } from "$lib/utils";
+    import Football from "$lib/icons/Football.svelte";
 
     let treeData: TeamsWithRegion[] = $state([]);
     let openedRegion = $state("");
@@ -171,7 +172,12 @@
                 {#each teamPlayers as item}
                     <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
                         <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white" style={`background-image: linear-gradient(to right, transparent 66%, ${getPlayerColorStr(item.pos)} 100%)`}>
-                            {item.name}
+                            <span class="flex items-center justify-between w-full">
+                                {item.name}
+                                {#if item.isAlbum}
+                                    <div class="mx-4"><Football /></div>
+                                {/if}
+                            </span>
                         </th>
                         <td>
                             {item.age}

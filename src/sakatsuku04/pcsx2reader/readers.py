@@ -7,7 +7,7 @@ from .models import Club, MyPlayer, OtherTeam, OtherPlayer, MyPlayerAbility
 from ..io import IntByteField, StrByteField, CnVer
 from ..data_reader import DataReader
 from ..dtos import ClubDto, MyPlayerDto, MyTeamPlayerDto, OtherTeamPlayerDto
-from ..objs import Position
+from ..objs import Player, Position
 
 
 class Pcsx2DataReader(DataReader):
@@ -147,9 +147,9 @@ class Pcsx2DataReader(DataReader):
         for i in range(0x19):
             pid = self._read_int_byte(0x72c7f2 + team_index * 0x6C + i * 4, 2)
             age = self._read_int_byte(0x72c7f4 + team_index * 0x6C + i * 4)
-            ability_graph = self._read_int_byte(0x72c7f5 + team_index * 0x6C + i * 4)
+            meikan = self._read_int_byte(0x72c7f5 + team_index * 0x6C + i * 4)
             number = self._read_int_byte(0x7337bd + team_index * 0x19 + i * 1)
-            player = OtherPlayer(pid, age, ability_graph, number)
+            player = OtherPlayer(pid, age, meikan, number)
             players.append(player)
         return players
 
@@ -215,6 +215,7 @@ class Pcsx2DataReader(DataReader):
                 self.reset()
             else:
                 CnVer.is_cn = self.is_cn()
+                Player.reset_player_dict()
 
     def games(self) -> list[str]:
         return []

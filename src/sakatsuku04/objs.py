@@ -1,4 +1,7 @@
 import csv
+from typing import Optional
+
+from .io import CnVer
 from .utils import get_resource_path
 
 
@@ -34,7 +37,7 @@ class Rank:
 
 
 class Player:
-    _player_dict = None
+    _player_dict: Optional[dict] = None
 
     def __init__(self, id: int):
         self.id = id
@@ -48,11 +51,16 @@ class Player:
     def player_dict(cls) -> dict[str, list[str]]:
         if cls._player_dict is None:
             cls._player_dict = dict()
-            with open(get_resource_path('players.csv'), 'r', encoding='utf8', newline='') as csvfile:
+            file = "players_zh.csv" if CnVer.is_cn else "players.csv"
+            with open(get_resource_path(file), 'r', encoding='utf8', newline='') as csvfile:
                 reader = csv.reader(csvfile)
                 for row in reader:
                     cls._player_dict[row[0]] = row
         return cls._player_dict
+
+    @classmethod
+    def reset_player_dict(cls):
+        cls._player_dict = None
 
     @property
     def name(self) -> str:

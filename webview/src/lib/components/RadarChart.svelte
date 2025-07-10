@@ -29,7 +29,7 @@
         {#each Array(5) as _, layer}
             <polygon
                 fill="none"
-                stroke="#e5e7eb"
+                stroke="currentColor"
                 stroke-width="0.5"
                 points={Array(numSides)
                     .fill(0)
@@ -48,7 +48,7 @@
                 y1="0"
                 x2={point(1, i).x}
                 y2={point(1, i).y}
-                stroke="#e5e7eb"
+                stroke="#808080"
                 stroke-width="0.5"
             />
 
@@ -64,12 +64,11 @@
             </text>
         {/each}
 
-        <!-- 能力区域 1：当前值 -->
+        <!-- 能力区域 3：最终最大值 -->
         <polygon
-            fill="rgba(185, 248, 207,0.3)"
-            stroke="rgba(37,99,235,1)"
-            stroke-width="1"
-            points={abilities.slice(0, 6)
+            fill="rgba(251, 191, 36, 0.6)"
+            stroke-width="0"
+            points={abilities.slice(12, 18)
                 .map((factor, i) => {
                     const value = playerHexagonConvert(factor) / 100;
                     const p = point(value, i);
@@ -80,9 +79,8 @@
 
         <!-- 能力区域 2：当前最大值 -->
         <polygon
-            fill="rgba(34, 211, 238,0.3)"
-            stroke="rgba(21,128,61,1)"
-            stroke-width="1"
+            fill="rgba(34, 197, 94, 0.5)"
+            stroke-width="0"
             points={abilities.slice(6, 12)
                 .map((factor, i) => {
                     const value = playerHexagonConvert(factor) / 100;
@@ -92,12 +90,11 @@
                 .join(" ")}
         />
 
-        <!-- 能力区域 3：最终最大值 -->
+        <!-- 能力区域 1：当前值 -->
         <polygon
-            fill="rgba(255, 202, 40,0.3)"
-            stroke="rgba(202,138,4,1)"
+            fill="rgba(33, 135, 70, 0.3)"
             stroke-width="1"
-            points={abilities.slice(12, 18)
+            points={abilities.slice(0, 6)
                 .map((factor, i) => {
                     const value = playerHexagonConvert(factor) / 100;
                     const p = point(value, i);
@@ -105,5 +102,6 @@
                 })
                 .join(" ")}
         />
+
     </svg>
 </div>
