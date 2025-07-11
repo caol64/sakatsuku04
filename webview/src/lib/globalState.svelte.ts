@@ -40,8 +40,8 @@ export function setClubData(data: Club) {
 
 // -------selectedTab-------
 
-export type Tab = "Game" | "Players" | "Teams" | "Scouts";
-export const allTabs: Tab[] = ["Game", "Players", "Teams"];
+export type Tab = "Game" | "Players" | "Teams" | "Search";
+export const allTabs: Tab[] = ["Game", "Players", "Teams", "Search"];
 
 let selectedTab: Tab = $state("Game");
 

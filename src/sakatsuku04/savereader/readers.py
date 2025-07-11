@@ -1,6 +1,7 @@
+from ..utils import find_name_matches
 from ..objs import Player, Position
 from ..data_reader import DataReader
-from ..dtos import ClubDto, MyPlayerDto, OtherTeamPlayerDto
+from ..dtos import ClubDto, MyPlayerDto, OtherTeamPlayerDto, SearchDto
 from ..savereader.memcard_reader import MemcardReader
 from .bit_stream import InputBitStream, OutputBitStream
 from .models import (
@@ -782,6 +783,29 @@ class SaveDataReader(DataReader):
         player = list(filter(lambda p: p.id.value == id, self.my_team.players)).pop()
         return player.to_dto()
 
+    def search_player(self, data: SearchDto) -> list[OtherTeamPlayerDto]:
+        name = data.name
+        pos = data.pos
+        age = data.age
+        ids = []
+        for team in self.other_teams:
+            for player in team.players:
+                if player.id.value != 0xFFFF:
+                    if age and age != player.age.value:
+                        continue
+                    ids.append(player.id.value)
+        filter_players = {k: v for k, v in Player.player_dict().items() if k in ids}
+        filter_ids = find_name_matches(filter_players, name) if name else ids
+        result = []
+        for i, team in enumerate(self.other_teams):
+            for player in team.players:
+                if player.id.value in filter_ids:
+                    dto = player.to_dto()
+                    dto.team_index = i
+                    result.append(dto)
+        return result
+
+
     def save_club(self, club_data: ClubDto) -> bool:
         save_entry = self.save_entries.get(self.selected_game)
         self.club.funds.value = club_data.combo_funds()
@@ -871,3 +895,4 @@ class SaveDataReader(DataReader):
         save_bin = self.entry_reader.build_save_bytes(encode_buffer)
         mc_reader = MemcardReader(self.path)
         mc_reader.write_save_entry(self.selected_game, save_bin, head_bytes)
+

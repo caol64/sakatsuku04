@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from ..io import IntBitField, IntByteField, StrBitField, StrByteField
 from ..objs import Player
-from ..dtos import ClubDto, MyPlayerDto, MyTeamPlayerDto, OtherTeamPlayerDto, PlayerAbilityDto
+from ..dtos import ClubDto, MyPlayerDto, OtherTeamPlayerDto, PlayerAbilityDto
 
 
 @dataclass

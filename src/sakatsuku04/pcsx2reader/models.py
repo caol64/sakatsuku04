@@ -71,6 +71,7 @@ class MyPlayer:
     ambition: IntByteField
     patient: IntByteField
     persistence: IntByteField
+    jl_factor: IntByteField
     test: IntByteField = IntByteField(0, 0, 0)
     un: list[int]
 
@@ -114,6 +115,7 @@ class MyPlayer:
             ambition=self.ambition.value,
             patient=self.patient.value,
             persistence=self.persistence.value,
+            jl_factor=self.jl_factor.value,
         )
 
 

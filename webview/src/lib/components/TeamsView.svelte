@@ -136,36 +136,16 @@
         <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                 <tr>
-                    <th scope="col" class="w-48">
-                        球员
-                    </th>
-                    <th scope="col">
-                        年龄
-                    </th>
-                    <th scope="col">
-                        号码
-                    </th>
-                    <th scope="col">
-                        位置
-                    </th>
-                    <th scope="col">
-                        等级
-                    </th>
-                    <th scope="col">
-                        连携
-                    </th>
-                    <th scope="col">
-                        口调
-                    </th>
-                    <th scope="col">
-                        身体
-                    </th>
-                    <th scope="col">
-                        技术
-                    </th>
-                    <th scope="col">
-                        头脑
-                    </th>
+                    <th scope="col" class="w-48">球员</th>
+                    <th scope="col">年龄</th>
+                    <th scope="col">号码</th>
+                    <th scope="col">位置</th>
+                    <th scope="col">等级</th>
+                    <th scope="col">连携</th>
+                    <th scope="col">口调</th>
+                    <th scope="col">身体</th>
+                    <th scope="col">技术</th>
+                    <th scope="col">头脑</th>
                 </tr>
             </thead>
             <tbody>
@@ -179,33 +159,15 @@
                                 {/if}
                             </span>
                         </th>
-                        <td>
-                            {item.age}
-                        </td>
-                        <td>
-                            {item.number}
-                        </td>
-                        <td>
-                            {item.pos}
-                        </td>
-                        <td>
-                            {item.rank}
-                        </td>
-                        <td>
-                            {item.cooperationType}
-                        </td>
-                        <td>
-                            {item.toneType}
-                        </td>
-                        <td>
-                            {item.growTypePhy}
-                        </td>
-                        <td>
-                            {item.growTypeTec}
-                        </td>
-                        <td>
-                            {item.growTypeSys}
-                        </td>
+                        <td>{item.age}</td>
+                        <td>{item.number}</td>
+                        <td>{item.pos}</td>
+                        <td>{item.rank}</td>
+                        <td>{item.cooperationType}</td>
+                        <td>{item.toneType}</td>
+                        <td>{item.growTypePhy}</td>
+                        <td>{item.growTypeTec}</td>
+                        <td>{item.growTypeSys}</td>
                     </tr>
                 {/each}
             </tbody>

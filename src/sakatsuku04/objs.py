@@ -41,21 +41,20 @@ class Player:
 
     def __init__(self, id: int):
         self.id = id
-        hex_id = f"{self.id:04X}"
-        if hex_id in Player.player_dict():
-            self._player_properties = Player.player_dict()[hex_id]
+        if id in Player.player_dict():
+            self._player_properties = Player.player_dict()[id]
         else:
             self._player_properties = {}
 
     @classmethod
-    def player_dict(cls) -> dict[str, list[str]]:
+    def player_dict(cls) -> dict[int, list[str]]:
         if cls._player_dict is None:
             cls._player_dict = dict()
             file = "players_zh.csv" if CnVer.is_cn else "players.csv"
             with open(get_resource_path(file), 'r', encoding='utf8', newline='') as csvfile:
                 reader = csv.reader(csvfile)
                 for row in reader:
-                    cls._player_dict[row[0]] = row
+                    cls._player_dict[int(row[0], 16)] = row
         return cls._player_dict
 
     @classmethod

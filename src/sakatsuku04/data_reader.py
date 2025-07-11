@@ -1,6 +1,6 @@
 from typing import Protocol
 
-from .dtos import ClubDto, MyPlayerDto, OtherTeamPlayerDto
+from .dtos import ClubDto, MyPlayerDto, OtherTeamPlayerDto, SearchDto
 
 
 class DataReader(Protocol):
@@ -33,6 +33,9 @@ class DataReader(Protocol):
         ...
 
     def save_other_team_friendly(self, team_index: int, friendly: int) -> bool:
+        ...
+
+    def search_player(self, data: SearchDto) -> list[OtherTeamPlayerDto]:
         ...
 
     def reset(self): ...

@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel, ConfigDict, computed_field
 from pydantic.alias_generators import to_camel
 
@@ -134,11 +135,19 @@ class OtherTeamPlayerDto(BaseDto):
     grow_type_phy: str
     grow_type_tec: str
     grow_type_sys: str
+    team_index: Optional[int] = None
 
     @computed_field
     @property
     def is_album(self) -> bool:
         return is_album_player(self.id)
+
+
+class SearchDto(BaseDto):
+    name: Optional[str] = None
+    pos: Optional[int] = None
+    age: Optional[int] = None
+    country: Optional[int] = None
 
 
 def player_hexagon_convert(input_value: int) -> int:

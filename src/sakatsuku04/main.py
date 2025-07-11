@@ -9,7 +9,7 @@ import bottle
 import webview
 
 from .data_reader import DataReader
-from .dtos import ClubDto, MyPlayerDto
+from .dtos import ClubDto, MyPlayerDto, SearchDto
 from .savereader.readers import SaveDataReader
 from .pcsx2reader.readers import Pcsx2DataReader
 from .utils import get_resource_path
@@ -142,6 +142,7 @@ class MainApp:
             self.save_my_player,
             self.fetch_team_friendly,
             self.save_team_friendly,
+            self.search_player,
         )
 
     def get_version(self) -> str:
@@ -196,6 +197,12 @@ class MainApp:
     def save_team_friendly(self, team_index: int, friendly: int) -> dict:
         self.data_raader.save_other_team_friendly(team_index, friendly)
         return {"message": "success"}
+
+    def search_player(self, data: dict) -> list:
+        search_data = SearchDto.model_validate(data)
+        if search_data.pos:
+            search_data.pos -= 1
+        return [f.model_dump(by_alias=True) for f in self.data_raader.search_player(search_data)]
 
 
 def main():

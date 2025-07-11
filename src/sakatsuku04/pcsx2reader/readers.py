@@ -3,10 +3,11 @@ import platform
 import importlib.resources
 from ctypes import c_char_p, c_void_p, c_uint, c_ulong, c_char, c_bool
 
+from ..utils import find_name_matches
 from .models import Club, MyPlayer, OtherTeam, OtherPlayer, MyPlayerAbility
 from ..io import IntByteField, StrByteField, CnVer
 from ..data_reader import DataReader
-from ..dtos import ClubDto, MyPlayerDto, MyTeamPlayerDto, OtherTeamPlayerDto
+from ..dtos import ClubDto, MyPlayerDto, MyTeamPlayerDto, OtherTeamPlayerDto, SearchDto
 from ..objs import Player, Position
 
 
@@ -147,9 +148,9 @@ class Pcsx2DataReader(DataReader):
         for i in range(0x19):
             pid = self._read_int_byte(0x72c7f2 + team_index * 0x6C + i * 4, 2)
             age = self._read_int_byte(0x72c7f4 + team_index * 0x6C + i * 4)
-            meikan = self._read_int_byte(0x72c7f5 + team_index * 0x6C + i * 4)
+            ability_graph = self._read_int_byte(0x72c7f5 + team_index * 0x6C + i * 4)
             number = self._read_int_byte(0x7337bd + team_index * 0x19 + i * 1)
-            player = OtherPlayer(pid, age, meikan, number)
+            player = OtherPlayer(pid, age, ability_graph, number)
             players.append(player)
         return players
 
@@ -180,6 +181,7 @@ class Pcsx2DataReader(DataReader):
         player.tone_type = self._read_int_byte(0x705391 + i * 0x240)
         player.patient = self._read_int_byte(0x705397 + i * 0x240)
         player.cooperation_type = self._read_int_byte(0x70539A + i * 0x240)
+        player.jl_factor = self._read_int_byte(0x70539B + i * 0x240)
         player.grow_type_phy = self._read_int_byte(0x70539C + i * 0x240)
         player.grow_type_tec = self._read_int_byte(0x70539D + i * 0x240)
         player.grow_type_sys = self._read_int_byte(0x70539E + i * 0x240)
@@ -252,6 +254,32 @@ class Pcsx2DataReader(DataReader):
 
     def read_myplayer(self, id: int) -> MyPlayerDto:
         return self._read_myplayer(id).to_dto()
+
+    def search_player(self, data: SearchDto) -> list[OtherTeamPlayerDto]:
+        name = data.name
+        pos = data.pos
+        age = data.age
+        other_team_players: list[list[OtherPlayer]] = []
+        for i in range(0x109):
+            players = self._read_other_team_players(i)
+            other_team_players.append(players)
+        ids = []
+        for team in other_team_players:
+            for player in team:
+                if player.id.value != 0xFFFF:
+                    if age and age != player.age.value:
+                        continue
+                    ids.append(player.id.value)
+        filter_players = {k: v for k, v in Player.player_dict().items() if k in ids}
+        filter_ids = find_name_matches(filter_players, name) if name else ids
+        result = []
+        for i, team in enumerate(other_team_players):
+            for player in team:
+                if player.id.value in filter_ids:
+                    dto = player.to_dto()
+                    dto.team_index = i
+                    result.append(dto)
+        return result
 
     def save_club(self, club_data: ClubDto) -> bool:
         club = self._read_club()

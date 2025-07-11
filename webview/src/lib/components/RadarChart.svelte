@@ -79,7 +79,7 @@
 
         <!-- 能力区域 2：当前最大值 -->
         <polygon
-            fill="rgba(34, 197, 94, 0.5)"
+            fill="rgba(76, 175, 80, 0.4)"
             stroke-width="0"
             points={abilities.slice(6, 12)
                 .map((factor, i) => {
@@ -92,7 +92,7 @@
 
         <!-- 能力区域 1：当前值 -->
         <polygon
-            fill="rgba(33, 135, 70, 0.3)"
+            fill="rgba(0, 150, 136, 0.6)"
             stroke-width="1"
             points={abilities.slice(0, 6)
                 .map((factor, i) => {

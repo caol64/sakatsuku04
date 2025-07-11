@@ -179,3 +179,11 @@ def get_resource_path(relative_path) -> Path:
 
 def is_album_player(id: int) -> bool:
     return id in album_players
+
+
+def find_name_matches(players: dict, name: str) -> list[id]:
+    result = []
+    for id, value in players.items():
+        if name in value[2]:
+            result.append(id)
+    return result
