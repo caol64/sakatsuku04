@@ -1,5 +1,5 @@
 <script lang="ts">
-	let { text, children, className = "" } = $props();
+	let { text, children, className = "", width = "100px" } = $props();
 
 	let visible = $state<boolean>(false);
 	let x = $state<number>(0);
@@ -27,7 +27,7 @@
 			id="tooltip-element"
 			role="tooltip"
 			style="position: fixed; left: {x}px; top: {y}px;"
-			class="w-[100px] z-50 rounded-md bg-gray-800 px-3 py-1.5 text-sm font-medium text-white shadow-lg pointer-events-none"
+			class="w-[{width}] z-50 rounded-md bg-gray-800 px-3 py-1.5 text-sm font-medium text-white shadow-lg pointer-events-none"
 		>
 			{@html text}
 		</div>

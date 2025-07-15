@@ -6,8 +6,9 @@
     import teamsData from "$locales/teams_zh.json";
     import teamGroupsData from "$locales/team_groups_zh.json";
     import { getRefreshFlag, getSelectedTab, setRefreshFlag } from "$lib/globalState.svelte";
-    import { getPlayerColorStr } from "$lib/utils";
     import Football from "$lib/icons/Football.svelte";
+    import { getCooperationType, getGrowType, getPlayerColor, getPosition, getRank, getToneType } from "$lib/utils";
+
 
     let treeData: TeamsWithRegion[] = $state([]);
     let openedRegion = $state("");
@@ -142,7 +143,7 @@
                     <th scope="col">位置</th>
                     <th scope="col">等级</th>
                     <th scope="col">连携</th>
-                    <th scope="col">口调</th>
+                    <th scope="col">性格</th>
                     <th scope="col">身体</th>
                     <th scope="col">技术</th>
                     <th scope="col">头脑</th>
@@ -151,7 +152,7 @@
             <tbody>
                 {#each teamPlayers as item}
                     <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
-                        <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white" style={`background-image: linear-gradient(to right, transparent 66%, ${getPlayerColorStr(item.pos)} 100%)`}>
+                        <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white" style={`background-image: linear-gradient(to right, transparent 66%, ${getPlayerColor(item.pos)} 100%)`}>
                             <span class="flex items-center justify-between w-full">
                                 {item.name}
                                 {#if item.isAlbum}
@@ -161,13 +162,13 @@
                         </th>
                         <td>{item.age}</td>
                         <td>{item.number}</td>
-                        <td>{item.pos}</td>
-                        <td>{item.rank}</td>
-                        <td>{item.cooperationType}</td>
-                        <td>{item.toneType}</td>
-                        <td>{item.growTypePhy}</td>
-                        <td>{item.growTypeTec}</td>
-                        <td>{item.growTypeSys}</td>
+                        <td>{getPosition(item.pos)}</td>
+                        <td>{getRank(item.rank)}</td>
+                        <td>{getCooperationType(item.cooperationType)}</td>
+                        <td>{getToneType(item.toneType)}</td>
+                        <td>{getGrowType(item.growTypePhy)}</td>
+                        <td>{getGrowType(item.growTypeTec)}</td>
+                        <td>{getGrowType(item.growTypeSys)}</td>
                     </tr>
                 {/each}
             </tbody>

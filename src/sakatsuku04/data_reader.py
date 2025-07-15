@@ -40,4 +40,10 @@ class DataReader(Protocol):
 
     def reset(self): ...
 
-    def is_cn(self) -> bool: ...
+    def game_ver(self) -> int:
+        """
+        0: jp
+        1: cn 1.01
+        2: cn 1.18
+        """
+        ...

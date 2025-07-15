@@ -8,7 +8,7 @@ from .models import Club, MyPlayer, OtherTeam, OtherPlayer, MyPlayerAbility
 from ..io import IntByteField, StrByteField, CnVer
 from ..data_reader import DataReader
 from ..dtos import ClubDto, MyPlayerDto, MyTeamPlayerDto, OtherTeamPlayerDto, SearchDto
-from ..objs import Player, Position
+from ..objs import Player
 
 
 class Pcsx2DataReader(DataReader):
@@ -187,6 +187,9 @@ class Pcsx2DataReader(DataReader):
         player.grow_type_sys = self._read_int_byte(0x70539E + i * 0x240)
         player.style = self._read_int_byte(0x7053A5 + i * 0x240)
         player.magic_value = self._read_int_byte(0x7053AC + i * 0x240, 4)
+        player.salary = self._read_int_byte(0x7053B6 + i * 0x240, 2)
+        player.offer_years_passed = self._read_int_byte(0x7053B9 + i * 0x240)
+        player.offer_years_total = self._read_int_byte(0x7053B9A + i * 0x240)
         player.abroad_days = self._read_int_byte(0x7053E8 + i * 0x240, 2)
         player.abroad_times = self._read_int_byte(0x7053F1 + i * 0x240)
         player.style_equip = self._read_int_byte(0x705408 + i * 0x240)
@@ -216,7 +219,7 @@ class Pcsx2DataReader(DataReader):
             if not is_connected:
                 self.reset()
             else:
-                CnVer.is_cn = self.is_cn()
+                CnVer.set_ver(self.game_ver())
                 Player.reset_player_dict()
 
     def games(self) -> list[str]:
@@ -247,7 +250,7 @@ class Pcsx2DataReader(DataReader):
             player for player in players if player.id.value != 0xFFFF
         ]:
             result.append(player.to_dto())
-        return sorted(result, key=lambda player: Position.ITEMS_REVERSE[player.pos])
+        return sorted(result, key=lambda player: player.pos)
 
     def read_other_team_friendly(self, team_index: int) -> int:
         return self._read_other_team_friendly(team_index).value
@@ -259,6 +262,10 @@ class Pcsx2DataReader(DataReader):
         name = data.name
         pos = data.pos
         age = data.age
+        country = data.country
+        tone = data.tone
+        cooperation = data.cooperation
+        rank = data.rank
         other_team_players: list[list[OtherPlayer]] = []
         for i in range(0x109):
             players = self._read_other_team_players(i)
@@ -277,6 +284,16 @@ class Pcsx2DataReader(DataReader):
             for player in team:
                 if player.id.value in filter_ids:
                     dto = player.to_dto()
+                    if pos is not None and pos != dto.pos:
+                        continue
+                    if country is not None and ((country == 50 and dto.born > 50) or (country != 50 and dto.born != country)):
+                        continue
+                    if tone is not None and tone != dto.tone_type:
+                        continue
+                    if cooperation is not None and cooperation != dto.cooperation_type:
+                        continue
+                    if rank is not None and rank != dto.rank:
+                        continue
                     dto.team_index = i
                     result.append(dto)
         return result
@@ -310,6 +327,7 @@ class Pcsx2DataReader(DataReader):
             player.grow_type_phy.value = data.grow_type_phy
             player.grow_type_tec.value = data.grow_type_tec
             player.grow_type_sys.value = data.grow_type_sys
+            player.salary.value = data.combo_salary()
             bits_fields = list()
             bits_fields.append(player.age)
             bits_fields.append(player.abroad_times)
@@ -326,6 +344,7 @@ class Pcsx2DataReader(DataReader):
             bits_fields.append(player.grow_type_phy)
             bits_fields.append(player.grow_type_tec)
             bits_fields.append(player.grow_type_sys)
+            bits_fields.append(player.salary)
 
             for ability, new_ability in zip(player.abilities, data.abilities):
                 ability.current.value = new_ability.current
@@ -350,8 +369,14 @@ class Pcsx2DataReader(DataReader):
     def reset(self):
         self.libipc.pine_pcsx2_delete(self.ipc)
 
-    def is_cn(self) -> bool:
-        return self.libipc.pine_getgameuuid(self.ipc, False) != b'd70c3195'
+    def game_ver(self) -> int:
+        uuid = self.libipc.pine_getgameuuid(self.ipc, False)
+        if uuid == b'd70c3195':
+            return 0
+        elif uuid == b'd70c32a6':
+            return 1
+        else:
+            return 2
 
     def _save(
         self,

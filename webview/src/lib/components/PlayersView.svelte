@@ -13,10 +13,12 @@
     import { getRefreshFlag, getSelectedTab, setRefreshFlag } from "$lib/globalState.svelte";
     import AbilityBar from "./AbilityBar.svelte";
     import Football from "$lib/icons/Football.svelte";
+    import abilEval from "$locales/abil_eval_zh.json";
+    import Comment from "$lib/icons/Comment.svelte";
 
     let myPlayers: MyTeamPlayer[] = $state([]);
     let selectedPlayer = $state(0);
-    let myPlayer: MyPlayer = $state({ abilities: [], hexagon: [] });
+    let myPlayer: MyPlayer = $state({ abilities: [], hexagon: [], odc:[] });
     let stats = $state(Array(18).fill(0));
     let bars = $state([0, 0, 0]);
 
@@ -31,7 +33,7 @@
         if (window.pywebview?.api?.fetch_my_player) {
             myPlayer = await window.pywebview.api.fetch_my_player(id);
             stats = myPlayer.hexagon;
-            bars = [myPlayer.hexagon[0], myPlayer.hexagon[1], 0];
+            bars = [myPlayer.odc[0], myPlayer.odc[1], 0];
         } else {
             alert('API 未加载');
         }
@@ -108,32 +110,90 @@
 
     <VStack className="w-1/5 mx-1">
         <div class="border border-gray-200 dark:border-gray-600 rounded-md p-4 space-y-2 bg-gray-50 dark:bg-gray-700">
-            <p>姓名<span>{myPlayer?.name}</span></p>
-            <p>年龄<span>{myPlayer?.age}</span></p>
-            <p>号码<span>{myPlayer?.number}</span></p>
-            <p>留学次数<span>{myPlayer?.abroadTimes}</span></p>
-            <p>出生地<span>{getRegion(myPlayer?.born)}</span></p>
-            <p>惯用脚<span>{preferFoot(myPlayer?.foot)}</span></p>
-            <p>身高<span>{myPlayer?.height}</span></p>
-            <p>位置<span>{getPosition(myPlayer?.pos)}</span></p>
-            <p>风格<span>{getStyle(myPlayer?.style)}</span></p>
-            <p>对战评价<span>{getRank(myPlayer?.rank)}</span></p>
-            <p>连携<span>{getCooperationType(myPlayer?.cooperationType)}</span></p>
-            <p>性格<span>{getToneType(myPlayer?.toneType)}</span></p>
+            <p class="flex items-center justify-between text-sm">
+                姓名
+                <span class="flex-1 pl-8">{myPlayer?.name}</span>
+                {#if myPlayer?.spComment}
+                    {@const tooltipText = `${myPlayer.spComment}`}
+                    <Tooltip text={tooltipText} width="200px">
+                        <Comment />
+                    </Tooltip>
+                {/if}
+            </p>
+            <p>
+                位置
+                <span class="pl-8 text-sm">{getPosition(myPlayer?.pos)}</span>
+            </p>
+            <p>
+                年龄
+                <span class="pl-8 text-sm">{myPlayer?.age}</span>
+            </p>
+            <p>
+                号码
+                <span class="pl-8 text-sm">{myPlayer?.number}</span>
+            </p>
+            <p>
+                留学次数
+                <span class="pl-8 text-sm">{myPlayer?.abroadTimes}</span>
+            </p>
+            <p>
+                出生地
+                <span class="pl-8 text-sm">{getRegion(myPlayer?.born)}</span>
+            </p>
+            <p>
+                惯用脚
+                <span class="pl-8 text-sm">{preferFoot(myPlayer?.foot)}</span>
+            </p>
+            <p>
+                身高
+                <span class="pl-8 text-sm">{myPlayer?.height}</span>
+            </p>
+            <p>
+                风格
+                <span class="pl-8 text-sm">{getStyle(myPlayer?.style)}</span>
+            </p>
+            <p>
+                对战评价
+                <span class="pl-8 text-sm">{getRank(myPlayer?.rank)}</span>
+            </p>
+            <p>
+                连携
+                <span class="pl-8 text-sm">{getCooperationType(myPlayer?.cooperationType)}</span>
+            </p>
+            <p>
+                性格
+                <span class="pl-8 text-sm">{getToneType(myPlayer?.toneType)}</span>
+            </p>
+            <p>
+                年薪
+                {#if myPlayer?.salaryHigh}
+                    <span class="pl-8 text-sm">
+                        {myPlayer?.salaryHigh} 亿
+                    </span>
+                {/if}
+                <span class="pl-{myPlayer?.salaryHigh ? '2' : '8'} text-sm">{myPlayer?.salaryLow} 万</span>
+            </p>
+            <p>
+                合同
+                <span class="pl-8 text-sm">{myPlayer?.offerYearsPassed} / {myPlayer?.offerYearsTotal}</span>
+            </p>
             <p>成长类型</p>
-            <div class="pl-4">
-                <p>身体<span>{getGrowType(myPlayer?.growTypePhy)}</span></p>
-                <p>技术<span>{getGrowType(myPlayer?.growTypeTec)}</span></p>
-                <p>头脑<span>{getGrowType(myPlayer?.growTypeSys)}</span></p>
+            <div class="pl-4 grid grid-cols-3 gap-x-2 text-sm text-left">
+                <div>身体</div>
+                <div>技术</div>
+                <div>头脑</div>
+                <div>{getGrowType(myPlayer?.growTypePhy)}</div>
+                <div>{getGrowType(myPlayer?.growTypeTec)}</div>
+                <div>{getGrowType(myPlayer?.growTypeSys)}</div>
             </div>
             <!-- <p>修正指数<span>{myPlayer?.jlFactor}</span></p> -->
             <p>隐藏属性</p>
-            <div class="pl-4">
-                <p>进取<span>{myPlayer?.desire}</span></p>
-                <p>高傲<span>{myPlayer?.pride}</span></p>
-                <p>野心<span>{myPlayer?.ambition}</span></p>
-                <p>毅力<span>{myPlayer?.persistence}</span></p>
-                <p>耐心<span>{myPlayer?.patient}</span></p>
+            <div class="pl-4  text-sm">
+                <div><span>进取</span><span class="pl-8">{myPlayer?.desire}</span></div>
+                <div><span>高傲</span><span class="pl-8">{myPlayer?.pride}</span></div>
+                <div><span>野心</span><span class="pl-8">{myPlayer?.ambition}</span></div>
+                <div><span>毅力</span><span class="pl-8">{myPlayer?.persistence}</span></div>
+                <div><span>耐心</span><span class="pl-8">{myPlayer?.patient}</span></div>
             </div>
         </div>
 
@@ -148,6 +208,11 @@
         <RadarChart abilities={stats} />
         <StatusBars values={bars} pos={myPlayer.pos} />
         <PositionGrid />
+        {#if myPlayer?.abilEval}
+            <div class="border border-gray-200 dark:border-gray-600 rounded-md py-2 px-3 space-y-2 bg-gray-50 dark:bg-gray-700 my-2">
+                {abilEval[myPlayer.abilEval]}
+            </div>
+        {/if}
     </VStack>
 
     <VStack className="grow h-full overflow-auto ml-1 pl-1">
@@ -182,8 +247,5 @@
     }
     .badges {
         @apply cursor-pointer bg-blue-100 text-blue-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-sm dark:bg-blue-900 dark:text-blue-300;
-    }
-    p span {
-        @apply pl-8 text-sm;
     }
 </style>

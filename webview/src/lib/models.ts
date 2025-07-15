@@ -27,13 +27,13 @@ export interface TeamPlayer {
     abilityGraph: number;
     number: number;
     name: string;
-    rank: string;
-    pos: string;
-    cooperationType: string;
-    toneType: string;
-    growTypePhy: string;
-    growTypeTec: string;
-    growTypeSys: string;
+    rank: number;
+    pos: number;
+    cooperationType: number;
+    toneType: number;
+    growTypePhy: number;
+    growTypeTec: number;
+    growTypeSys: number;
     isAlbum: boolean;
     teamIndex: number;
 }
@@ -71,6 +71,13 @@ export interface MyPlayer {
     persistence?: number;
     jlFactor?: number;
     hexagon: number[];
+    odc: number[];
+    abilEval?: number;
+    spComment?: string;
+    salaryHigh?: number;
+    salaryLow?: number;
+    offerYearsPassed?: number;
+    offerYearsTotal?: number;
 }
 
 export interface MyPlayerAbility {

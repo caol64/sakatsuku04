@@ -19,6 +19,8 @@
     let selectedGrowTypeSys = $state(toHex(player.growTypeSys));
     let selectedAbilityIndex = $state(0);
     let selectedAge = $state(player.age);
+    let selectedSalaryHigh = $state(player.salaryHigh);
+    let selectedSalaryLow = $state(player.salaryLow);
     let selectedAbroadTimes = $state(player.abroadTimes);
     let playAbilities = player.abilities.map(ability => ({ ...ability }));
     let selectedAbility: MyPlayerAbility = $state(playAbilities[0]);
@@ -63,12 +65,36 @@
         return true;
     }
 
+    function checkMoney(): boolean {
+        console.log(selectedSalaryHigh);
+        console.log(selectedSalaryLow);
+        if (selectedSalaryHigh === undefined || selectedSalaryLow === undefined || isNaN(selectedSalaryHigh) || isNaN(selectedSalaryLow)) {
+            alert("金额不正确");
+            return false;
+        }
+
+        const high = Number(selectedSalaryHigh);
+        const low = Number(selectedSalaryLow);
+
+        if (!Number.isInteger(high) || !Number.isInteger(low) || high < 0 || low < 0) {
+            alert("金额必须为正整数");
+            return false;
+        }
+        if ((high * 10000 + low <= 100)) {
+            alert("年薪不能低于100万");
+            return false;
+        }
+        return true;
+    }
+
     async function submitSave() {
-        if (checkAbility()) {
+        if (checkAbility() && checkMoney()) {
             const newPlayer: MyPlayer = { ...player };
             newPlayer.abilities = playAbilities;
             newPlayer.age = selectedAge;
             newPlayer.abroadTimes = selectedAbroadTimes;
+            newPlayer.salaryHigh = selectedSalaryHigh;
+            newPlayer.salaryLow = selectedSalaryLow;
             newPlayer.born = fromHex(selectedBorn);
             newPlayer.pos = fromHex(selectedPos);
             newPlayer.style = fromHex(selectedStyle);
@@ -132,6 +158,25 @@
                 {/each}
             </select>
             <DropDown />
+        </div>
+    </div>
+    <div class="form">
+        <div class="label">年薪</div>
+        <div class="input">
+            <HStack className="gap-4">
+                <div class="relative">
+                    <input type="text" maxlength="4" title="请输入 0 到 9999 之间的整数" bind:value={ selectedSalaryHigh } class="money-input" required />
+                    <div class="inner">
+                        <span>亿</span>
+                    </div>
+                </div>
+                <div class="relative">
+                    <input type="text" maxlength="4" title="请输入 0 到 9999 之间的整数" bind:value={ selectedSalaryLow } class="money-input" required />
+                    <div class="inner">
+                        <span>万</span>
+                    </div>
+                </div>
+            </HStack>
         </div>
     </div>
     <div class="form">
@@ -246,11 +291,14 @@
     .select {
         @apply w-40 bg-transparent placeholder:text-slate-400 text-slate-700 dark:text-gray-300 text-sm border border-slate-200 rounded pl-3 pr-8 py-2 transition duration-300 focus:outline-none focus:border-slate-400 hover:border-slate-400 shadow-sm focus:shadow-md appearance-none cursor-pointer;
     }
+    .money-input {
+        @apply w-30 bg-transparent placeholder:text-slate-400 text-slate-700 dark:text-gray-300 text-sm border border-slate-200 rounded pl-3 pr-8 py-2 transition duration-300 focus:outline-none focus:border-slate-400 hover:border-slate-400 shadow-sm focus:shadow-md;
+    }
     .thin-select {
         @apply w-20 bg-transparent placeholder:text-slate-400 text-slate-700 dark:text-gray-300 text-sm border border-slate-200 rounded pl-3 pr-8 py-2 transition duration-300 focus:outline-none focus:border-slate-400 hover:border-slate-400 shadow-sm focus:shadow-md appearance-none cursor-pointer;
     }
     .form {
-        @apply grid  grid-cols-[1fr_2fr] my-2 items-center;
+        @apply grid grid-cols-[1fr_2fr] my-2 items-center;
     }
     .range {
         @apply w-52 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700;
@@ -263,5 +311,8 @@
     }
     .number {
         @apply w-28 bg-white border border-gray-300 text-gray-900 text-sm rounded focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 shadow-sm focus:shadow-md;
+    }
+    .inner {
+        @apply absolute inset-y-0 end-0 top-0 flex items-center pe-3.5 pointer-events-none;
     }
 </style>

@@ -1,7 +1,7 @@
 <script lang="ts">
     import Football from "$lib/icons/Football.svelte";
     import type { TeamPlayer } from "$lib/models";
-    import { getPlayerColorStr, sortedPosition, sortedRegion } from "$lib/utils";
+    import { getPlayerColor, sortedPosition, sortedRegion, getCooperationType, getGrowType, getPosition, getRank, getToneType, fromHex, sortedRank, sortedCooperationType, sortedToneType } from "$lib/utils";
     import VStack from "./Stack/VStack.svelte";
     import teamsData from "$locales/teams_zh.json";
     import DropDown from "$lib/icons/DropDown.svelte";
@@ -16,12 +16,18 @@
     let selectedPos = $state("");
     let selectedCountry = $state("");
     let selectedAge = $state("");
+    let selectedRank = $state("");
+    let selectedTone = $state("");
+    let selectedCooperationType = $state("");
     let placeholderPos = "不指定";
     let placeholderAge = "不指定";
     let placeholderCountry = "不指定";
+    let placeholderRank = "不指定";
+    let placeholderTone = "不指定";
+    let placeholderCooperationType = "不指定";
 
-    function isSearchValid(name?: string, pos?: number, age?: number, country?: string): boolean {
-        return !!(name || pos || age || country); // 防止返回undefined
+    function isSearchValid(name?: string, pos?: number, age?: number, country?: number, rank?: number, cooperation?: number, tone?: number): boolean {
+        return !!(name || pos || age || country || rank || cooperation || tone); // 防止返回undefined
     }
 
 
@@ -29,10 +35,13 @@
         const name = keyword || undefined;
         const pos = selectedPos && !isNaN(Number(selectedPos)) ? Number(selectedPos) + 1 : undefined;
         const age = selectedAge && !isNaN(Number(selectedAge)) ? Number(selectedAge) : undefined;
-        const country = selectedCountry || undefined;
+        const country = selectedCountry ? fromHex(selectedCountry) : undefined;
+        const rank = selectedRank ? fromHex(selectedRank) + 1 : undefined;
+        const cooperation = selectedCooperationType && !isNaN(Number(selectedCooperationType)) ? Number(selectedCooperationType) + 1 : undefined;
+        const tone = selectedTone && !isNaN(Number(selectedTone)) ? Number(selectedTone) + 1 : undefined;
 
-        if (!isSearchValid(name, pos, age, country)) {
-            alert("请至少填写一个搜索条件（姓名、位置、年龄、国籍）");
+        if (!isSearchValid(name, pos, age, country, rank, cooperation, tone)) {
+            alert("请至少填写一个搜索条件（姓名、位置、年龄、国籍、等级、连携、性格）");
             return;
         }
 
@@ -44,6 +53,9 @@
                     pos,
                     age,
                     country,
+                    rank,
+                    cooperation,
+                    tone,
                 });
             } else {
                 alert('API 未加载');
@@ -65,6 +77,9 @@
         selectedPos = "";
         selectedCountry = "";
         selectedAge = "";
+        selectedRank = "";
+        selectedCooperationType = "";
+        selectedTone = "";
     }
 </script>
 
@@ -97,7 +112,7 @@
                     <th class="px-4 py-3">位置</th>
                     <th class="px-4 py-3">等级</th>
                     <th class="px-4 py-3">连携</th>
-                    <th class="px-4 py-3">口调</th>
+                    <th class="px-4 py-3">性格</th>
                     <th class="px-4 py-3">身体</th>
                     <th class="px-4 py-3">技术</th>
                     <th class="px-4 py-3">头脑</th>
@@ -105,26 +120,26 @@
                 </tr>
             </thead>
             <tbody>
-                {#each teamPlayers as player}
+                {#each teamPlayers as item}
                     <tr class="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600">
-                        <th scope="row" class="px-4 font-medium text-gray-900 whitespace-nowrap dark:text-white" style={`background-image: linear-gradient(to right, transparent 66%, ${getPlayerColorStr(player.pos)} 100%)`}>
+                        <th scope="row" class="px-4 font-medium text-gray-900 whitespace-nowrap dark:text-white" style={`background-image: linear-gradient(to right, transparent 66%, ${getPlayerColor(item.pos)} 100%)`}>
                             <span class="flex items-center justify-between w-full">
-                                {player.name}
-                                {#if player.isAlbum}
+                                {item.name}
+                                {#if item.isAlbum}
                                     <div><Football /></div>
                                 {/if}
                             </span>
                         </th>
-                        <td class="px-4 py-2">{player.age}</td>
-                        <td class="px-4 py-2">{player.number}</td>
-                        <td class="px-4 py-2">{player.pos}</td>
-                        <td class="px-4 py-2">{player.rank}</td>
-                        <td class="px-4 py-2">{player.cooperationType}</td>
-                        <td class="px-4 py-2">{player.toneType}</td>
-                        <td class="px-4 py-2">{player.growTypePhy}</td>
-                        <td class="px-4 py-2">{player.growTypeTec}</td>
-                        <td class="px-4 py-2">{player.growTypeSys}</td>
-                        <td class="px-4 py-2">{getTeamByIndex(player.teamIndex)}</td>
+                        <td class="px-4 py-2">{item.age}</td>
+                        <td class="px-4 py-2">{item.number}</td>
+                        <td class="px-4 py-2">{getPosition(item.pos)}</td>
+                        <td class="px-4 py-2">{getRank(item.rank)}</td>
+                        <td class="px-4 py-2">{getCooperationType(item.cooperationType)}</td>
+                        <td class="px-4 py-2">{getToneType(item.toneType)}</td>
+                        <td class="px-4 py-2">{getGrowType(item.growTypePhy)}</td>
+                        <td class="px-4 py-2">{getGrowType(item.growTypeTec)}</td>
+                        <td class="px-4 py-2">{getGrowType(item.growTypeSys)}</td>
+                        <td class="px-4 py-2">{getTeamByIndex(item.teamIndex)}</td>
                     </tr>
                 {:else}
                     <tr>
@@ -146,7 +161,7 @@
 
             <div class="text-sm font-medium text-gray-700 dark:text-white mb-4">位置</div>
             <div class="input mb-4">
-                <select bind:value={selectedPos} class="select" disabled>
+                <select bind:value={selectedPos} class="select">
                     {#if placeholderPos}
                         <option value="" disabled selected>{placeholderPos}</option>
                     {/if}
@@ -172,11 +187,50 @@
 
             <div class="text-sm font-medium text-gray-700 dark:text-white mb-4">国籍</div>
             <div class="input mb-4">
-                <select bind:value={selectedCountry} class="select" disabled>
+                <select bind:value={selectedCountry} class="select">
                     {#if placeholderCountry}
                         <option value="" disabled selected>{placeholderCountry}</option>
                     {/if}
                     {#each sortedRegion.slice(50) as [key, value]}
+                        <option value={key}>{value}</option>
+                    {/each}
+                </select>
+                <DropDown />
+            </div>
+
+            <div class="text-sm font-medium text-gray-700 dark:text-white mb-4">等级</div>
+            <div class="input mb-4">
+                <select bind:value={selectedRank} class="select">
+                    {#if placeholderCountry}
+                        <option value="" disabled selected>{placeholderRank}</option>
+                    {/if}
+                    {#each sortedRank as [key, value]}
+                        <option value={key}>{value}</option>
+                    {/each}
+                </select>
+                <DropDown />
+            </div>
+
+            <div class="text-sm font-medium text-gray-700 dark:text-white mb-4">连携</div>
+            <div class="input mb-4">
+                <select bind:value={selectedCooperationType} class="select">
+                    {#if placeholderCountry}
+                        <option value="" disabled selected>{placeholderCooperationType}</option>
+                    {/if}
+                    {#each sortedCooperationType as [key, value]}
+                        <option value={key}>{value}</option>
+                    {/each}
+                </select>
+                <DropDown />
+            </div>
+
+            <div class="text-sm font-medium text-gray-700 dark:text-white mb-4">性格</div>
+            <div class="input mb-4">
+                <select bind:value={selectedTone} class="select">
+                    {#if placeholderCountry}
+                        <option value="" disabled selected>{placeholderTone}</option>
+                    {/if}
+                    {#each sortedToneType as [key, value]}
                         <option value={key}>{value}</option>
                     {/each}
                 </select>

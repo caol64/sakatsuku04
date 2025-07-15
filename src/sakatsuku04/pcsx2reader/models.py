@@ -72,6 +72,9 @@ class MyPlayer:
     patient: IntByteField
     persistence: IntByteField
     jl_factor: IntByteField
+    salary: IntByteField
+    offer_years_passed: IntByteField
+    offer_years_total: IntByteField
     test: IntByteField = IntByteField(0, 0, 0)
     un: list[int]
 
@@ -91,6 +94,7 @@ class MyPlayer:
             )
             for a in self.abilities
         ]
+        player = Player(self.id.value)
         return MyPlayerDto(
             index=self.index,
             id=self.id.value,
@@ -116,6 +120,11 @@ class MyPlayer:
             patient=self.patient.value,
             persistence=self.persistence.value,
             jl_factor=self.jl_factor.value,
+            sp_comment=player.sp_comment,
+            salary_high=self.salary.value * 100 // 10000,
+            salary_low=self.salary.value * 100 % 10000,
+            offer_years_passed=self.offer_years_passed.value,
+            offer_years_total=self.offer_years_total.value,
         )
 
 
@@ -136,6 +145,7 @@ class OtherPlayer:
             name=player.name,
             rank=player.rank,
             pos=player.pos,
+            born=player.born,
             cooperation_type=player.cooperation_type,
             tone_type=player.tone_type,
             grow_type_phy=player.grow_type_phy,

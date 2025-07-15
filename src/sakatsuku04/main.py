@@ -202,6 +202,12 @@ class MainApp:
         search_data = SearchDto.model_validate(data)
         if search_data.pos:
             search_data.pos -= 1
+        if search_data.rank:
+            search_data.rank -= 1
+        if search_data.cooperation:
+            search_data.cooperation -= 1
+        if search_data.tone:
+            search_data.tone -= 1
         return [f.model_dump(by_alias=True) for f in self.data_raader.search_player(search_data)]
 
 
