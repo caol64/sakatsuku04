@@ -2,7 +2,8 @@ from typing import Optional
 from pydantic import BaseModel, ConfigDict, computed_field
 from pydantic.alias_generators import to_camel
 
-from .utils import calc_abil_eval, is_album_player, ability_to_lv, lv_to_dot
+from .objs import Player
+from .utils import calc_abil_eval, find_badden_match, is_album_player, ability_to_lv, lv_to_dot
 from . import constants
 
 
@@ -71,7 +72,7 @@ class MyPlayerDto(BaseDto):
     ambition: int
     patient: int
     persistence: int
-    jl_factor: int
+    grow_type_id: int
     sp_comment: Optional[str]
     salary_high: int
     salary_low: int
@@ -119,6 +120,17 @@ class MyPlayerDto(BaseDto):
     @property
     def abil_eval(self) -> int:
         return calc_abil_eval([r.current for r in self.abilities][0: 36], self.pos)
+
+    @computed_field
+    @property
+    def max_abil_eval(self) -> int:
+        return calc_abil_eval([r.max for r in self.abilities][0: 36], self.pos)
+
+    @computed_field
+    @property
+    def badden_players(self) -> Optional[list[str]]:
+        badden_ids = find_badden_match(self.id)
+        return [Player(p).name for p in badden_ids] if badden_ids else None
 
     def combo_salary(self) -> int:
         return (self.salary_high * 10000 + self.salary_low) // 100

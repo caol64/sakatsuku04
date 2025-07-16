@@ -171,3 +171,13 @@ def calc_abil_eval(abilities: list[int], pos: int) -> int:
         if total // 15 <= constants.status_table_mes[i]:
             return i
     return 7
+
+
+def find_badden_match(id: int) -> list[int]:
+    result = []
+    for a, b in constants.tbl_badden:
+        if id == a:
+            result.append(b)
+        elif id == b:
+            result.append(a)
+    return result

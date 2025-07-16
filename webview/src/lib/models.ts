@@ -69,11 +69,13 @@ export interface MyPlayer {
     ambition?: number;
     patient?: number;
     persistence?: number;
-    jlFactor?: number;
+    growTypeId?: number;
     hexagon: number[];
     odc: number[];
     abilEval?: number;
+    maxAbilEval?: number;
     spComment?: string;
+    baddenPlayers?: string[];
     salaryHigh?: number;
     salaryLow?: number;
     offerYearsPassed?: number;

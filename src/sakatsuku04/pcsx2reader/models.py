@@ -1,7 +1,8 @@
 from dataclasses import dataclass
+
 from ..dtos import ClubDto, MyPlayerDto, OtherTeamPlayerDto, PlayerAbilityDto
-from ..objs import Player
 from ..io import IntByteField, StrByteField
+from ..objs import Player
 
 
 class Club:
@@ -48,12 +49,12 @@ class MyPlayer:
     born: IntByteField
     born2: IntByteField
     abroad_times: IntByteField
-    abroad_days: IntByteField
+    injury_days: IntByteField
     height: IntByteField
     foot: IntByteField
     rank: IntByteField
     pos: IntByteField
-    pos2: IntByteField
+    base_pos: IntByteField
     grow_type_phy: IntByteField
     grow_type_tec: IntByteField
     grow_type_sys: IntByteField
@@ -71,7 +72,7 @@ class MyPlayer:
     ambition: IntByteField
     patient: IntByteField
     persistence: IntByteField
-    jl_factor: IntByteField
+    grow_type_id: IntByteField
     salary: IntByteField
     offer_years_passed: IntByteField
     offer_years_total: IntByteField
@@ -80,7 +81,7 @@ class MyPlayer:
 
     def set_style(self, style_index: int):
         new_int = (self.style_learned2.value << 32) | self.style_learned1.value
-        new_int |= (1 << style_index)
+        new_int |= 1 << style_index
         self.style_learned1.value = new_int & 0xFFFFFFFF
         self.style_learned2.value = (new_int >> 32) & 0xFFFFFFFF
 
@@ -119,7 +120,7 @@ class MyPlayer:
             ambition=self.ambition.value,
             patient=self.patient.value,
             persistence=self.persistence.value,
-            jl_factor=self.jl_factor.value,
+            grow_type_id=self.grow_type_id.value,
             sp_comment=player.sp_comment,
             salary_high=self.salary.value * 100 // 10000,
             salary_low=self.salary.value * 100 % 10000,

@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 
+from ..dtos import ClubDto, MyPlayerDto, OtherTeamPlayerDto, PlayerAbilityDto
 from ..io import IntBitField, IntByteField, StrBitField, StrByteField
 from ..objs import Player
-from ..dtos import ClubDto, MyPlayerDto, OtherTeamPlayerDto, PlayerAbilityDto
 
 
 @dataclass
@@ -68,12 +68,12 @@ class MyPlayer:
     born: IntBitField
     born2: IntBitField
     abroad_times: IntBitField
-    abroad_days: IntBitField
+    injury_days: IntBitField
     height: IntBitField
     foot: IntBitField
     rank: IntBitField
     pos: IntBitField
-    pos2: IntBitField
+    base_pos: IntBitField
     grow_type_phy: IntBitField
     grow_type_tec: IntBitField
     grow_type_sys: IntBitField
@@ -91,7 +91,7 @@ class MyPlayer:
     ambition: IntBitField
     patient: IntBitField
     persistence: IntBitField
-    jl_factor: IntBitField
+    grow_type_id: IntBitField
     salary: IntBitField
     offer_years_passed: IntBitField
     offer_years_total: IntBitField
@@ -105,7 +105,7 @@ class MyPlayer:
 
     def set_style(self, style_index: int):
         new_int = (self.style_learned2.value << 32) | self.style_learned1.value
-        new_int |= (1 << style_index)
+        new_int |= 1 << style_index
         self.style_learned1.value = new_int & 0xFFFFFFFF
         self.style_learned2.value = (new_int >> 32) & 0xFFFFFFFF
 
@@ -144,7 +144,7 @@ class MyPlayer:
             ambition=self.ambition.value,
             patient=self.patient.value,
             persistence=self.persistence.value,
-            jl_factor=self.jl_factor.value,
+            grow_type_id=self.grow_type_id.value,
             sp_comment=player.sp_comment,
             salary_high=self.salary.value * 100 // 10000,
             salary_low=self.salary.value * 100 % 10000,
@@ -157,8 +157,9 @@ class MyTeam:
     english_name: StrBitField
     oilis_english_name: StrBitField
     players: list[MyPlayer]
-    my_scouts: list['MyScout']
-    scout_candidates: list['MyScout']
+    youth_players: list[MyPlayer]
+    my_scouts: list["MyScout"]
+    scout_candidates: list["MyScout"]
 
 
 @dataclass

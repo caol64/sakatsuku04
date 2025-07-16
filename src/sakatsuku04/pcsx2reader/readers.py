@@ -1,28 +1,27 @@
 import ctypes
-import platform
 import importlib.resources
-from ctypes import c_char_p, c_void_p, c_uint, c_ulong, c_char, c_bool
+import platform
+from ctypes import c_bool, c_char, c_char_p, c_uint, c_ulong, c_void_p
 
-from ..utils import find_name_matches
-from .models import Club, MyPlayer, OtherTeam, OtherPlayer, MyPlayerAbility
-from ..io import IntByteField, StrByteField, CnVer
 from ..data_reader import DataReader
 from ..dtos import ClubDto, MyPlayerDto, MyTeamPlayerDto, OtherTeamPlayerDto, SearchDto
+from ..io import CnVer, IntByteField, StrByteField
 from ..objs import Player
+from ..utils import find_name_matches
+from .models import Club, MyPlayer, MyPlayerAbility, OtherPlayer, OtherTeam
 
 
 class Pcsx2DataReader(DataReader):
-
     def __init__(self):
         # we get the correct library extension per os
-        lib="libpine_c"
+        lib = "libpine_c"
         cur_os = platform.system()
-        if(cur_os == "Linux"):
-            lib="libpine_c.so"
-        elif(cur_os == "Windows"):
-            lib="pine_c.dll"
-        elif(cur_os == "Darwin"):
-            lib="libpine_c.dylib"
+        if cur_os == "Linux":
+            lib = "libpine_c.so"
+        elif cur_os == "Windows":
+            lib = "pine_c.dll"
+        elif cur_os == "Darwin":
+            lib = "libpine_c.dylib"
         with importlib.resources.path("sakatsuku04.libs", lib) as file_path:
             self.libipc = ctypes.CDLL(file_path)
         self.libipc.pine_pcsx2_new.restype = c_void_p
@@ -69,7 +68,7 @@ class Pcsx2DataReader(DataReader):
         result = bytearray()
         for i in range(length):
             int_value = self._read_8bit(address + i)
-            result += int_value.to_bytes(1, 'little')
+            result += int_value.to_bytes(1, "little")
         return bytes(result)
 
     def _write_8bit(self, address: int, value: int):
@@ -98,7 +97,9 @@ class Pcsx2DataReader(DataReader):
         return IntByteField(byte_length, value, address)
 
     def _write_int_byte(self, byte_field: IntByteField):
-        self._write_funcs[byte_field.byte_length](byte_field.byte_offset, byte_field.value)
+        self._write_funcs[byte_field.byte_length](
+            byte_field.byte_offset, byte_field.value
+        )
 
     def _read_str_byte(self, address: int, byte_length: int = 1) -> StrByteField:
         value = self._read_str(address, byte_length)
@@ -127,14 +128,25 @@ class Pcsx2DataReader(DataReader):
             player.index = i
             player.id = self._read_int_byte(0x7051E0 + i * 0x240, 2)
             player.pos = self._read_int_byte(0x7051E2 + i * 0x240)
-            player.name = self._read_str_byte(0x705366 + i * 0x240, 0xd)
+            player.name = self._read_str_byte(0x705366 + i * 0x240, 0xD)
+            my_players.append(player)
+        return my_players
+
+    def _read_youth_team(self) -> list[MyPlayer]:
+        my_players = []
+        for i in range(0x18):
+            player = MyPlayer()
+            player.index = i
+            player.id = self._read_int_byte(0x70F0A8 + i * 0x240, 2)
+            player.pos = self._read_int_byte(0x70F0AA + i * 0x240)
+            player.name = self._read_str_byte(0x70F22E + i * 0x240, 0xD)
             my_players.append(player)
         return my_players
 
     def _read_other_teams(self) -> list[OtherTeam]:
         other_teams: list[OtherTeam] = list()
         for i in range(0x109):  # loop the teams
-            id = self._read_int_byte(0x72c7f0 + i * 0x6C, 2)
+            id = self._read_int_byte(0x72C7F0 + i * 0x6C, 2)
             unknown1 = self._read_int_byte(0x72C856 + i * 0x6C, 2)
             unknown2 = self._read_int_byte(0x72C858 + i * 0x6C, 2)
             friendly = self._read_int_byte(0x72C85A + i * 0x6C, 2)
@@ -146,62 +158,62 @@ class Pcsx2DataReader(DataReader):
     def _read_other_team_players(self, team_index: int) -> list[OtherPlayer]:
         players = list()
         for i in range(0x19):
-            pid = self._read_int_byte(0x72c7f2 + team_index * 0x6C + i * 4, 2)
-            age = self._read_int_byte(0x72c7f4 + team_index * 0x6C + i * 4)
-            ability_graph = self._read_int_byte(0x72c7f5 + team_index * 0x6C + i * 4)
-            number = self._read_int_byte(0x7337bd + team_index * 0x19 + i * 1)
+            pid = self._read_int_byte(0x72C7F2 + team_index * 0x6C + i * 4, 2)
+            age = self._read_int_byte(0x72C7F4 + team_index * 0x6C + i * 4)
+            ability_graph = self._read_int_byte(0x72C7F5 + team_index * 0x6C + i * 4)
+            number = self._read_int_byte(0x7337BD + team_index * 0x19 + i * 1)
             player = OtherPlayer(pid, age, ability_graph, number)
             players.append(player)
         return players
 
     def _read_other_team_friendly(self, team_index: int) -> IntByteField:
-        return self._read_int_byte(0x72c85a + team_index * 0x6C, 2)
+        return self._read_int_byte(0x72C85A + team_index * 0x6C, 2)
 
-    def _read_myplayer(self, id: int) -> MyPlayer:
-        my_players = self._read_myteam()
+    def _read_myplayer(self, id: int, offset: int, team: int) -> MyPlayer:
+        my_players = self._read_myteam() if team == 0 else self._read_youth_team()
         target_player = list(filter(lambda p: p.id.value == id, my_players)).pop()
         player = MyPlayer()
         player.index = target_player.index
         i = player.index
-        player.id = self._read_int_byte(0x7051E0 + i * 0x240, 2)
-        player.pos = self._read_int_byte(0x7051E2 + i * 0x240)
-        player.age = self._read_int_byte(0x7051E3 + i * 0x240)
-        player.name = self._read_str_byte(0x705366 + i * 0x240, 0xd)
-        player.born = self._read_int_byte(0x705373 + i * 0x240)
-        player.born2 = self._read_int_byte(0x705374 + i * 0x240)
-        player.rank = self._read_int_byte(0x705375 + i * 0x240)
-        player.pos2 = self._read_int_byte(0x705376 + i * 0x240)
-        player.height = self._read_int_byte(0x705378 + i * 0x240)
-        player.number = self._read_int_byte(0x70537A + i * 0x240)
-        player.foot = self._read_int_byte(0x70537B + i * 0x240)
-        player.desire = self._read_int_byte(0x70538B + i * 0x240)
-        player.pride = self._read_int_byte(0x70538C + i * 0x240)
-        player.ambition = self._read_int_byte(0x70538D + i * 0x240)
-        player.persistence = self._read_int_byte(0x70538E + i * 0x240)
-        player.tone_type = self._read_int_byte(0x705391 + i * 0x240)
-        player.patient = self._read_int_byte(0x705397 + i * 0x240)
-        player.cooperation_type = self._read_int_byte(0x70539A + i * 0x240)
-        player.jl_factor = self._read_int_byte(0x70539B + i * 0x240)
-        player.grow_type_phy = self._read_int_byte(0x70539C + i * 0x240)
-        player.grow_type_tec = self._read_int_byte(0x70539D + i * 0x240)
-        player.grow_type_sys = self._read_int_byte(0x70539E + i * 0x240)
-        player.style = self._read_int_byte(0x7053A5 + i * 0x240)
-        player.magic_value = self._read_int_byte(0x7053AC + i * 0x240, 4)
-        player.salary = self._read_int_byte(0x7053B6 + i * 0x240, 2)
-        player.offer_years_passed = self._read_int_byte(0x7053B9 + i * 0x240)
-        player.offer_years_total = self._read_int_byte(0x7053B9A + i * 0x240)
-        player.abroad_days = self._read_int_byte(0x7053E8 + i * 0x240, 2)
-        player.abroad_times = self._read_int_byte(0x7053F1 + i * 0x240)
-        player.style_equip = self._read_int_byte(0x705408 + i * 0x240)
-        player.style_learned1 = self._read_int_byte(0x70540c + i * 0x240, 4)
-        player.style_learned2 = self._read_int_byte(0x705410 + i * 0x240, 4)
-        player.style_learned3 = self._read_int_byte(0x705414 + i * 0x240, 4)
-        player.style_learned4 = self._read_int_byte(0x705418 + i * 0x240, 4)
+        player.id = self._read_int_byte(offset + i * 0x240, 2)
+        player.pos = self._read_int_byte(offset + 2 + i * 0x240)
+        player.age = self._read_int_byte(offset + 3 + i * 0x240)
+        player.name = self._read_str_byte(offset + 0x186 + i * 0x240, 0xD)
+        player.born = self._read_int_byte(offset + 0x193 + i * 0x240)
+        player.born2 = self._read_int_byte(offset + 0x194 + i * 0x240)
+        player.rank = self._read_int_byte(offset + 0x195 + i * 0x240)
+        player.base_pos = self._read_int_byte(offset + 0x196 + i * 0x240)
+        player.height = self._read_int_byte(offset + 0x198 + i * 0x240)
+        player.number = self._read_int_byte(offset + 0x19A + i * 0x240)
+        player.foot = self._read_int_byte(offset + 0x19B + i * 0x240)
+        player.desire = self._read_int_byte(offset + 0x1AB + i * 0x240)
+        player.pride = self._read_int_byte(offset + 0x1AC + i * 0x240)
+        player.ambition = self._read_int_byte(offset + 0x1AD + i * 0x240)
+        player.persistence = self._read_int_byte(offset + 0x1AE + i * 0x240)
+        player.tone_type = self._read_int_byte(offset + 0x1B1 + i * 0x240)
+        player.patient = self._read_int_byte(offset + 0x1B7 + i * 0x240)
+        player.cooperation_type = self._read_int_byte(offset + 0x1BA + i * 0x240)
+        player.grow_type_id = self._read_int_byte(offset + 0x1BB + i * 0x240)
+        player.grow_type_phy = self._read_int_byte(offset + 0x1BC + i * 0x240)
+        player.grow_type_tec = self._read_int_byte(offset + 0x1BD + i * 0x240)
+        player.grow_type_sys = self._read_int_byte(offset + 0x1BE + i * 0x240)
+        player.style = self._read_int_byte(offset + 0x1C5 + i * 0x240)
+        player.magic_value = self._read_int_byte(offset + 0x1CC + i * 0x240, 4)
+        player.salary = self._read_int_byte(offset + 0x1D6 + i * 0x240, 2)
+        player.offer_years_passed = self._read_int_byte(offset + 0x1D9 + i * 0x240)
+        player.offer_years_total = self._read_int_byte(offset + 0x1DA + i * 0x240)
+        player.injury_days = self._read_int_byte(offset + 0x208 + i * 0x240, 2)
+        player.abroad_times = self._read_int_byte(offset + 0x211 + i * 0x240)
+        player.style_equip = self._read_int_byte(offset + 0x228 + i * 0x240)
+        player.style_learned1 = self._read_int_byte(offset + 0x22C + i * 0x240, 4)
+        player.style_learned2 = self._read_int_byte(offset + 0x230 + i * 0x240, 4)
+        player.style_learned3 = self._read_int_byte(offset + 0x234 + i * 0x240, 4)
+        player.style_learned4 = self._read_int_byte(offset + 0x238 + i * 0x240, 4)
         player.abilities = []
         for j in range(0x40):
-            current = self._read_int_byte(0x7051E4 + i * 0x240 + j * 6, 2)
-            current_max = self._read_int_byte(0x7051E6 + i * 0x240 + j * 6, 2)
-            max = self._read_int_byte(0x7051E8 + i * 0x240 + j * 6, 2)
+            current = self._read_int_byte(offset + 4 + i * 0x240 + j * 6, 2)
+            current_max = self._read_int_byte(offset + 6 + i * 0x240 + j * 6, 2)
+            max = self._read_int_byte(offset + 8 + i * 0x240 + j * 6, 2)
             player.abilities.append(MyPlayerAbility(j, current, current_max, max))
         return player
 
@@ -225,8 +237,7 @@ class Pcsx2DataReader(DataReader):
     def games(self) -> list[str]:
         return []
 
-    def select_game(self, game: str):
-        ...
+    def select_game(self, game: str): ...
 
     def read_club(self) -> ClubDto:
         club = self._read_club()
@@ -235,28 +246,40 @@ class Pcsx2DataReader(DataReader):
     def read_myteam(self) -> list[MyTeamPlayerDto]:
         my_players = self._read_myteam()
         result = []
-        for player in [
-            player
-            for player in my_players
-            if player.id.value != 0xFFFF
-        ]:
-            result.append(MyTeamPlayerDto(id=player.id.value, name=player.name.value, pos=player.pos.value))
+        for player in [player for player in my_players if player.id.value != 0xFFFF]:
+            result.append(
+                MyTeamPlayerDto(
+                    id=player.id.value, name=player.name.value, pos=player.pos.value
+                )
+            )
+        return sorted(result, key=lambda player: player.pos)
+
+    def read_youth_team(self) -> list[MyPlayerDto]:
+        my_players = self._read_youth_team()
+        result = []
+        for player in [player for player in my_players if player.id.value != 0xFFFF]:
+            result.append(
+                MyTeamPlayerDto(
+                    id=player.id.value, name=player.name.value, pos=player.pos.value
+                )
+            )
         return sorted(result, key=lambda player: player.pos)
 
     def read_other_team_players(self, team_index: int) -> list[OtherTeamPlayerDto]:
         players = self._read_other_team_players(team_index)
         result = []
-        for player in [
-            player for player in players if player.id.value != 0xFFFF
-        ]:
+        for player in [player for player in players if player.id.value != 0xFFFF]:
             result.append(player.to_dto())
         return sorted(result, key=lambda player: player.pos)
 
     def read_other_team_friendly(self, team_index: int) -> int:
         return self._read_other_team_friendly(team_index).value
 
-    def read_myplayer(self, id: int) -> MyPlayerDto:
-        return self._read_myplayer(id).to_dto()
+    def read_myplayer(self, id: int, team: int) -> MyPlayerDto:
+        if team == 0:
+            return self._read_myplayer(id, 0x7051E0, team).to_dto()
+        else:
+            return self._read_myplayer(id, 0x70F0A8, team).to_dto()
 
     def search_player(self, data: SearchDto) -> list[OtherTeamPlayerDto]:
         name = data.name
@@ -286,7 +309,10 @@ class Pcsx2DataReader(DataReader):
                     dto = player.to_dto()
                     if pos is not None and pos != dto.pos:
                         continue
-                    if country is not None and ((country == 50 and dto.born > 50) or (country != 50 and dto.born != country)):
+                    if country is not None and (
+                        (country == 50 and dto.born > 50)
+                        or (country != 50 and dto.born != country)
+                    ):
                         continue
                     if tone is not None and tone != dto.tone_type:
                         continue
@@ -311,14 +337,13 @@ class Pcsx2DataReader(DataReader):
         return True
 
     def save_player(self, data: MyPlayerDto) -> bool:
-        player = self._read_myplayer(data.id)
+        player = self._read_myplayer(data.id, 0x7051E0)
         if player:
             player.age.value = data.age
             player.abroad_times.value = data.abroad_times
             player.born.value = data.born
             player.born2.value = data.born
             player.pos.value = data.pos
-            player.pos2.value = data.pos
             player.style.value = data.style
             player.style_equip.value = data.style
             player.set_style(data.style)
@@ -334,7 +359,6 @@ class Pcsx2DataReader(DataReader):
             bits_fields.append(player.born)
             bits_fields.append(player.born2)
             bits_fields.append(player.pos)
-            bits_fields.append(player.pos2)
             bits_fields.append(player.style)
             bits_fields.append(player.style_equip)
             bits_fields.append(player.style_learned1)
@@ -371,20 +395,16 @@ class Pcsx2DataReader(DataReader):
 
     def game_ver(self) -> int:
         uuid = self.libipc.pine_getgameuuid(self.ipc, False)
-        if uuid == b'd70c3195':
+        if uuid == b"d70c3195":
             return 0
-        elif uuid == b'd70c32a6':
+        elif uuid == b"d70c32a6":
             return 1
         else:
             return 2
 
-    def _save(
-        self,
-        bytes_fields: list[IntByteField | StrByteField]
-    ):
+    def _save(self, bytes_fields: list[IntByteField | StrByteField]):
         for field in bytes_fields:
             if isinstance(field, IntByteField):
                 self._write_int_byte(field)
             else:
                 self._write_str_byte(field)
-

@@ -15,12 +15,14 @@
     import Football from "$lib/icons/Football.svelte";
     import abilEval from "$locales/abil_eval_zh.json";
     import Comment from "$lib/icons/Comment.svelte";
+    import Skull from "$lib/icons/Skull.svelte";
 
     let myPlayers: MyTeamPlayer[] = $state([]);
     let selectedPlayer = $state(0);
     let myPlayer: MyPlayer = $state({ abilities: [], hexagon: [], odc:[] });
     let stats = $state(Array(18).fill(0));
     let bars = $state([0, 0, 0]);
+    let selectedTeam = $state(0);
 
     let abilityPairs = $derived(
         sortedAbilities.map((label, i) => ({
@@ -31,7 +33,7 @@
 
     async function fetchMyPlayer(id: number) {
         if (window.pywebview?.api?.fetch_my_player) {
-            myPlayer = await window.pywebview.api.fetch_my_player(id);
+            myPlayer = await window.pywebview.api.fetch_my_player(id, selectedTeam);
             stats = myPlayer.hexagon;
             bars = [myPlayer.odc[0], myPlayer.odc[1], 0];
         } else {
@@ -41,10 +43,15 @@
 
     async function fetchMyTeam() {
         if (window.pywebview?.api?.fetch_my_team) {
-            myPlayers = await window.pywebview.api.fetch_my_team();
-            if (myPlayers) {
+            myPlayers = await window.pywebview.api.fetch_my_team(selectedTeam);
+            if (myPlayers && myPlayers.length > 0) {
                 selectedPlayer = myPlayers[0].id;
                 await fetchMyPlayer(selectedPlayer);
+            } else {
+                selectedPlayer = 0;
+                myPlayer = { abilities: [], hexagon: [], odc:[] };
+                stats = Array(18).fill(0);
+                bars = [0, 0, 0];
             }
         } else {
             alert('API 未加载');
@@ -54,6 +61,7 @@
     $effect(() => {
         if(getRefreshFlag() && getSelectedTab() === "Players") {
             try {
+                selectedTeam = 0;
                 fetchMyTeam();
             } finally {
                 setRefreshFlag(false);
@@ -86,26 +94,43 @@
             await fetchMyPlayer(id);
         }
     }
+
+    async function onTeamTabClick(index: number) {
+        if (selectedTeam !== index) {
+            selectedTeam = index;
+            await fetchMyTeam();
+        }
+    }
 </script>
 
 <HStack className="flex-1 overflow-hidden m-2.5">
     <VStack className="w-1/5 mr-1">
-        <div class="sidebar">
-            {#each myPlayers as item}
-                <button
-                    onclick={() => onPlayerClick(item.id)}
-                    class={selectedPlayer === item.id ? "activate" : ""}
-                    style={`background-image: linear-gradient(to right, transparent 66%, ${getPlayerColor(item.pos)} 100%)`}
-                >
-                    <span class="flex items-center justify-between w-full">
-                        {item.name}
-                        {#if item.isAlbum}
-                            <div class="mx-2"><Football /></div>
-                        {/if}
-                    </span>
-                </button>
-            {/each}
-        </div>
+        <HStack className="space-x-4 mb-2 mx-2">
+            <button onclick={() => onTeamTabClick(0)} class="badges">一线队</button>
+            <button onclick={() => onTeamTabClick(1)} class="badges">青年队</button>
+        </HStack>
+        {#if myPlayers && myPlayers.length > 0}
+            <div class="sidebar">
+                {#each myPlayers as item}
+                    <button
+                        onclick={() => onPlayerClick(item.id)}
+                        class={selectedPlayer === item.id ? "activate" : ""}
+                        style={`background-image: linear-gradient(to right, transparent 66%, ${getPlayerColor(item.pos)} 100%)`}
+                    >
+                        <span class="flex items-center justify-between w-full">
+                            {item.name}
+                            {#if item.isAlbum}
+                                <div class="mx-2"><Football /></div>
+                            {/if}
+                        </span>
+                    </button>
+                {/each}
+            </div>
+        {:else}
+            <div class="border text-sm border-gray-200 dark:border-gray-600 rounded-md p-4 space-y-2 bg-gray-50 dark:bg-gray-700">
+                空空如也
+            </div>
+        {/if}
     </VStack>
 
     <VStack className="w-1/5 mx-1">
@@ -156,9 +181,15 @@
                 对战评价
                 <span class="pl-8 text-sm">{getRank(myPlayer?.rank)}</span>
             </p>
-            <p>
+            <p class="flex items-center justify-between text-sm">
                 连携
-                <span class="pl-8 text-sm">{getCooperationType(myPlayer?.cooperationType)}</span>
+                <span  class="flex-1 pl-8">{getCooperationType(myPlayer?.cooperationType)}</span>
+                {#if myPlayer?.baddenPlayers}
+                    {@const tooltipText = `连携崩坏：<br>${myPlayer.baddenPlayers.join("<br>")}`}
+                    <Tooltip text={tooltipText} width="100px">
+                        <Skull />
+                    </Tooltip>
+                {/if}
             </p>
             <p>
                 性格
@@ -196,16 +227,21 @@
                 <div><span>耐心</span><span class="pl-8">{myPlayer?.patient}</span></div>
             </div>
         </div>
-
-        <div class="flex justify-end pt-2">
-            <button onclick={openModal} class="w-20 h-8 rounded-md cursor-pointer text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium text-sm text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-                编辑
-            </button>
-        </div>
+        {#if selectedTeam === 0}
+            <div class="flex justify-end pt-2">
+                <button onclick={openModal} class="w-20 h-8 rounded-md cursor-pointer text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium text-sm text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                    编辑
+                </button>
+            </div>
+        {/if}
     </VStack>
 
     <VStack className="w-1/4 mx-1">
-        <RadarChart abilities={stats} />
+        {#if myPlayer?.maxAbilEval}
+            <Tooltip text={abilEval[myPlayer.maxAbilEval]} width="200px">
+                <RadarChart abilities={stats} />
+            </Tooltip>
+        {/if}
         <StatusBars values={bars} pos={myPlayer.pos} />
         <PositionGrid />
         {#if myPlayer?.abilEval}

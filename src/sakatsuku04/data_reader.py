@@ -17,13 +17,16 @@ class DataReader(Protocol):
     def read_myteam(self) -> list[MyPlayerDto]:
         ...
 
+    def read_youth_team(self) -> list[MyPlayerDto]:
+        ...
+
     def read_other_team_players(self, team_index: int) -> list[OtherTeamPlayerDto]:
         ...
 
     def read_other_team_friendly(self, team_index: int) -> int:
         ...
 
-    def read_myplayer(self, id: int) -> MyPlayerDto:
+    def read_myplayer(self, id: int, team: int) -> MyPlayerDto:
         ...
 
     def save_club(self, data: ClubDto) -> bool:

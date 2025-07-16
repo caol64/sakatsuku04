@@ -177,8 +177,11 @@ class MainApp:
         self.data_raader.save_club(club_data)
         return {"message": "success"}
 
-    def fetch_my_team(self) -> list:
-        return [f.model_dump(by_alias=True) for f in self.data_raader.read_myteam()]
+    def fetch_my_team(self, team: int) -> list:
+        if team == 0:
+            return [f.model_dump(by_alias=True) for f in self.data_raader.read_myteam()]
+        else:
+            return [f.model_dump(by_alias=True) for f in self.data_raader.read_youth_team()]
 
     def fetch_team_player(self, team_index: int) -> list:
         return [f.model_dump(by_alias=True) for f in self.data_raader.read_other_team_players(team_index)]
@@ -186,8 +189,8 @@ class MainApp:
     def fetch_team_friendly(self, team_index: int) -> int:
         return self.data_raader.read_other_team_friendly(team_index)
 
-    def fetch_my_player(self, id: int) -> dict:
-        return self.data_raader.read_myplayer(id).model_dump(by_alias=True)
+    def fetch_my_player(self, id: int, team: int) -> dict:
+        return self.data_raader.read_myplayer(id, team).model_dump(by_alias=True)
 
     def save_my_player(self, data: dict) -> dict:
         player_data = MyPlayerDto.model_validate(data)

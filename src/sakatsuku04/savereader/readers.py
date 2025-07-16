@@ -1,9 +1,10 @@
-from ..utils import find_name_matches
-from ..objs import Player
 from ..data_reader import DataReader
 from ..dtos import ClubDto, MyPlayerDto, MyTeamPlayerDto, OtherTeamPlayerDto, SearchDto
+from ..io import CnVer, InputBitStream, IntBitField, OutputBitStream, StrBitField
+from ..objs import Player
 from ..savereader.memcard_reader import MemcardReader
-from ..io import InputBitStream, OutputBitStream
+from ..utils import find_name_matches
+from .entry_reader import EntryReader, HeadEntryReader
 from .models import (
     Club,
     MyPlayer,
@@ -13,8 +14,6 @@ from .models import (
     OtherPlayer,
     OtherTeam,
 )
-from .entry_reader import EntryReader, HeadEntryReader
-from ..io import CnVer, IntBitField, StrBitField
 
 
 class BaseReader:
@@ -190,29 +189,7 @@ class TeamReader(BaseReader):
         # 0x70f073
         self.bit_stream.unpack_bits([1] * (0x11 * 2 + 0xF), 0x11 * 2 + 0xF + 4)
         # 0x70f0a8
-        for _ in range(0x18):  # youth team players
-            self.bit_stream.unpack_bits([0x10, 4, 7], 4)
-            self.bit_stream.unpack_bits([0x10, 0x10, 0x10] * 0x40)
-            self.bit_stream.unpack_bits([0xB], 2)
-            un = self.bit_stream.unpack_str(0xD)
-            self.bit_stream.unpack_bits([8, 8, 4, 4, 7, 8, 4, 7, 3, 7], 11)
-            self.bit_stream.unpack_bits([0x10, 0x10])
-            self.bit_stream.unpack_bits([4, 4, 4, 4, 1, 2, 4, 4, 4, 4], 10)
-            self.bit_stream.unpack_bits(
-                [7, 7, 7, 7, 7, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4], 18
-            )
-            self.bit_stream.unpack_bits([4, 7, 4, 7, 3, 3, 7, 5, 1, 3, 4], 14)
-            self.bit_stream.unpack_bits([0x20, 2], 6)
-            self.bit_stream.unpack_bits([0xA, 8, 8, 0x10], 6)
-            self.bit_stream.unpack_bits([8, 3, 3, 8, 8, 8], 6)
-            self.bit_stream.unpack_bits([0x10] * 14, 30)
-            self.bit_stream.unpack_bits(
-                [0x20, 0x10, 0x10, 0x10, 0x10, 0x10, 4, 7, 4, 7, 6, 4, 8, 4], 22
-            )
-            self.bit_stream.unpack_bits([0x10, 0x10, 7])
-            self.bit_stream.unpack_bits([-8] * 9, 9)
-            self.bit_stream.unpack_bits([0x10, 0x10, 8, -8, 5, 5, 6], 12)
-            self.bit_stream.unpack_bits([0x20, 0x20, 0x20, 0x20, 0x10], 20)
+        team.youth_players = self._read_my_players(0x18)
         # 0x7126a8
         self.bit_stream.unpack_bits([-3, 3], 2)
         # 0x7126aa
@@ -403,14 +380,11 @@ class TeamReader(BaseReader):
         # 0x72c7f0
         return team
 
-    def read_players(self) -> list[MyPlayer]:
-        # 0x7051c0
-        players: list[MyPlayer] = [MyPlayer(i) for i in range(0x19)]
-        self.bit_stream.unpack_bits([16, 16, 1], 5)
-        a = self.bit_stream.unpack_bits([-6] * 0x19, 0x19 + 2)
-        # 0x7051e0
+    def _read_my_players(self, count: int) -> list[MyPlayer]:
+        players: list[MyPlayer] = [MyPlayer(i) for i in range(count)]
         # each player produce 0x240 bytes
-        for i in range(0x19):  # 0x19
+        # 0x7051E0
+        for i in range(count):
             players[i].id, players[i].pos, players[i].age = self.bit_stream.unpack_bits(
                 [0x10, 4, 7], 4
             )  # 7051E4
@@ -422,7 +396,7 @@ class TeamReader(BaseReader):
                     MyPlayerAbility(ll, current, current_max, max)
                 )  # 705364
             self.bit_stream.unpack_bits(0xB)  # pop?
-            players[i].name = self.bit_stream.unpack_str(0xD) # 705364 186(13)
+            players[i].name = self.bit_stream.unpack_str(0xD)  # 705364 186(13)
             # print(players[i].name.value)
             a = self.bit_stream.unpack_bits(
                 [8, 8, 4, 4, 7, 8, 4, 7, 3, 7], 11
@@ -430,18 +404,17 @@ class TeamReader(BaseReader):
             players[i].born = a[0]  # 705373 193
             players[i].born2 = a[1]  # 705374 194
             players[i].rank = a[2]  # 705375 195
-            players[i].pos2 = a[3]  # 705376 196
-            players[i].height = a[5]  # 705378 198
+            players[i].base_pos = a[3]  # 705376 196 (base pos)
+            # 197 base age
+            players[i].height = a[5]  # 705378 198(2)
             players[i].number = a[7]  # 70537A 19a
             players[i].foot = a[8]  # 70537B 19b
             # 70537E
             # self.print_mem_offset(0x7051e0)
-            a = self.bit_stream.unpack_bits([0x10, 0x10]) # 19e(2) 1a0(2)
+            a = self.bit_stream.unpack_bits([0x10, 0x10])  # 19e(2) 1a0(2)
             # 705382
-            a = self.bit_stream.unpack_bits(
-                [4, 4, 4, 4, 1, 2, 4, 4, 4, 4], 10
-            )
-            players[i].desire = a[9]  # 0x70538B
+            a = self.bit_stream.unpack_bits([4, 4, 4, 4, 1, 2, 4, 4, 4, 4], 10)
+            players[i].desire = a[9]  # 0x70538B 1ab
             # 70538C
             a = self.bit_stream.unpack_bits(
                 [7, 7, 7, 7, 7, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3], 16
@@ -461,51 +434,52 @@ class TeamReader(BaseReader):
             un = a[12]  # 0x705398
             un = a[13]  # 00705399
             players[i].cooperation_type = a[14]  # 0x70539A 1ba
-            players[i].jl_factor = a[15]  # 0x70539B 1bb
+            players[i].grow_type_id = a[15]  # 0x70539B 1bb
             # 70539C
             players[i].grow_type_phy = self.bit_stream.unpack_bits(4, 1)  # 0x70539C 1bc
             players[i].grow_type_tec = self.bit_stream.unpack_bits(4, 1)  # 0x70539D 1bd
             players[i].grow_type_sys = self.bit_stream.unpack_bits(4, 1)  # 0x70539E 1be
             a = self.bit_stream.unpack_bits([7, 4, 7, 3, 3, 7], 6)
-            players[i].style = self.bit_stream.unpack_bits(5, 1) # 0x7053a5 1c5
+            players[i].style = self.bit_stream.unpack_bits(5, 1)  # 0x7053a5 1c5
             a = self.bit_stream.unpack_bits([1, 3, 4], 6)
             # 0x7053ac
             a = self.bit_stream.unpack_bits([0x20, 2], 6)
             players[i].magic_value = a[0]  # 0x7053ac 1cc(4)
             # 0x7053B2
             a = self.bit_stream.unpack_bits([0xA, 8, 8, 0x10], 6)
-            tired = a[0] # 0x7053B2 1d2(2)
+            tired1 = a[0]  # 0x7053B2 1d2(2)
             players[i].salary = a[3]  # 0x7053B6 1d6(2)
             # 7053B8
             a = self.bit_stream.unpack_bits([8, 3, 3, 8, 8, 8], 6)
-            players[i].offer_years_passed = a[1] # 0x7053B9 1d9(1)
-            players[i].offer_years_total = a[2] # 0x7053B9A 1da(1)
+            joined_years = a[0] # 0x7053B8 1d8(1)
+            players[i].offer_years_passed = a[1]  # 0x7053B9 1d9(1)
+            players[i].offer_years_total = a[2]  # 0x7053B9A 1da(1)
+            contract_cond = a[3] # 0x7053B9B 1db(1)
             # 0x7053be
             a = self.bit_stream.unpack_bits([0x10] * 14, 30)
-            un = a[0]  # 0x7053be dissatisfied? 1de(2)
-            # tired = a[10]  # 7053D2
+            comp = a[0]  # 0x7053be 1de(2) 不满
+            tired = a[10]  # 0x7053D2 1f2(2)
             # 7053DC
             a = self.bit_stream.unpack_bits([0x20, 0x10, 0x10, 0x10])
+            power = a[3] # 0x7053e4 204(2) 气力，max=1000
             # 0x7053e6
-            a = self.bit_stream.unpack_bits(
-                [0x10, 0x10, 4, 7, 4, 7, 6, 4, 8, 4], 12
-            )
+            a = self.bit_stream.unpack_bits([0x10, 0x10, 4, 7, 4, 7, 6, 4, 8, 4], 12)
             un = a[0]  # 0x7053e6 206(2)
-            players[i].abroad_days = a[1]  # 0x7053e8 208(2)
+            players[i].injury_days = a[1]  # 0x7053e8 208(2)
             players[i].abroad_times = a[9]  # 0x7053f1 211(1)
             # 0x7053f2
             a = self.bit_stream.unpack_bits([0x10, 0x10, 7])
-            captain_exp = a[0] # 0x7053f2 212(2)
-            keyman_exp = a[1] # 0x7053f4 214(2)
+            captain_exp = a[0]  # 0x7053f2 212(2)
+            keyman_exp = a[1]  # 0x7053f4 214(2)
             a = self.bit_stream.unpack_bits([-8] * 9, 9)  # not use
             # 0x705400
             a = self.bit_stream.unpack_bits([0x10, 0x10, 8, -8, 5, 5, 6], 12)
-            a[0] # 0x705400 220(2)
-            a[1] # 0x705402 222(2)
-            a[2] # 0x705404 224(1) 能力爆发（强度）
-            a[3] # 0x705405 225(1) 能力爆发（倒计时）为0爆发
-            a[4] # 0x705406 226(1)
-            a[5] # 0x705407 227(1) 能力爆发（原因）
+            a[0]  # 0x705400 220(2)
+            a[1]  # 0x705402 222(2)
+            a[2]  # 0x705404 224(1) 能力爆发（强度）
+            a[3]  # 0x705405 225(1) 能力爆发（倒计时）为0爆发
+            a[4]  # 0x705406 226(1)
+            a[5]  # 0x705407 227(1) 能力爆发（原因）
             players[i].style_equip = a[6]  # 0x705408 228(4)
             # 0x70540c
             a = self.bit_stream.unpack_bits([0x20, 0x20, 0x20, 0x20, 0x10], 20)
@@ -514,8 +488,15 @@ class TeamReader(BaseReader):
             players[i].style_learned3 = a[2]  # 0x705414 234(4)
             players[i].style_learned4 = a[3]  # 0x705418 238(4)
             un = a[4]  # 0x70541c 23c(4)
-            players[i].un = [hex(z.value) for z in a]
             # 705420
+        return players
+
+    def read_players(self) -> list[MyPlayer]:
+        # 0x7051c0
+        self.bit_stream.unpack_bits([16, 16, 1], 5)
+        a = self.bit_stream.unpack_bits([-6] * 0x19, 0x19 + 2)
+        # 0x7051e0
+        players = self._read_my_players(0x19)
         self.bit_stream.unpack_bits(0x10)
         for _ in range(10):
             self.bit_stream.unpack_bits([-6], 2)
@@ -650,9 +631,10 @@ class TownReader(BaseReader):
     tail_padding = b"\x10\xe3\xef\x1c" * 4
 
     def read(self):
-        self.bit_stream.unpack_bits(3, 2)
+        self.bit_stream.unpack_bits(3, 2) # 0, 1
         self.bit_stream.unpack_bits([0x10, 0x10, 0x10, 0x10], 10)
-        self.bit_stream.unpack_bits([0x20])
+        # 0xc
+        population = self.bit_stream.unpack_bits([0x20]) # 0xc
         self.bit_stream.unpack_bits([7, 7, 7, 8, 8], 8)
         self.bit_stream.unpack_bits([0x10, 0x10, 0x10])
         for _ in range(3):
@@ -774,7 +756,26 @@ class SaveDataReader(DataReader):
             filter(lambda player: player.id.value != 0xFFFF, self.my_team.players),
             key=lambda player: player.pos.value,
         ):
-            result.append(MyTeamPlayerDto(id=player.id.value, name=player.name.value, pos=player.pos.value))
+            result.append(
+                MyTeamPlayerDto(
+                    id=player.id.value, name=player.name.value, pos=player.pos.value
+                )
+            )
+        return result
+
+    def read_youth_team(self) -> list[MyPlayerDto]:
+        result = []
+        for player in sorted(
+            filter(
+                lambda player: player.id.value != 0xFFFF, self.my_team.youth_players
+            ),
+            key=lambda player: player.pos.value,
+        ):
+            result.append(
+                MyTeamPlayerDto(
+                    id=player.id.value, name=player.name.value, pos=player.pos.value
+                )
+            )
         return result
 
     def read_other_team_players(self, team_index: int) -> list[OtherTeamPlayerDto]:
@@ -788,8 +789,15 @@ class SaveDataReader(DataReader):
         team = self.other_teams[team_index]
         return team.friendly.value
 
-    def read_myplayer(self, id: int) -> MyPlayerDto:
-        player = list(filter(lambda p: p.id.value == id, self.my_team.players)).pop()
+    def read_myplayer(self, id: int, team: int) -> MyPlayerDto:
+        if team == 0:
+            player = list(
+                filter(lambda p: p.id.value == id, self.my_team.players)
+            ).pop()
+        else:
+            player = list(
+                filter(lambda p: p.id.value == id, self.my_team.youth_players)
+            ).pop()
         return player.to_dto()
 
     def search_player(self, data: SearchDto) -> list[OtherTeamPlayerDto]:
@@ -816,7 +824,10 @@ class SaveDataReader(DataReader):
                     dto = player.to_dto()
                     if pos is not None and pos != dto.pos:
                         continue
-                    if country is not None and ((country == 50 and dto.born > 50) or (country != 50 and dto.born != country)):
+                    if country is not None and (
+                        (country == 50 and dto.born > 50)
+                        or (country != 50 and dto.born != country)
+                    ):
                         continue
                     if tone is not None and tone != dto.tone_type:
                         continue
@@ -827,7 +838,6 @@ class SaveDataReader(DataReader):
                     dto.team_index = i
                     result.append(dto)
         return result
-
 
     def save_club(self, club_data: ClubDto) -> bool:
         save_entry = self.save_entries.get(self.selected_game)
@@ -848,14 +858,15 @@ class SaveDataReader(DataReader):
         return True
 
     def save_player(self, data: MyPlayerDto) -> bool:
-        player = list(filter(lambda p: p.id.value == data.id, self.my_team.players)).pop()
+        player = list(
+            filter(lambda p: p.id.value == data.id, self.my_team.players)
+        ).pop()
         if player:
             player.age.value = data.age
             player.abroad_times.value = data.abroad_times
             player.born.value = data.born
             player.born2.value = data.born
             player.pos.value = data.pos
-            player.pos2.value = data.pos
             player.style.value = data.style
             player.style_equip.value = data.style
             player.set_style(data.style)
@@ -871,7 +882,6 @@ class SaveDataReader(DataReader):
             bits_fields.append(player.born)
             bits_fields.append(player.born2)
             bits_fields.append(player.pos)
-            bits_fields.append(player.pos2)
             bits_fields.append(player.style)
             bits_fields.append(player.style_equip)
             bits_fields.append(player.style_learned1)
@@ -920,4 +930,3 @@ class SaveDataReader(DataReader):
         save_bin = self.entry_reader.build_save_bytes(encode_buffer)
         mc_reader = MemcardReader(self.path)
         mc_reader.write_save_entry(self.selected_game, save_bin, head_bytes)
-
