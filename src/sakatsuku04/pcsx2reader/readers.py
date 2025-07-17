@@ -7,7 +7,7 @@ from ..data_reader import DataReader
 from ..dtos import ClubDto, MyPlayerDto, MyTeamPlayerDto, OtherTeamPlayerDto, SearchDto
 from ..io import CnVer, IntByteField, StrByteField
 from ..objs import Player
-from ..utils import find_name_matches
+from ..utils import find_name_matches, reset_char_dict
 from .models import Club, MyPlayer, MyPlayerAbility, OtherPlayer, OtherTeam
 
 
@@ -169,8 +169,9 @@ class Pcsx2DataReader(DataReader):
     def _read_other_team_friendly(self, team_index: int) -> IntByteField:
         return self._read_int_byte(0x72C85A + team_index * 0x6C, 2)
 
-    def _read_myplayer(self, id: int, offset: int, team: int) -> MyPlayer:
+    def _read_myplayer(self, id: int, team: int) -> MyPlayer:
         my_players = self._read_myteam() if team == 0 else self._read_youth_team()
+        offset = 0x7051E0 if team == 0 else 0x70F0A8
         target_player = list(filter(lambda p: p.id.value == id, my_players)).pop()
         player = MyPlayer()
         player.index = target_player.index
@@ -222,17 +223,17 @@ class Pcsx2DataReader(DataReader):
         try:
             status = self._get_emu_status()
             is_connected = status in [1, 0]
+            if is_connected:
+                ver = self.game_ver()
+                CnVer.set_ver(ver)
+                Player.reset_player_dict()
+                reset_char_dict()
             return is_connected
         except Exception as e:
             print(f"Error getting emulator status: {e}")
             is_connected = False
+            self.reset()
             return is_connected
-        finally:
-            if not is_connected:
-                self.reset()
-            else:
-                CnVer.set_ver(self.game_ver())
-                Player.reset_player_dict()
 
     def games(self) -> list[str]:
         return []
@@ -276,10 +277,7 @@ class Pcsx2DataReader(DataReader):
         return self._read_other_team_friendly(team_index).value
 
     def read_myplayer(self, id: int, team: int) -> MyPlayerDto:
-        if team == 0:
-            return self._read_myplayer(id, 0x7051E0, team).to_dto()
-        else:
-            return self._read_myplayer(id, 0x70F0A8, team).to_dto()
+        return self._read_myplayer(id, team).to_dto()
 
     def search_player(self, data: SearchDto) -> list[OtherTeamPlayerDto]:
         name = data.name
@@ -336,8 +334,8 @@ class Pcsx2DataReader(DataReader):
         self._save(bytes_fields)
         return True
 
-    def save_player(self, data: MyPlayerDto) -> bool:
-        player = self._read_myplayer(data.id, 0x7051E0)
+    def save_player(self, data: MyPlayerDto, team: int) -> bool:
+        player = self._read_myplayer(data.id, team)
         if player:
             player.age.value = data.age
             player.abroad_times.value = data.abroad_times
@@ -397,10 +395,12 @@ class Pcsx2DataReader(DataReader):
         uuid = self.libipc.pine_getgameuuid(self.ipc, False)
         if uuid == b"d70c3195":
             return 0
-        elif uuid == b"d70c32a6":
-            return 1
         else:
-            return 2
+            test_char = self._read_int_byte(0x5da110, 2)
+            if test_char.value == int.from_bytes(b'\x96\xA5', byteorder='little'):
+                return 2
+            else:
+                return 1
 
     def _save(self, bytes_fields: list[IntByteField | StrByteField]):
         for field in bytes_fields:

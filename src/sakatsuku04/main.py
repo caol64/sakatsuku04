@@ -192,9 +192,9 @@ class MainApp:
     def fetch_my_player(self, id: int, team: int) -> dict:
         return self.data_raader.read_myplayer(id, team).model_dump(by_alias=True)
 
-    def save_my_player(self, data: dict) -> dict:
+    def save_my_player(self, data: dict, team: int) -> dict:
         player_data = MyPlayerDto.model_validate(data)
-        self.data_raader.save_player(player_data)
+        self.data_raader.save_player(player_data, team)
         return {"message": "success"}
 
     def save_team_friendly(self, team_index: int, friendly: int) -> dict:

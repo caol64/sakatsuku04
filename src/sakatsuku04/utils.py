@@ -34,6 +34,10 @@ def get_cn_char_dict(is_18: bool) -> dict[str, str]:
         _cn_char_dict.update(_load_char_dict(path))
     return _cn_char_dict
 
+def reset_char_dict():
+    global _cn_char_dict
+    _cn_char_dict = None
+
 def decode_bytes_to_str(byte_array: bytes, is_cn = False, is_18 = False) -> str:
     return decode(byte_array, get_cn_char_dict(is_18)) if is_cn else decode(byte_array, get_jp_char_dict())
 

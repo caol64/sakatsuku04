@@ -54,11 +54,11 @@ class StrByteField:
 
     @property
     def value(self) -> str:
-        return zero_terminate(decode_bytes_to_str(self.byte_array, CnVer.is_cn))
+        return zero_terminate(decode_bytes_to_str(self.byte_array, CnVer.is_cn, CnVer.is_i8))
 
     @value.setter
     def value(self, string: str):
-        self.byte_array = zero_pad(encode_str_to_bytes(string, CnVer.is_cn), self.byte_length)
+        self.byte_array = zero_pad(encode_str_to_bytes(string, CnVer.is_cn, CnVer.is_i8), self.byte_length)
 
 
 class InputBitStream:

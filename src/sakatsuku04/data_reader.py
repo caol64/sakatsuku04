@@ -32,7 +32,7 @@ class DataReader(Protocol):
     def save_club(self, data: ClubDto) -> bool:
         ...
 
-    def save_player(self, data: MyPlayerDto) -> bool:
+    def save_player(self, data: MyPlayerDto, team: int) -> bool:
         ...
 
     def save_other_team_friendly(self, team_index: int, friendly: int) -> bool:

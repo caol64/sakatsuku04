@@ -267,7 +267,7 @@
 </HStack>
 
 <Modal open={isModalOpen} close={closeModal}>
-    <PlayersEditor player={myPlayer} onSave={onSaveSuccess} />
+    <PlayersEditor player={myPlayer} team={selectedTeam} onSave={onSaveSuccess} />
 </Modal>
 
 <style lang="postcss">

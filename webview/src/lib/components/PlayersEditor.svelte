@@ -6,9 +6,9 @@
     import HStack from "./Stack/HStack.svelte";
     import Tooltip from "./Tooltip.svelte";
 
-    type Props = { player: MyPlayer, onSave: () => void; };
+    type Props = { player: MyPlayer, team: number, onSave: () => void; };
 
-    let { player, onSave }: Props = $props();
+    let { player, team, onSave }: Props = $props();
     let selectedBorn = $state(toHex(player.born));
     let selectedPos = $state(toHex(player.pos));
     let selectedStyle = $state(toHex(player.style));
@@ -104,7 +104,7 @@
             newPlayer.growTypeTec = fromHex(selectedGrowTypeTec);
             newPlayer.growTypeSys = fromHex(selectedGrowTypeSys);
             if (window.pywebview?.api?.save_my_player) {
-                const { message } = await window.pywebview.api.save_my_player(newPlayer);
+                const { message } = await window.pywebview.api.save_my_player(newPlayer, team);
                 if (message === "success") {
                     alert("修改成功");
                     onSave();

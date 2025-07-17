@@ -47,8 +47,8 @@ class ClubReader(BaseReader):
         club.year, club.month, club.date, club.day = self.bit_stream.unpack_bits(
             [0xE, 4, 5, 3], 8
         )
-        club.funds = self.bit_stream.unpack_bits(0x20)
-        club.manager_name = self.bit_stream.unpack_str(0x10)  # 00703D5C
+        club.funds = self.bit_stream.unpack_bits(0x20) # 0x8(4)
+        club.manager_name = self.bit_stream.unpack_str(0x10)  # 00703D5C 0xC(10)
         self.bit_stream.unpack_str(0x10)
         club.club_name = self.bit_stream.unpack_str(0x15)
         self.bit_stream.unpack_str(0x1CB)  #  - 00703F5B
@@ -633,9 +633,12 @@ class TownReader(BaseReader):
     def read(self):
         self.bit_stream.unpack_bits(3, 2) # 0, 1
         self.bit_stream.unpack_bits([0x10, 0x10, 0x10, 0x10], 10)
-        # 0xc
-        population = self.bit_stream.unpack_bits([0x20]) # 0xc
-        self.bit_stream.unpack_bits([7, 7, 7, 8, 8], 8)
+        # 0xb
+        population = self.bit_stream.unpack_bits(0x20) # 0xc
+        # 0xf
+        a = self.bit_stream.unpack_bits([7, 7, 7, 8, 8], 8)
+        traffic_level = a[1] # 0x11
+        # print(population.value)
         self.bit_stream.unpack_bits([0x10, 0x10, 0x10])
         for _ in range(3):
             self.bit_stream.unpack_bits([0x10, 0xE], 4)
@@ -742,6 +745,10 @@ class SaveDataReader(DataReader):
         self.my_team = team_reader.read()
         oteam_reader = OtherTeamReader(in_bit_stream)
         self.other_teams = oteam_reader.read()
+        # leager_reader = LeagueReader(in_bit_stream)
+        # leager_reader.read()
+        # town_reader = TownReader(in_bit_stream)
+        # town_reader.read()
         CnVer.set_ver(self.game_ver())
         Player.reset_player_dict()
 
@@ -857,9 +864,11 @@ class SaveDataReader(DataReader):
         self._save(bits_fields, head_bytes)
         return True
 
-    def save_player(self, data: MyPlayerDto) -> bool:
+    def save_player(self, data: MyPlayerDto, team: int) -> bool:
         player = list(
             filter(lambda p: p.id.value == data.id, self.my_team.players)
+        ).pop() if team == 0 else list(
+            filter(lambda p: p.id.value == data.id, self.my_team.youth_players)
         ).pop()
         if player:
             player.age.value = data.age
