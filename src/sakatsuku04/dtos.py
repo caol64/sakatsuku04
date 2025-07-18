@@ -3,7 +3,7 @@ from pydantic import BaseModel, ConfigDict, computed_field
 from pydantic.alias_generators import to_camel
 
 from .objs import Player
-from .utils import calc_abil_eval, find_badden_match, is_album_player, ability_to_lv, lv_to_dot
+from .utils import calc_abil_eval, calc_apos_eval, calc_grow_eval, find_badden_match, is_album_player, ability_to_lv, lv_to_dot
 from . import constants
 
 
@@ -123,8 +123,18 @@ class MyPlayerDto(BaseDto):
 
     @computed_field
     @property
+    def grow_eval(self) -> int:
+        return calc_grow_eval(self.grow_type_tec, self.age)
+
+    @computed_field
+    @property
     def max_abil_eval(self) -> int:
         return calc_abil_eval([r.max for r in self.abilities][0: 36], self.pos)
+
+    @computed_field
+    @property
+    def apos_eval(self) -> list[int]:
+        return calc_apos_eval([r.current for r in self.abilities])
 
     @computed_field
     @property
@@ -134,6 +144,21 @@ class MyPlayerDto(BaseDto):
 
     def combo_salary(self) -> int:
         return (self.salary_high * 10000 + self.salary_low) // 100
+
+    @computed_field
+    @property
+    def phy_grows(self) -> list[int]:
+        return list(constants.tbl_phy_grow_type[self.grow_type_phy])
+
+    @computed_field
+    @property
+    def tec_grows(self) -> list[int]:
+        return list(constants.tbl_tec_grow_type[self.grow_type_tec])
+
+    @computed_field
+    @property
+    def sys_grows(self) -> list[int]:
+        return list(constants.tbl_sys_grow_type[self.grow_type_sys])
 
 
 class TeamDto(BaseDto):
@@ -172,6 +197,17 @@ class SearchDto(BaseDto):
     rank: Optional[int] = None
     tone: Optional[int] = None
     cooperation: Optional[int] = None
+
+class TownDto(BaseDto):
+    living: int
+    economy: int
+    sports: int
+    env: int
+    population: int
+    price: int
+    traffic_level: int
+    soccer_pop: int
+    soccer_level: int
 
 
 def _calc_avg(player: MyPlayerDto, indices: tuple[int], mode: int) -> int:

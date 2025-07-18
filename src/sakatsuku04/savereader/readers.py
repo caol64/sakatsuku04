@@ -1,5 +1,5 @@
 from ..data_reader import DataReader
-from ..dtos import ClubDto, MyPlayerDto, MyTeamPlayerDto, OtherTeamPlayerDto, SearchDto
+from ..dtos import ClubDto, MyPlayerDto, MyTeamPlayerDto, OtherTeamPlayerDto, SearchDto, TownDto
 from ..io import CnVer, InputBitStream, IntBitField, OutputBitStream, StrBitField
 from ..objs import Player
 from ..savereader.memcard_reader import MemcardReader
@@ -13,6 +13,7 @@ from .models import (
     MyTeam,
     OtherPlayer,
     OtherTeam,
+    Town,
 )
 
 
@@ -48,10 +49,10 @@ class ClubReader(BaseReader):
             [0xE, 4, 5, 3], 8
         )
         club.funds = self.bit_stream.unpack_bits(0x20) # 0x8(4)
-        club.manager_name = self.bit_stream.unpack_str(0x10)  # 00703D5C 0xC(10)
-        self.bit_stream.unpack_str(0x10)
-        club.club_name = self.bit_stream.unpack_str(0x15)
-        self.bit_stream.unpack_str(0x1CB)  #  - 00703F5B
+        club.manager_name = self.bit_stream.unpack_str(0x10)  # 00703D5C 0xC(16)
+        manager_name2 = self.bit_stream.unpack_str(0x10) # 0x1c(16)
+        club.club_name = self.bit_stream.unpack_str(0x15) # 0x2c(21)
+        a = self.bit_stream.unpack_str(0x1CB)  #  - 00703F5B 0x41(459)
         self.bit_stream.unpack_bits(3, 2)
         self.bit_stream.unpack_bits([0x10, 0x10], 6)
         self.bit_stream.unpack_bits(
@@ -59,11 +60,11 @@ class ClubReader(BaseReader):
         )  # 0x703f82
         self.bit_stream.unpack_bits([8, 8, 8, 8, 8, 8, 8, 8, 8, 4], 14)  # 0x703f90
         self.bit_stream.unpack_bits([0x20] * 0x20)  # 0x704010
-        for i in range(0x32):
+        for i in range(50):
             self.bit_stream.unpack_bits([0x10, 8, 8, 8], 8)
             self.bit_stream.unpack_bits([0x20] * 0x10)
         self.bit_stream.unpack_bits([0x20] * 0x30)
-        for i in range(0x72):
+        for i in range(114):
             self.bit_stream.unpack_bits([0x10, 8], 4)
         # 0x7050a8
         self.bit_stream.unpack_bits(
@@ -72,10 +73,13 @@ class ClubReader(BaseReader):
         # 0x7050c0
         self.bit_stream.unpack_bits([0x10, 0x10, 0x10, 0x10, 0x10], 12)
         # 0x7050cc
-        club.seed = self.bit_stream.unpack_bits(0x20)  # maybe random seed?
+        club.seed = self.bit_stream.unpack_bits(0x20)  # 137c(4) seed_sim
         # 0x7050d0
-        a = self.bit_stream.unpack_bits([0x20, 8, 5, 0x10, 1], 12)
-        club.difficulty = a[2]  # 007050D5
+        seed2 = self.bit_stream.unpack_bits(0x20)  # 1380(4) seed_game
+        # 0x1384
+        a = self.bit_stream.unpack_bits([8, 5, 0x10, 1], 8)
+        # self.print_mem_offset(0x703D50)
+        club.difficulty = a[1]  # 007050D5 0x1385
         self.bit_stream.unpack_bits([0x20, 0x20, 0x20, 8, 8], 16)
         self.bit_stream.unpack_bits([0x20, 8, 8, 8], 8)
         # 0x7050f4
@@ -259,20 +263,20 @@ class TeamReader(BaseReader):
             self.bit_stream.unpack_bits([0x10] * 9, 20)
             self.bit_stream.unpack_bits(1, 1)
         # 0x712c98
-        for _ in range(0x32):
+        for _ in range(50):
             self.bit_stream.unpack_bits([9, 6, 6, 9, 3], 8)
             self.bit_stream.unpack_bits([0x10, 0x10, 0x20, 0x10, 0x10, 0x10, 0x10])
             self.bit_stream.unpack_bits([0x15], 4)
             self.bit_stream.unpack_bits([0x15], 4)
             self.bit_stream.unpack_bits([0x20] * 13)
         # 0x713d00
-        for _ in range(0x32):
+        for _ in range(50):
             self.bit_stream.unpack_bits([8, 6, 8, 2], 4)
             self.bit_stream.unpack_bits([0x10, 0x10, 0x20, 8], 12)
             self.bit_stream.unpack_bits([0x20] * 0x10)
             self.bit_stream.unpack_bits([8] * 0x10)
         # 0x714fc0
-        self.bit_stream.unpack_bits([8] * (8 * 0xC))
+        self.bit_stream.unpack_bits([8] * (8 * 12))
         # 0x715020
         self.bit_stream.unpack_bits(1, 2)
         self.bit_stream.unpack_bits(4, 2)
@@ -288,11 +292,11 @@ class TeamReader(BaseReader):
         self.bit_stream.unpack_bits([0x20] * 3)
         self.bit_stream.unpack_bits(2, 2)
         self.bit_stream.unpack_bits([0x10] * 11)
-        for _ in range(0x2C):
+        for _ in range(44):
             self.bit_stream.unpack_bits([8, 3], 4)
             self.bit_stream.unpack_bits([0x20])
         # 0x715274
-        for _ in range(0x36):
+        for _ in range(54):
             self.bit_stream.unpack_bits([2, 1, 1], 3)
         # 0x715316
         self.bit_stream.unpack_bits([8] * 12)
@@ -303,19 +307,19 @@ class TeamReader(BaseReader):
             self.bit_stream.unpack_bits(8, 1)
         # 0x7154b4
         self.bit_stream.unpack_bits([6, 1] * 4, 8)
-        for _ in range(0x27):
+        for _ in range(39):
             self.bit_stream.unpack_bits([2, 8, 8, 1], 4)
         # 0x715558
         self.bit_stream.unpack_bits([8] * 10)
         self.bit_stream.unpack_bits([6, 1] * 4, 8)
-        self.bit_stream.unpack_bits([8] * (0x27 + 6))
+        self.bit_stream.unpack_bits([8] * (39 + 6))
         self.bit_stream.align(1)
-        for _ in range(0x19):
+        for _ in range(25):
             self.bit_stream.unpack_bits([0x10, 0x10, 0x10])
         self.bit_stream.align(1)
         self.bit_stream.unpack_bits([8, 0x20, 0x20, 0x20])
         for _ in range(6):
-            self.bit_stream.unpack_bits([8] * 0x16)
+            self.bit_stream.unpack_bits([8] * 22)
             self.bit_stream.unpack_bits([2, 2, 2, 5, 5, 5], 6)
             self.bit_stream.unpack_bits([0x20] * 3)
             for _ in range(0xA8 * 2):
@@ -331,14 +335,14 @@ class TeamReader(BaseReader):
         self.bit_stream.unpack_bits([8] * 2)
         self.bit_stream.unpack_bits([0x10] * 9)
         self.bit_stream.unpack_bits([0x20] * 9)
-        for _ in range(0x1A):  # 纪念相册
+        for _ in range(26):  # 纪念相册
             un = self.bit_stream.unpack_str(0xD)
             self.bit_stream.unpack_bits([8, 4, 8, 8, 3, 4, 6, 3], 8)
             self.bit_stream.unpack_bits([8] * 18)
             self.bit_stream.unpack_bits([8] * (0x15 + 0x2B))
             self.bit_stream.unpack_bits([8, -6, 0x10], 5)
         # 0x72bcf4 自由球员
-        for _ in range(0x34):
+        for _ in range(52):
             self.bit_stream.unpack_bits([0x10, 0xB], 4)
             self.bit_stream.unpack_bits([4, 6, 8], 4)
             self.bit_stream.unpack_bits([0x10, 0x10, 3, 8], 6)
@@ -346,7 +350,7 @@ class TeamReader(BaseReader):
         for _ in range(240):
             self.bit_stream.unpack_bits([0x10, 8], 4)
         # 0x72c38c
-        for _ in range(0x1A):
+        for _ in range(26):
             self.bit_stream.unpack_bits([8], 2)
             self.bit_stream.unpack_bits([0x10, 0x10, 0x10, 0x10])
         # 0x72c490
@@ -630,17 +634,27 @@ class TownReader(BaseReader):
     remain_mask = 0x4
     tail_padding = b"\x10\xe3\xef\x1c" * 4
 
-    def read(self):
+    def read(self) -> Town:
+        town = Town()
         self.bit_stream.unpack_bits(3, 2) # 0, 1
-        self.bit_stream.unpack_bits([0x10, 0x10, 0x10, 0x10], 10)
+        a = self.bit_stream.unpack_bits([0x10, 0x10, 0x10, 0x10], 10)
+        town.living = a[0] # 2(2)
+        town.economy = a[1] # 4(2)
+        town.sports = a[2] # 6(2)
+        town.env = a[3] # 8(2)
         # 0xb
-        population = self.bit_stream.unpack_bits(0x20) # 0xc
+        town.population = self.bit_stream.unpack_bits(0x20) # 0xc(4)
         # 0xf
         a = self.bit_stream.unpack_bits([7, 7, 7, 8, 8], 8)
-        traffic_level = a[1] # 0x11
+        town.price = a[0] # 0x10
+        town.traffic_level = a[1] # 0x11
+        town.soccer_pop = a[2] # 0x12
         # print(population.value)
-        self.bit_stream.unpack_bits([0x10, 0x10, 0x10])
-        for _ in range(3):
+        # 0x18
+        a = self.bit_stream.unpack_bits([0x10, 0x10, 0x10])
+        town.soccer_level = a[2] # 0x1c(2)
+        # 0x1e
+        for _ in range(3): # 姐妹都市
             self.bit_stream.unpack_bits([0x10, 0xE], 4)
             self.bit_stream.unpack_bits([4, 5, 3, 8], 6)
         self.bit_stream.unpack_bits([3, 4, 8], 3)
@@ -651,6 +665,7 @@ class TownReader(BaseReader):
         self.bit_stream.unpack_bits([8] * 0x27, 0x27)
         self.bit_stream.unpack_bits(8, 2)
         self.bit_stream.padding(self.tail_padding)
+        return town
 
 
 class RecordReader(BaseReader):
@@ -676,14 +691,59 @@ class ScheReader(BaseReader):
     consume_bytes = 0x4221F
     consume_bits = 0x2110F8
     remain_mask = 0x2
+    tail_padding = b"\x38\x00\xc7\xff" * 4
 
     def read(self):
-        for _ in range(11):
-            self.bit_stream.unpack_bits(5)
-        self.bit_stream.skip(
-            ScheReader.consume_bits,
-            ScheReader.total_size - self.bit_stream.unpacked_bytes_length,
-        )
+        # 0x76397c
+        for _ in range(28):
+            self.bit_stream.unpack_bits(5, 1)
+        # 0x763998 0x1c
+        for _ in range(28):
+            self.bit_stream.unpack_bits(5, 1)
+        # 0x7639b4 0x38
+        for _ in range(106):
+            self.bit_stream.unpack_bits(1, 1)
+            self.bit_stream.unpack_bits(4, 1)
+            self.bit_stream.unpack_bits(0x10)
+            self.bit_stream.unpack_bits(7, 1)
+            self.bit_stream.unpack_bits(2, 1)
+            self.bit_stream.unpack_bits(2, 1)
+            self.bit_stream.unpack_bits(8, 1)
+            self.bit_stream.unpack_bits(0xb, 2)
+            self.bit_stream.unpack_bits(0xb, 2)
+            self.bit_stream.unpack_bits(8, 1)
+            self.bit_stream.unpack_bits(8, 1)
+            self.bit_stream.unpack_bits(8, 1)
+            self.bit_stream.unpack_bits(8, 1)
+            self.bit_stream.unpack_bits(0x10)
+        # 0x764128 0x7ac
+        for _ in range(4):
+            self.bit_stream.unpack_bits(0xe, 2)
+            self.bit_stream.unpack_bits(0x4, 1)
+            self.bit_stream.unpack_bits(0x5, 1)
+            self.bit_stream.unpack_bits(0x3, 2)
+            self.bit_stream.unpack_bits(0x10)
+            self.bit_stream.unpack_bits(0x5, 2)
+            self.bit_stream.unpack_bits(0xb, 2)
+            self.bit_stream.unpack_bits(0xb, 2)
+            self.bit_stream.unpack_bits(0xb, 2)
+        # 0x764168 0x7ec
+        for _ in range(64):
+            self.bit_stream.unpack_bits(0x1, 1)
+        # 0x7641a8 0x82c
+        for _ in range(32):
+            self.bit_stream.unpack_bits(0x1, 1)
+        # 0x7641c8 0x84c
+        for _ in range(70):
+            self.bit_stream.unpack_bits(0x2, 2)
+            self.bit_stream.unpack_bits(0x10)
+        # 0x7642e0 0x964
+        for _ in range(40):
+            self.bit_stream.unpack_bits(0x2, 2)
+            self.bit_stream.unpack_bits(0x10)
+        # self.print_mem_offset(0x76397c)
+        # 0x764380 0xa04
+        self.bit_stream.padding(self.tail_padding)
 
 
 class OptionReader(BaseReader):
@@ -726,6 +786,7 @@ class SaveDataReader(DataReader):
         self.club: Club = None
         self.my_team: MyTeam = None
         self.other_teams: list[OtherTeam] = None
+        self.town: Town = None
 
     def games(self) -> list[str]:
         return list(self.save_entries.keys())
@@ -745,10 +806,10 @@ class SaveDataReader(DataReader):
         self.my_team = team_reader.read()
         oteam_reader = OtherTeamReader(in_bit_stream)
         self.other_teams = oteam_reader.read()
-        # leager_reader = LeagueReader(in_bit_stream)
-        # leager_reader.read()
-        # town_reader = TownReader(in_bit_stream)
-        # town_reader.read()
+        leager_reader = LeagueReader(in_bit_stream)
+        leager_reader.read()
+        town_reader = TownReader(in_bit_stream)
+        self.town = town_reader.read()
         CnVer.set_ver(self.game_ver())
         Player.reset_player_dict()
 
@@ -846,6 +907,9 @@ class SaveDataReader(DataReader):
                     result.append(dto)
         return result
 
+    def read_town(self) -> TownDto:
+        return self.town.to_dto()
+
     def save_club(self, club_data: ClubDto) -> bool:
         save_entry = self.save_entries.get(self.selected_game)
         self.club.funds.value = club_data.combo_funds()
@@ -919,6 +983,29 @@ class SaveDataReader(DataReader):
         team.friendly.value = friendly
         bits_fields = list()
         bits_fields.append(team.friendly)
+        self._save(bits_fields)
+        return True
+
+    def save_town(self, data: TownDto) -> bool:
+        self.town.living.value = data.living
+        self.town.economy.value = data.economy
+        self.town.sports.value = data.sports
+        self.town.env.value = data.env
+        self.town.population.value = data.population
+        self.town.price.value = data.price
+        self.town.traffic_level.value = data.traffic_level
+        self.town.soccer_pop.value = data.soccer_pop
+        self.town.soccer_level.value = data.soccer_level
+        bits_fields = list()
+        bits_fields.append(self.town.living)
+        bits_fields.append(self.town.economy)
+        bits_fields.append(self.town.sports)
+        bits_fields.append(self.town.env)
+        bits_fields.append(self.town.population)
+        bits_fields.append(self.town.price)
+        bits_fields.append(self.town.traffic_level)
+        bits_fields.append(self.town.soccer_pop)
+        bits_fields.append(self.town.soccer_level)
         self._save(bits_fields)
         return True
 

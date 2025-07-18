@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from ..dtos import ClubDto, MyPlayerDto, OtherTeamPlayerDto, PlayerAbilityDto
+from ..dtos import ClubDto, MyPlayerDto, OtherTeamPlayerDto, PlayerAbilityDto, TownDto
 from ..io import IntByteField, StrByteField
 from ..objs import Player
 
@@ -163,3 +163,28 @@ class OtherTeam:
     unknown1: IntByteField
     unknown2: IntByteField
     players: list[OtherPlayer]
+
+
+class Town:
+    living: IntByteField
+    economy: IntByteField
+    sports: IntByteField
+    env: IntByteField
+    population: IntByteField
+    price: IntByteField
+    traffic_level: IntByteField
+    soccer_pop: IntByteField
+    soccer_level: IntByteField
+
+    def to_dto(self):
+        return TownDto(
+            living=self.living.value,
+            economy=self.economy.value,
+            sports=self.sports.value,
+            env=self.env.value,
+            population=self.population.value,
+            price=self.price.value,
+            traffic_level=self.traffic_level.value,
+            soccer_pop=self.soccer_pop.value,
+            soccer_level=self.soccer_level.value,
+        )

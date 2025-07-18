@@ -9,7 +9,7 @@ import bottle
 import webview
 
 from .data_reader import DataReader
-from .dtos import ClubDto, MyPlayerDto, SearchDto
+from .dtos import ClubDto, MyPlayerDto, SearchDto, TownDto
 from .savereader.readers import SaveDataReader
 from .pcsx2reader.readers import Pcsx2DataReader
 from .utils import get_resource_path
@@ -143,6 +143,8 @@ class MainApp:
             self.fetch_team_friendly,
             self.save_team_friendly,
             self.search_player,
+            self.fetch_my_town,
+            self.save_my_town,
         )
 
     def get_version(self) -> str:
@@ -192,6 +194,9 @@ class MainApp:
     def fetch_my_player(self, id: int, team: int) -> dict:
         return self.data_raader.read_myplayer(id, team).model_dump(by_alias=True)
 
+    def fetch_my_town(self) -> dict:
+        return self.data_raader.read_town().model_dump(by_alias=True)
+
     def save_my_player(self, data: dict, team: int) -> dict:
         player_data = MyPlayerDto.model_validate(data)
         self.data_raader.save_player(player_data, team)
@@ -212,6 +217,11 @@ class MainApp:
         if search_data.tone:
             search_data.tone -= 1
         return [f.model_dump(by_alias=True) for f in self.data_raader.search_player(search_data)]
+
+    def save_my_town(self, data: dict) -> dict:
+        town_data = TownDto.model_validate(data)
+        self.data_raader.save_town(town_data)
+        return {"message": "success"}
 
 
 def main():

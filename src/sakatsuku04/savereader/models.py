@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from ..dtos import ClubDto, MyPlayerDto, OtherTeamPlayerDto, PlayerAbilityDto
+from ..dtos import ClubDto, MyPlayerDto, OtherTeamPlayerDto, PlayerAbilityDto, TownDto
 from ..io import IntBitField, IntByteField, StrBitField, StrByteField
 from ..objs import Player
 
@@ -207,3 +207,28 @@ class MyScout:
     offer_years: IntBitField = None
     area1: IntBitField = None
     area2: IntBitField = None
+
+
+class Town:
+    living: IntBitField
+    economy: IntBitField
+    sports: IntBitField
+    env: IntBitField
+    population: IntBitField
+    price: IntBitField
+    traffic_level: IntBitField
+    soccer_pop: IntBitField
+    soccer_level: IntBitField
+
+    def to_dto(self):
+        return TownDto(
+            living=self.living.value,
+            economy=self.economy.value,
+            sports=self.sports.value,
+            env=self.env.value,
+            population=self.population.value,
+            price=self.price.value,
+            traffic_level=self.traffic_level.value,
+            soccer_pop=self.soccer_pop.value,
+            soccer_level=self.soccer_level.value,
+        )

@@ -32,26 +32,26 @@
             <input id="clubname" bind:value={ clubData.clubName } class="input" required disabled />
         </div>
         <div class="mb-6">
-        <label for="fundsHigh">资金</label>
-        <HStack className="gap-4 mb-6">
-            <div class="relative">
-                <input type="text" id="fundsHigh" maxlength="4" pattern={pattern} title="请输入 0 到 9999 之间的整数" bind:value={ clubData.fundsHigh } class="input" required />
-                <div class="inner">
-                    <span>亿</span>
+            <label for="fundsHigh">资金</label>
+            <HStack className="gap-4 mb-6">
+                <div class="relative">
+                    <input type="text" id="fundsHigh" maxlength="4" pattern={pattern} title="请输入 0 到 9999 之间的整数" bind:value={ clubData.fundsHigh } class="input" required />
+                    <div class="inner">
+                        <span>亿</span>
+                    </div>
                 </div>
-            </div>
-            <div class="relative">
-                <input type="text" id="fundsLow" maxlength="4" pattern={pattern} title="请输入 0 到 9999 之间的整数" bind:value={ clubData.fundsLow } class="input" required />
-                <div class="inner">
-                    <span>万</span>
+                <div class="relative">
+                    <input type="text" id="fundsLow" maxlength="4" pattern={pattern} title="请输入 0 到 9999 之间的整数" bind:value={ clubData.fundsLow } class="input" required />
+                    <div class="inner">
+                        <span>万</span>
+                    </div>
                 </div>
+            </HStack>
+            <div>
+                <label for="managerName">球队经理</label>
+                <input id="managerName" bind:value={ clubData.managerName } class="input" required disabled />
             </div>
-        </HStack>
-        <div>
-            <label for="managerName">球队经理</label>
-            <input id="managerName" bind:value={ clubData.managerName } class="input" required disabled />
         </div>
-    </div>
     </div>
     <div class="bg-gray-50 dark:bg-gray-700 rounded-2xl shadow p-6 flex flex-col space-y-6">
         <h2 class="text-xl font-bold">游戏设置</h2>

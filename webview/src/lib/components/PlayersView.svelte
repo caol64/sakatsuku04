@@ -4,22 +4,23 @@
     import HStack from "./Stack/HStack.svelte";
     import RadarChart from "./RadarChart.svelte";
     import StatusBars from "./StatusBars.svelte";
-    import PositionGrid from "./PositionGrid.svelte";
     import VStack from "./Stack/VStack.svelte";
     import Tooltip from "./Tooltip.svelte";
     import Modal from "./Modal.svelte";
     import PlayersEditor from "./PlayersEditor.svelte";
-    import { getCooperationType, getGrowType, getPlayerColor, getPosition, getRank, getRegion, getStyle, getToneType, preferFoot, sortedAbilities } from "$lib/utils";
+    import { getCooperationType, getGrowType, getPlayerColor, getPosition, getRank, getRegion, getStyle, getToneType, preferFoot, sortedAbilities, getGrowEval } from "$lib/utils";
     import { getRefreshFlag, getSelectedTab, setRefreshFlag } from "$lib/globalState.svelte";
     import AbilityBar from "./AbilityBar.svelte";
     import Football from "$lib/icons/Football.svelte";
     import abilEval from "$locales/abil_eval_zh.json";
     import Comment from "$lib/icons/Comment.svelte";
     import Skull from "$lib/icons/Skull.svelte";
+    import Waveform from "./Waveform.svelte";
+    import PositionGrid from "./PositionGrid.svelte";
 
     let myPlayers: MyTeamPlayer[] = $state([]);
     let selectedPlayer = $state(0);
-    let myPlayer: MyPlayer = $state({ abilities: [], hexagon: [], odc:[] });
+    let myPlayer: MyPlayer = $state({ abilities: [], hexagon: [], odc: [] });
     let stats = $state(Array(18).fill(0));
     let bars = $state([0, 0, 0]);
     let selectedTeam = $state(0);
@@ -49,7 +50,7 @@
                 await fetchMyPlayer(selectedPlayer);
             } else {
                 selectedPlayer = 0;
-                myPlayer = { abilities: [], hexagon: [], odc:[] };
+                myPlayer = { abilities: [], hexagon: [], odc: [] };
                 stats = Array(18).fill(0);
                 bars = [0, 0, 0];
             }
@@ -236,17 +237,21 @@
         {/if}
     </VStack>
 
-    <VStack className="w-1/4 mx-1">
+    <VStack className="w-3/10 mx-1">
         {#if myPlayer?.maxAbilEval}
             <Tooltip text={abilEval[myPlayer.maxAbilEval]} width="200px">
                 <RadarChart abilities={stats} />
             </Tooltip>
         {/if}
-        <StatusBars values={bars} pos={myPlayer.pos} />
-        <PositionGrid />
+        <HStack className="w-full grid grid-cols-2">
+            <StatusBars values={bars} pos={myPlayer.pos} />
+            <PositionGrid aposEval={myPlayer.aposEval} />
+        </HStack>
+        <Waveform phyGrows={myPlayer?.phyGrows} tecGrows={myPlayer?.tecGrows} sysGrows={myPlayer?.sysGrows} currentAge={myPlayer?.age} />
         {#if myPlayer?.abilEval}
             <div class="border border-gray-200 dark:border-gray-600 rounded-md py-2 px-3 space-y-2 bg-gray-50 dark:bg-gray-700 my-2">
-                {abilEval[myPlayer.abilEval]}
+                <p>{abilEval[myPlayer.abilEval]}</p>
+                <p>{getGrowEval(myPlayer.growEval)}</p>
             </div>
         {/if}
     </VStack>

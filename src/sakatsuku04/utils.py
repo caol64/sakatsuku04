@@ -177,6 +177,47 @@ def calc_abil_eval(abilities: list[int], pos: int) -> int:
     return 7
 
 
+def calc_grow_eval(grow_type_tec: int, age: int) -> int:
+    age_index = 0
+    for i, v in enumerate(constants.status_table_age):
+        if age < v:
+            break
+        age_index = i
+    return constants.status_table_grow[grow_type_tec][age_index]
+
+
+def calc_apos_eval(abilities: list[int]) -> list[int]:
+    highest_level = 0
+    levels = []
+    for i in range(11):
+        score = 0
+        for k, v in constants.apos_to_exp[i].items():
+            score += abilities[k] * v
+        level = ability_to_lv(score)
+        if level > highest_level:
+            highest_level = level
+        levels.append(level)
+    results = []
+    for level in levels:
+        for i in range(4):
+            rating_level_to_check = 4 - i
+            current_standard = constants.apos_exp_eval[i]
+            # 条件1：硬实力达标
+            hard_skill_ok = (level >= current_standard[0])
+            # 条件2：相对实力达标
+            relative_skill_ok = (
+                level >= highest_level * current_standard[2] or
+                level >= current_standard[1]
+            )
+            if hard_skill_ok and relative_skill_ok:
+                results.append(rating_level_to_check)
+                break
+        else:
+            results.append(0)
+    return results
+
+
+
 def find_badden_match(id: int) -> list[int]:
     result = []
     for a, b in constants.tbl_badden:

@@ -6,6 +6,7 @@ import grow from "$locales/grow_zh.json";
 import position from "$locales/position_zh.json";
 import rank from "$locales/rank_zh.json";
 import ability from "$locales/ability_zh.json";
+import growEval from "$locales/grow_eval_zh.json";
 
 export function toHex(num: number | undefined): string {
     return num !== undefined ? num.toString(16).padStart(2, '0').toUpperCase() : "";
@@ -19,6 +20,10 @@ function lookup(dict: Record<string, string>, num: number | undefined): string {
     return num !== undefined ? dict[toHex(num)] ?? "" : "";
 }
 
+function lookupDirect(dict: Record<string, string>, num: number | undefined): string {
+    return num !== undefined ? dict[String(num)] ?? "" : "";
+}
+
 export const getRegion = (num: number | undefined) => lookup(region, num);
 export const getStyle = (num: number | undefined) => lookup(style, num);
 export const getToneType = (num: number | undefined) => lookup(tone, num);
@@ -26,6 +31,7 @@ export const getCooperationType = (num: number | undefined) => lookup(cooperatio
 export const getGrowType = (num: number | undefined) => lookup(grow, num);
 export const getPosition = (num: number | undefined) => lookup(position, num);
 export const getRank = (num: number | undefined) => lookup(rank, num);
+export const getGrowEval = (num: number | undefined) => lookupDirect(growEval, num);
 
 export function preferFoot(footValue: number | undefined): string {
     if (footValue === 0) {

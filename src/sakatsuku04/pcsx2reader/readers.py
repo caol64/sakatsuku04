@@ -4,11 +4,11 @@ import platform
 from ctypes import c_bool, c_char, c_char_p, c_uint, c_ulong, c_void_p
 
 from ..data_reader import DataReader
-from ..dtos import ClubDto, MyPlayerDto, MyTeamPlayerDto, OtherTeamPlayerDto, SearchDto
+from ..dtos import ClubDto, MyPlayerDto, MyTeamPlayerDto, OtherTeamPlayerDto, SearchDto, TownDto
 from ..io import CnVer, IntByteField, StrByteField
 from ..objs import Player
 from ..utils import find_name_matches, reset_char_dict
-from .models import Club, MyPlayer, MyPlayerAbility, OtherPlayer, OtherTeam
+from .models import Club, MyPlayer, MyPlayerAbility, OtherPlayer, OtherTeam, Town
 
 
 class Pcsx2DataReader(DataReader):
@@ -218,6 +218,20 @@ class Pcsx2DataReader(DataReader):
             player.abilities.append(MyPlayerAbility(j, current, current_max, max))
         return player
 
+    def _read_town(self) -> Town:
+        start = 0x7354f0
+        town = Town()
+        town.living = self._read_int_byte(start + 2, 2) # 2(2)
+        town.economy = self._read_int_byte(start + 4, 2) # 4(2)
+        town.sports = self._read_int_byte(start + 6, 2) # 6(2)
+        town.env = self._read_int_byte(start + 8, 2) # 8(2)
+        town.population = self._read_int_byte(start + 0xc, 4) # 0xc(4)
+        town.price = self._read_int_byte(start + 0x10) # 0x10
+        town.traffic_level = self._read_int_byte(start + 0x11) # 0x11
+        town.soccer_pop = self._read_int_byte(start + 0x12) # 0x12
+        town.soccer_level = self._read_int_byte(start + 0x1c, 2) # 0x1c(2)
+        return town
+
     def check_connect(self) -> bool:
         is_connected = False
         try:
@@ -278,6 +292,9 @@ class Pcsx2DataReader(DataReader):
 
     def read_myplayer(self, id: int, team: int) -> MyPlayerDto:
         return self._read_myplayer(id, team).to_dto()
+
+    def read_town(self) -> TownDto:
+        return self._read_town().to_dto()
 
     def search_player(self, data: SearchDto) -> list[OtherTeamPlayerDto]:
         name = data.name
@@ -385,6 +402,30 @@ class Pcsx2DataReader(DataReader):
         byte_field.value = friendly
         bits_fields = list()
         bits_fields.append(byte_field)
+        self._save(bits_fields)
+        return True
+
+    def save_town(self, data: TownDto) -> bool:
+        town = self._read_town()
+        town.living.value = data.living
+        town.economy.value = data.economy
+        town.sports.value = data.sports
+        town.env.value = data.env
+        town.population.value = data.population
+        town.price.value = data.price
+        town.traffic_level.value = data.traffic_level
+        town.soccer_pop.value = data.soccer_pop
+        town.soccer_level.value = data.soccer_level
+        bits_fields = list()
+        bits_fields.append(town.living)
+        bits_fields.append(town.economy)
+        bits_fields.append(town.sports)
+        bits_fields.append(town.env)
+        bits_fields.append(town.population)
+        bits_fields.append(town.price)
+        bits_fields.append(town.traffic_level)
+        bits_fields.append(town.soccer_pop)
+        bits_fields.append(town.soccer_level)
         self._save(bits_fields)
         return True
 

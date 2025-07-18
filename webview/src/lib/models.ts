@@ -73,6 +73,8 @@ export interface MyPlayer {
     hexagon: number[];
     odc: number[];
     abilEval?: number;
+    growEval?: number;
+    aposEval?: number[];
     maxAbilEval?: number;
     spComment?: string;
     baddenPlayers?: string[];
@@ -80,6 +82,9 @@ export interface MyPlayer {
     salaryLow?: number;
     offerYearsPassed?: number;
     offerYearsTotal?: number;
+    phyGrows?: number[];
+    tecGrows?: number[];
+    sysGrows?: number[];
 }
 
 export interface MyPlayerAbility {
@@ -87,4 +92,17 @@ export interface MyPlayerAbility {
     current: number;
     currentMax: number;
     max: number;
+}
+
+
+export interface MyTown {
+    living?: number;
+    economy?: number;
+    sports?: number;
+    env?: number;
+    population?: number;
+    price?: number;
+    trafficLevel?: number;
+    soccerPop?: number;
+    soccerLevel?: number;
 }
