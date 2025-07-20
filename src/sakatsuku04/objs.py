@@ -85,18 +85,23 @@ class Player:
 
 
 class Scout:
-    _scout_dict = None
+    _scout_dict: Optional[dict] = None
 
     @classmethod
-    def scout_dict(cls) -> dict[str, str]:
+    def scout_dict(cls) -> dict[int, list[str]]:
         if cls._scout_dict is None:
             cls._scout_dict = dict()
-            with open(get_resource_path('scouts.csv'), 'r', encoding='utf8', newline='') as csvfile:
+            file = "bscouts_zh.csv" if CnVer.is_cn else "bscouts_jp.csv"
+            with open(get_resource_path(file), 'r', encoding='utf8', newline='') as csvfile:
                 reader = csv.reader(csvfile)
-                for row in reader:
-                    cls._scout_dict[row[0]] = row[1]
+                for i, row in enumerate(reader):
+                    cls._scout_dict[i + 30000] = row
         return cls._scout_dict
 
     @classmethod
-    def name(cls, id: str) -> str:
-        return Scout.scout_dict().get(id)
+    def reset_scout_dict(cls):
+        cls._scout_dict = None
+
+    @classmethod
+    def name(cls, id: int) -> str:
+        return Scout.scout_dict().get(id)[0]

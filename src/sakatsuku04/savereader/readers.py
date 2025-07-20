@@ -1,7 +1,7 @@
 from ..data_reader import DataReader
-from ..dtos import ClubDto, MyPlayerDto, MyTeamPlayerDto, OtherTeamPlayerDto, SearchDto, TownDto
+from ..dtos import ClubDto, MyPlayerDto, MyTeamPlayerDto, OtherTeamPlayerDto, ScoutDto, SearchDto, TownDto
 from ..io import CnVer, InputBitStream, IntBitField, OutputBitStream, StrBitField
-from ..objs import Player
+from ..objs import Player, Scout
 from ..savereader.memcard_reader import MemcardReader
 from ..utils import find_name_matches
 from .entry_reader import EntryReader, HeadEntryReader
@@ -59,11 +59,11 @@ class ClubReader(BaseReader):
             [0x20, 0xB, 1, 1, 1, 8, 8, 8, 8, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB], 30
         )  # 0x703f82
         self.bit_stream.unpack_bits([8, 8, 8, 8, 8, 8, 8, 8, 8, 4], 14)  # 0x703f90
-        self.bit_stream.unpack_bits([0x20] * 0x20)  # 0x704010
+        self.bit_stream.unpack_bits([0x20] * 32)  # 0x704010
         for i in range(50):
             self.bit_stream.unpack_bits([0x10, 8, 8, 8], 8)
-            self.bit_stream.unpack_bits([0x20] * 0x10)
-        self.bit_stream.unpack_bits([0x20] * 0x30)
+            self.bit_stream.unpack_bits([0x20] * 16)
+        self.bit_stream.unpack_bits([0x20] * 48)
         for i in range(114):
             self.bit_stream.unpack_bits([0x10, 8], 4)
         # 0x7050a8
@@ -201,15 +201,15 @@ class TeamReader(BaseReader):
             self.bit_stream.unpack_bits([7] * 6, 6)
         # 0x71273a
         self.bit_stream.align(2)
-        # 0x71273c 教练list
+        # 0x71273c 教练list d638
         self.bit_stream.unpack_bits(
             [0x10, 3, 8] * (0x12 + 0x16 * 3), 4 * (0x12 + 0x16 * 3)
         )
-        # 0x71288c
+        # 0x71288c d788 球探list
         team.my_scouts = list()
-        for _ in range(3):  # my scout
+        for _ in range(3):
             self.bit_stream.unpack_bits(4, 2)  # index
-            name = self.bit_stream.unpack_str(0xD)
+            name = self.bit_stream.unpack_str(0xD) # 2(d)
             # 0x71289b
             a = self.bit_stream.unpack_bits([8, 8, 4, 7, 7, 0x10, 8], 9)
             born = a[0]  # 0x71289c
@@ -226,9 +226,9 @@ class TeamReader(BaseReader):
             abilities = self.bit_stream.unpack_bits([7] * 21, 21)
             # 0x7128bf
             a = self.bit_stream.unpack_bits([8, 8, 8, 0x10, 3, 3, 2], 9)
-            area1 = a[0]  # 0x7128c0
-            area2 = a[1]  # 0x7128c1
-            id = a[3]
+            area1 = a[0]  # 0x7128c0 0x33(1)
+            area2 = a[1]  # 0x7128c1 0x34(1)
+            id = a[3]  # 0x7128c3 0x36(2)
             # 0x7128c8
             for _ in range(5):
                 self.bit_stream.unpack_bits([0x10, 0xB, 4, 6, 8], 8)
@@ -658,11 +658,11 @@ class TownReader(BaseReader):
             self.bit_stream.unpack_bits([0x10, 0xE], 4)
             self.bit_stream.unpack_bits([4, 5, 3, 8], 6)
         self.bit_stream.unpack_bits([3, 4, 8], 3)
-        self.bit_stream.unpack_bits([1] * 0xD, 0xD)
-        self.bit_stream.unpack_bits([1] * (0x27 * 3), 0x27 * 3)
-        self.bit_stream.unpack_bits([4] * 0xD, 0xD)
-        self.bit_stream.unpack_bits([2] * (0x27 * 3), 0x27 * 3)
-        self.bit_stream.unpack_bits([8] * 0x27, 0x27)
+        self.bit_stream.unpack_bits([1] * 0xD, 13)
+        self.bit_stream.unpack_bits([1] * (0x27 * 3), 117)
+        self.bit_stream.unpack_bits([4] * 0xD, 13)
+        self.bit_stream.unpack_bits([2] * (0x27 * 3), 117)
+        self.bit_stream.unpack_bits([8] * 0x27, 39)
         self.bit_stream.unpack_bits(8, 2)
         self.bit_stream.padding(self.tail_padding)
         return town
@@ -812,6 +812,7 @@ class SaveDataReader(DataReader):
         self.town = town_reader.read()
         CnVer.set_ver(self.game_ver())
         Player.reset_player_dict()
+        Scout.reset_scout_dict()
 
     def read_club(self) -> ClubDto:
         if not self.selected_game:
@@ -909,6 +910,12 @@ class SaveDataReader(DataReader):
 
     def read_town(self) -> TownDto:
         return self.town.to_dto()
+
+    def read_scouts(self, type: int) -> list[ScoutDto]:
+        if type == 0:
+            return [f.to_dto() for f in self.my_team.my_scouts]
+        else:
+            return [f.to_dto_with_name(f.id.value) for f in self.my_team.scout_candidates]
 
     def save_club(self, club_data: ClubDto) -> bool:
         save_entry = self.save_entries.get(self.selected_game)

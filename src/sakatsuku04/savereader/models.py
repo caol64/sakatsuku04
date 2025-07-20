@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 
-from ..dtos import ClubDto, MyPlayerDto, OtherTeamPlayerDto, PlayerAbilityDto, TownDto
+from ..dtos import ClubDto, MyPlayerDto, OtherTeamPlayerDto, PlayerAbilityDto, ScoutDto, TownDto
 from ..io import IntBitField, IntByteField, StrBitField, StrByteField
-from ..objs import Player
+from ..objs import Player, Scout
 
 
 @dataclass
@@ -201,12 +201,24 @@ class OtherTeam:
 @dataclass
 class MyScout:
     id: IntBitField
-    age: IntBitField
+    age: IntBitField = None
     saved_name: StrBitField = None
     abilities: list[IntBitField] = None
     offer_years: IntBitField = None
     area1: IntBitField = None
     area2: IntBitField = None
+
+    def to_dto(self):
+        return ScoutDto(
+            id=self.id.value,
+            name=self.saved_name.value,
+        )
+
+    def to_dto_with_name(self, id: int):
+        return ScoutDto(
+            id=self.id.value,
+            name=Scout.name(id),
+        )
 
 
 class Town:

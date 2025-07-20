@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 
-from ..dtos import ClubDto, MyPlayerDto, OtherTeamPlayerDto, PlayerAbilityDto, TownDto
+from ..dtos import ClubDto, MyPlayerDto, OtherTeamPlayerDto, PlayerAbilityDto, ScoutDto, TownDto
 from ..io import IntByteField, StrByteField
-from ..objs import Player
+from ..objs import Player, Scout
 
 
 class Club:
@@ -188,3 +188,27 @@ class Town:
             soccer_pop=self.soccer_pop.value,
             soccer_level=self.soccer_level.value,
         )
+
+
+@dataclass
+class MyScout:
+    id: IntByteField
+    age: IntByteField = None
+    saved_name: StrByteField = None
+    abilities: list[IntByteField] = None
+    offer_years: IntByteField = None
+    area1: IntByteField = None
+    area2: IntByteField = None
+
+    def to_dto(self):
+        return ScoutDto(
+            id=self.id.value,
+            name=self.saved_name.value,
+        )
+
+    def to_dto_with_name(self, id: int):
+        return ScoutDto(
+            id=self.id.value,
+            name=Scout.name(id),
+        )
+

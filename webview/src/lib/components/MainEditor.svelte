@@ -7,6 +7,7 @@
     import TeamsView from "./TeamsView.svelte";
     import SearchView from "./SearchView.svelte";
     import TownEditor from "./TownEditor.svelte";
+    import ScoutsView from "./ScoutsView.svelte";
 </script>
 
 <VStack className="px-2 flex-1 h-screen">
@@ -19,6 +20,8 @@
         <TeamsView />
     {:else if getSelectedTab() === "Search"}
         <SearchView />
+    {:else if getSelectedTab() === "Scouts"}
+        <ScoutsView />
     {:else if getSelectedTab() === "Town"}
         <TownEditor />
     {/if}

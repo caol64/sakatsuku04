@@ -106,3 +106,12 @@ export interface MyTown {
     soccerPop?: number;
     soccerLevel?: number;
 }
+
+
+export interface Scout {
+    id: number;
+    name: string;
+    abilities?: number[];
+    exclusivePlayers?: string[];
+    simiExclusivePlayers?: string[];
+}

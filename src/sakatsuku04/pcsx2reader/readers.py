@@ -4,11 +4,11 @@ import platform
 from ctypes import c_bool, c_char, c_char_p, c_uint, c_ulong, c_void_p
 
 from ..data_reader import DataReader
-from ..dtos import ClubDto, MyPlayerDto, MyTeamPlayerDto, OtherTeamPlayerDto, SearchDto, TownDto
+from ..dtos import ClubDto, MyPlayerDto, MyTeamPlayerDto, OtherTeamPlayerDto, ScoutDto, SearchDto, TownDto
 from ..io import CnVer, IntByteField, StrByteField
-from ..objs import Player
+from ..objs import Player, Scout
 from ..utils import find_name_matches, reset_char_dict
-from .models import Club, MyPlayer, MyPlayerAbility, OtherPlayer, OtherTeam, Town
+from .models import Club, MyPlayer, MyPlayerAbility, MyScout, OtherPlayer, OtherTeam, Town
 
 
 class Pcsx2DataReader(DataReader):
@@ -232,6 +232,27 @@ class Pcsx2DataReader(DataReader):
         town.soccer_level = self._read_int_byte(start + 0x1c, 2) # 0x1c(2)
         return town
 
+    def _read_my_scout(self) -> list[MyScout]:
+        start = 0x71288c
+        scout_list = []
+        for i in range(3):
+            name = self._read_str_byte(start + i * 156 + 2, 0xD)
+            id = self._read_int_byte(start + i * 156 + 0x36, 2)
+            scout = MyScout(id)
+            scout.saved_name = name
+            scout_list.append(scout)
+        return scout_list
+
+    def _read_scout_candidates(self) -> list[MyScout]:
+        start = 0x712a60
+        scout_candidates = []
+        for i in range(0xA):
+            scout_id = self._read_int_byte(start + i * 4, 2)
+            if scout_id and scout_id.value != 0xFFFF:
+                scout = MyScout(scout_id)
+                scout_candidates.append(scout)
+        return scout_candidates
+
     def check_connect(self) -> bool:
         is_connected = False
         try:
@@ -241,6 +262,7 @@ class Pcsx2DataReader(DataReader):
                 ver = self.game_ver()
                 CnVer.set_ver(ver)
                 Player.reset_player_dict()
+                Scout.reset_scout_dict()
                 reset_char_dict()
             return is_connected
         except Exception as e:
@@ -292,6 +314,12 @@ class Pcsx2DataReader(DataReader):
 
     def read_myplayer(self, id: int, team: int) -> MyPlayerDto:
         return self._read_myplayer(id, team).to_dto()
+
+    def read_scouts(self, type: int) -> list[ScoutDto]:
+        if type == 0:
+            return [f.to_dto() for f in self._read_my_scout()]
+        else:
+            return [f.to_dto_with_name(f.id.value) for f in self._read_scout_candidates()]
 
     def read_town(self) -> TownDto:
         return self._read_town().to_dto()

@@ -180,9 +180,9 @@ def calc_abil_eval(abilities: list[int], pos: int) -> int:
 def calc_grow_eval(grow_type_tec: int, age: int) -> int:
     age_index = 0
     for i, v in enumerate(constants.status_table_age):
-        if age < v:
-            break
         age_index = i
+        if age <= v:
+            break
     return constants.status_table_grow[grow_type_tec][age_index]
 
 

@@ -145,6 +145,7 @@ class MainApp:
             self.search_player,
             self.fetch_my_town,
             self.save_my_town,
+            self.fetch_my_scouts,
         )
 
     def get_version(self) -> str:
@@ -193,6 +194,9 @@ class MainApp:
 
     def fetch_my_player(self, id: int, team: int) -> dict:
         return self.data_raader.read_myplayer(id, team).model_dump(by_alias=True)
+
+    def fetch_my_scouts(self, type: int) -> list:
+        return [f.model_dump(by_alias=True) for f in self.data_raader.read_scouts(type)]
 
     def fetch_my_town(self) -> dict:
         return self.data_raader.read_town().model_dump(by_alias=True)
