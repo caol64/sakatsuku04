@@ -2,7 +2,7 @@ from typing import Optional
 from pydantic import BaseModel, ConfigDict, computed_field
 from pydantic.alias_generators import to_camel
 
-from .objs import Player
+from .objs import Player, Scout
 from .utils import calc_abil_eval, calc_apos_eval, calc_grow_eval, find_badden_match, is_album_player, ability_to_lv, lv_to_dot
 from . import constants
 
@@ -187,6 +187,14 @@ class OtherTeamPlayerDto(BaseDto):
     @property
     def is_album(self) -> bool:
         return is_album_player(self.id)
+
+    @computed_field
+    @property
+    def scouts(self) -> Optional[list[str]]:
+        scouts_ids = constants.scout_excl_reversed.get(self.id)
+        if scouts_ids:
+            return [Scout.name(f) for f in scouts_ids]
+        return []
 
 
 class SearchDto(BaseDto):

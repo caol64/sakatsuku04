@@ -36,6 +36,7 @@ export interface TeamPlayer {
     growTypeSys: number;
     isAlbum: boolean;
     teamIndex: number;
+    scouts?: string[];
 }
 
 export interface MyTeamPlayer {

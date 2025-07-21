@@ -8,6 +8,8 @@
     import { getRefreshFlag, getSelectedTab, setRefreshFlag } from "$lib/globalState.svelte";
     import Football from "$lib/icons/Football.svelte";
     import { getCooperationType, getGrowType, getPlayerColor, getPosition, getRank, getToneType } from "$lib/utils";
+    import Tooltip from "./Tooltip.svelte";
+    import Avatar from "$lib/icons/Avatar.svelte";
 
 
     let treeData: TeamsWithRegion[] = $state([]);
@@ -154,7 +156,17 @@
                     <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
                         <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white" style={`background-image: linear-gradient(to right, transparent 66%, ${getPlayerColor(item.pos)} 100%)`}>
                             <span class="flex items-center justify-between w-full">
-                                {item.name}
+                                <HStack className="items-center">
+                                    <span>{item.name}</span>
+                                    {#if item.scouts && item.scouts.length > 0}
+                                        {@const tooltipText = `${item.scouts.join("<br>")}`}
+                                        <div class="ml-4">
+                                            <Tooltip text={tooltipText} width="80px">
+                                                <Avatar />
+                                            </Tooltip>
+                                        </div>
+                                    {/if}
+                                </HStack>
                                 {#if item.isAlbum}
                                     <div class="mx-4"><Football /></div>
                                 {/if}

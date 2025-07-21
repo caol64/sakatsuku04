@@ -6,6 +6,9 @@
     import teamsData from "$locales/teams_zh.json";
     import DropDown from "$lib/icons/DropDown.svelte";
     import { setIsLoading } from "$lib/globalState.svelte";
+    import HStack from "./Stack/HStack.svelte";
+    import Tooltip from "./Tooltip.svelte";
+    import Avatar from "$lib/icons/Avatar.svelte";
 
     let keyword = $state("");
     let teamPlayers: TeamPlayer[] = $state([]);
@@ -102,7 +105,7 @@
     </div>
 
     <!-- 表格部分 -->
-    <div class="overflow-y-auto rounded-lg shadow pb-12">
+    <div class="overflow-y-auto rounded-lg shadow pb-24">
         <table class="min-w-full text-sm text-left text-gray-900 dark:text-white">
             <thead class="bg-gray-100 dark:bg-gray-800 text-xs uppercase">
                 <tr>
@@ -124,7 +127,17 @@
                     <tr class="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600">
                         <th scope="row" class="px-4 font-medium text-gray-900 whitespace-nowrap dark:text-white" style={`background-image: linear-gradient(to right, transparent 66%, ${getPlayerColor(item.pos)} 100%)`}>
                             <span class="flex items-center justify-between w-full">
-                                {item.name}
+                                <HStack className="items-center">
+                                    <span>{item.name}</span>
+                                    {#if item.scouts && item.scouts.length > 0}
+                                        {@const tooltipText = `${item.scouts.join("<br>")}`}
+                                        <div class="ml-4">
+                                            <Tooltip text={tooltipText} width="80px">
+                                                <Avatar />
+                                            </Tooltip>
+                                        </div>
+                                    {/if}
+                                </HStack>
                                 {#if item.isAlbum}
                                     <div><Football /></div>
                                 {/if}
