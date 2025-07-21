@@ -1,14 +1,20 @@
 <script lang="ts">
+    import { getRefreshFlag, getSelectedTab, setIsLoading, setRefreshFlag } from "$lib/globalState.svelte";
     import type { MyTown } from "$lib/models";
     import { onMount } from "svelte";
 
     let myTown: MyTown = $state({});
 
     async function fetchMyTown() {
-        if (window.pywebview?.api?.fetch_my_town) {
-            myTown = await window.pywebview.api.fetch_my_town();
-        } else {
-            alert('API 未加载');
+        try {
+            setIsLoading(true);
+            if (window.pywebview?.api?.fetch_my_town) {
+                myTown = await window.pywebview.api.fetch_my_town();
+            } else {
+                alert('API 未加载');
+            }
+        } finally {
+            setIsLoading(false);
         }
     }
 
@@ -29,6 +35,16 @@
             alert('API 未加载');
         }
     }
+
+    $effect(() => {
+        if(getRefreshFlag() && getSelectedTab() === "Town") {
+            try {
+                fetchMyTown();
+            } finally {
+                setRefreshFlag(false);
+            }
+        }
+    });
 
 </script>
 

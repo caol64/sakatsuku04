@@ -9,7 +9,7 @@
     import Modal from "./Modal.svelte";
     import PlayersEditor from "./PlayersEditor.svelte";
     import { getCooperationType, getGrowType, getPlayerColor, getPosition, getRank, getRegion, getStyle, getToneType, preferFoot, sortedAbilities, getGrowEval } from "$lib/utils";
-    import { getRefreshFlag, getSelectedTab, setRefreshFlag } from "$lib/globalState.svelte";
+    import { getRefreshFlag, getSelectedTab, setIsLoading, setRefreshFlag } from "$lib/globalState.svelte";
     import AbilityBar from "./AbilityBar.svelte";
     import Football from "$lib/icons/Football.svelte";
     import abilEval from "$locales/abil_eval_zh.json";
@@ -43,19 +43,24 @@
     }
 
     async function fetchMyTeam() {
-        if (window.pywebview?.api?.fetch_my_team) {
-            myPlayers = await window.pywebview.api.fetch_my_team(selectedTeam);
-            if (myPlayers && myPlayers.length > 0) {
-                selectedPlayer = myPlayers[0].id;
-                await fetchMyPlayer(selectedPlayer);
+        try {
+            setIsLoading(true);
+            if (window.pywebview?.api?.fetch_my_team) {
+                myPlayers = await window.pywebview.api.fetch_my_team(selectedTeam);
+                if (myPlayers && myPlayers.length > 0) {
+                    selectedPlayer = myPlayers[0].id;
+                    await fetchMyPlayer(selectedPlayer);
+                } else {
+                    selectedPlayer = 0;
+                    myPlayer = { abilities: [], hexagon: [], odc: [] };
+                    stats = Array(18).fill(0);
+                    bars = [0, 0, 0];
+                }
             } else {
-                selectedPlayer = 0;
-                myPlayer = { abilities: [], hexagon: [], odc: [] };
-                stats = Array(18).fill(0);
-                bars = [0, 0, 0];
+                alert('API 未加载');
             }
-        } else {
-            alert('API 未加载');
+        } finally {
+            setIsLoading(false);
         }
     }
 
@@ -141,7 +146,7 @@
                 <span class="flex-1 pl-8">{myPlayer?.name}</span>
                 {#if myPlayer?.spComment}
                     {@const tooltipText = `${myPlayer.spComment}`}
-                    <Tooltip text={tooltipText} width="200px">
+                    <Tooltip text={tooltipText} width="250px">
                         <Comment />
                     </Tooltip>
                 {/if}
@@ -239,7 +244,7 @@
 
     <VStack className="w-3/10 mx-1">
         {#if myPlayer?.maxAbilEval}
-            <Tooltip text={abilEval[myPlayer.maxAbilEval]} width="200px">
+            <Tooltip text={abilEval[myPlayer.maxAbilEval]} width="220px">
                 <RadarChart abilities={stats} />
             </Tooltip>
         {/if}

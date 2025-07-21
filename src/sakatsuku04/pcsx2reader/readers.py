@@ -2,12 +2,14 @@ import ctypes
 import importlib.resources
 import platform
 from ctypes import c_bool, c_char, c_char_p, c_uint, c_ulong, c_void_p
+import struct
 
 from ..data_reader import DataReader
 from ..dtos import ClubDto, MyPlayerDto, MyTeamPlayerDto, OtherTeamPlayerDto, ScoutDto, SearchDto, TownDto
 from ..io import CnVer, IntByteField, StrByteField
 from ..objs import Player, Scout
-from ..utils import find_name_matches, reset_char_dict
+from ..utils import find_name_matches, get_album_bit_indices, reset_char_dict
+from ..constants import scout_excl_tbl, scout_simi_excl_tbl, team_ids
 from .models import Club, MyPlayer, MyPlayerAbility, MyScout, OtherPlayer, OtherTeam, Town
 
 
@@ -253,6 +255,13 @@ class Pcsx2DataReader(DataReader):
                 scout_candidates.append(scout)
         return scout_candidates
 
+    def _read_album_players(self) -> list[IntByteField]:
+        start = 0x260d4 + 0x705104
+        r = []
+        for i in range(9):
+            r.append(self._read_int_byte(start + i * 4, 4))
+        return r
+
     def check_connect(self) -> bool:
         is_connected = False
         try:
@@ -316,13 +325,47 @@ class Pcsx2DataReader(DataReader):
         return self._read_myplayer(id, team).to_dto()
 
     def read_scouts(self, type: int) -> list[ScoutDto]:
-        if type == 0:
-            return [f.to_dto() for f in self._read_my_scout()]
-        else:
-            return [f.to_dto_with_name(f.id.value) for f in self._read_scout_candidates()]
+        scouts = (
+            [f.to_dto() for f in self._read_my_scout()]
+            if type == 0
+            else [f.to_dto_with_name(f.id.value) for f in self._read_scout_candidates()]
+        )
+
+        if not scouts:
+            return scouts
+
+        other_teams = self._read_other_teams()
+        for i, team in enumerate(other_teams):
+            team.players = self._read_other_team_players(i)
+
+        def resolve_players(player_ids: list[int]) -> list[SearchDto]:
+            result = []
+            for pid in player_ids:
+                dto = SearchDto(name=Player(pid).name)
+                for team in other_teams:
+                    for player in team.players:
+                        if player.id.value == pid:
+                            dto.age = player.age.value
+                            dto.team_id = team_ids.index(team.id.value)
+                            break
+                result.append(dto)
+            return result
+
+        for scout in scouts:
+            scout.exclusive_players = resolve_players(scout_excl_tbl.get(scout.id, []))
+            scout.simi_exclusive_players = resolve_players(scout_simi_excl_tbl.get(scout.id, []))
+
+        return scouts
 
     def read_town(self) -> TownDto:
         return self._read_town().to_dto()
+
+    def read_my_album_players(self) -> list[int]:
+        players_raw = [p.value for p in self._read_album_players()]
+        byte_data = bytearray()
+        for val in players_raw:
+            byte_data.extend(struct.pack('<I', val))
+        return get_album_bit_indices(byte_data)
 
     def search_player(self, data: SearchDto) -> list[OtherTeamPlayerDto]:
         name = data.name

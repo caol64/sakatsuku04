@@ -26,8 +26,8 @@
 		<div
 			id="tooltip-element"
 			role="tooltip"
-			style="position: fixed; left: {x}px; top: {y}px;"
-			class="w-[{width}] z-50 rounded-md bg-gray-800 px-3 py-1.5 text-sm font-medium text-white shadow-lg pointer-events-none"
+			style="position: fixed; left: {x}px; top: {y}px; max-width: {width};"
+			class="z-50 rounded-md bg-gray-800 px-3 py-1.5 text-sm font-medium text-white shadow-lg pointer-events-none"
 		>
 			{@html text}
 		</div>

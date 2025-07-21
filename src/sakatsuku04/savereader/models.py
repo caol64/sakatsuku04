@@ -160,6 +160,7 @@ class MyTeam:
     youth_players: list[MyPlayer]
     my_scouts: list["MyScout"]
     scout_candidates: list["MyScout"]
+    album_players: list[IntBitField]
 
 
 @dataclass

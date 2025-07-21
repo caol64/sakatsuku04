@@ -197,6 +197,7 @@ class SearchDto(BaseDto):
     rank: Optional[int] = None
     tone: Optional[int] = None
     cooperation: Optional[int] = None
+    team_id: Optional[int] = None
 
 class TownDto(BaseDto):
     living: int
@@ -214,24 +215,8 @@ class ScoutDto(BaseDto):
     id: int
     name: str
     abilities: Optional[list[int]] = None
-
-    @computed_field
-    @property
-    def exclusive_players(self) -> Optional[list[str]]:
-        players_id = constants.scout_excl_tbl.get(self.id)
-        if players_id and len(players_id) > 0:
-            return [Player(a).name for a in players_id]
-        else:
-            return []
-
-    @computed_field
-    @property
-    def simi_exclusive_players(self) -> Optional[list[str]]:
-        players_id = constants.scout_simi_excl_tbl.get(self.id)
-        if players_id and len(players_id) > 0:
-            return [Player(a).name for a in players_id]
-        else:
-            return []
+    exclusive_players: Optional[list[SearchDto]] = None
+    simi_exclusive_players: Optional[list[SearchDto]] = None
 
 
 def _calc_avg(player: MyPlayerDto, indices: tuple[int], mode: int) -> int:

@@ -8,6 +8,7 @@
     import SearchView from "./SearchView.svelte";
     import TownEditor from "./TownEditor.svelte";
     import ScoutsView from "./ScoutsView.svelte";
+    import AlbumView from "./AlbumView.svelte";
 </script>
 
 <VStack className="px-2 flex-1 h-screen">
@@ -24,6 +25,8 @@
         <ScoutsView />
     {:else if getSelectedTab() === "Town"}
         <TownEditor />
+    {:else if getSelectedTab() === "Album"}
+        <AlbumView />
     {/if}
     {#if getIsLoading()}
         <div class="absolute inset-0 bg-black/50 flex items-center justify-center z-50">

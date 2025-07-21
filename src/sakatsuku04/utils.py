@@ -217,7 +217,6 @@ def calc_apos_eval(abilities: list[int]) -> list[int]:
     return results
 
 
-
 def find_badden_match(id: int) -> list[int]:
     result = []
     for a, b in constants.tbl_badden:
@@ -226,3 +225,30 @@ def find_badden_match(id: int) -> list[int]:
         elif id == b:
             result.append(a)
     return result
+
+def team_to_nati(team_id: int) -> int:
+    nati_id = 50
+    if 0x100 <= team_id < 0x208:
+        target_value = team_id - 0x100
+        table_index = 0
+        for threshold in constants.team_nati_range:
+            if threshold <= target_value:
+                table_index += 1
+            else:
+                break
+        nati_id = table_index + 50
+    return nati_id
+
+
+def get_album_bit_indices(data: bytearray) -> list[int]:
+    indices = []
+    start = 0
+    for byte_index, byte in enumerate(data):
+        for bit_index in range(8):
+            if start > 277:
+                return indices
+            if (byte >> bit_index) & 1:
+                global_bit_index = byte_index * 8 + bit_index
+                indices.append(global_bit_index)
+            start += 1
+    return indices

@@ -112,6 +112,17 @@ export interface Scout {
     id: number;
     name: string;
     abilities?: number[];
-    exclusivePlayers?: string[];
-    simiExclusivePlayers?: string[];
+    exclusivePlayers?: Search[];
+    simiExclusivePlayers?: Search[];
+}
+
+export interface Search {
+    name?: string;
+    pos?: number;
+    age?: number;
+    country?: number;
+    rank?: number;
+    cooperation?: number;
+    tone?: number;
+    teamId?: number;
 }

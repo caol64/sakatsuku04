@@ -35,6 +35,9 @@ class DataReader(Protocol):
     def read_town(self) -> TownDto:
         ...
 
+    def read_my_album_players(self) -> list[int]:
+        ...
+
     def save_club(self, data: ClubDto) -> bool:
         ...
 

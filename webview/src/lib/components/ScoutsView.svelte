@@ -3,6 +3,8 @@
     import { onMount } from "svelte";
     import HStack from "./Stack/HStack.svelte";
     import VStack from "./Stack/VStack.svelte";
+    import teamsData from "$locales/teams_zh.json";
+    import { getRefreshFlag, getSelectedTab, setIsLoading, setRefreshFlag } from "$lib/globalState.svelte";
 
     let myScouts: Scout[] = $state([]);
     let selectedScoutId = $state(0);
@@ -13,13 +15,18 @@
     });
 
     async function fetchMyScouts() {
-        if (window.pywebview?.api?.fetch_my_scouts) {
-            myScouts = await window.pywebview.api.fetch_my_scouts(selectedType);
-            if (myScouts && myScouts.length > 0) {
-                selectedScoutId = myScouts[0].id;
+        try {
+            setIsLoading(true);
+            if (window.pywebview?.api?.fetch_my_scouts) {
+                myScouts = await window.pywebview.api.fetch_my_scouts(selectedType);
+                if (myScouts && myScouts.length > 0) {
+                    selectedScoutId = myScouts[0].id;
+                }
+            } else {
+                alert('API 未加载');
             }
-        } else {
-            alert('API 未加载');
+        } finally {
+            setIsLoading(false);
         }
     }
 
@@ -39,6 +46,16 @@
             selectedScoutId = id;
         }
     }
+
+    $effect(() => {
+        if(getRefreshFlag() && getSelectedTab() === "Scouts") {
+            try {
+                fetchMyScouts();
+            } finally {
+                setRefreshFlag(false);
+            }
+        }
+    });
 </script>
 
 <HStack className="flex-1 overflow-hidden m-2.5">
@@ -66,12 +83,18 @@
             </div>
         {/if}
     </VStack>
-    <div class="grow bg-gray-50 dark:bg-gray-700 rounded-2xl shadow p-6 flex flex-col space-y-2 mx-8">
+    <div class="grow bg-gray-50 dark:bg-gray-700 rounded-2xl shadow p-6 flex flex-col space-y-2 mx-8 text-sm font-medium">
         {#if selectedScout?.exclusivePlayers?.length}
             <p>专有球员</p>
             <div class="ml-8">
                 {#each selectedScout.exclusivePlayers as item}
-                    <p>{item}</p>
+                    <HStack>
+                        <p class="w-[100px]">{item.name}</p>
+                        {#if item.teamId}
+                            <p class="ml-4">{teamsData[item.teamId]}</p>
+                            <p class="ml-4">{item.age}岁</p>
+                        {/if}
+                    </HStack>
                 {/each}
             </div>
         {/if}
@@ -79,7 +102,13 @@
             <p>半专有球员</p>
             <div class="ml-8">
                 {#each selectedScout.simiExclusivePlayers as item}
-                    <p>{item}</p>
+                    <HStack>
+                        <p class="w-[100px]">{item.name}</p>
+                        {#if item.teamId}
+                            <p class="ml-4">{teamsData[item.teamId]}</p>
+                            <p class="ml-4">{item.age}岁</p>
+                        {/if}
+                    </HStack>
                 {/each}
             </div>
         {/if}

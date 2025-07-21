@@ -215,7 +215,7 @@
     <div class="form">
         <div class="label">成长类型</div>
         <HStack className="items-center space-x-2">
-            <Tooltip text="身体">
+            <Tooltip text="身体" width="60px">
                 <div class="input">
                     <select bind:value={selectedGrowTypePhy} class="thin-select">
                         {#each sortedGrowType as [key, value]}
@@ -225,7 +225,7 @@
                     <DropDown />
                 </div>
             </Tooltip>
-            <Tooltip text="技术">
+            <Tooltip text="技术" width="60px">
                 <div class="input">
                     <select bind:value={selectedGrowTypeTec} class="thin-select">
                         {#each sortedGrowType as [key, value]}
@@ -235,7 +235,7 @@
                     <DropDown />
                 </div>
             </Tooltip>
-            <Tooltip text="头脑">
+            <Tooltip text="头脑" width="60px">
                 <div class="input">
                     <select bind:value={selectedGrowTypeSys} class="thin-select">
                         {#each sortedGrowType as [key, value]}
@@ -261,17 +261,17 @@
     <div class="form">
         <div class="label">能力值</div>
         <HStack className="items-center space-x-2">
-            <Tooltip text="当前">
+            <Tooltip text="当前" width="60px">
                 <div class="input">
                     <input type="number" min="1" max="65535" bind:value={selectedAbility.current} class="number" required />
                 </div>
             </Tooltip>
-            <Tooltip text="潜力">
+            <Tooltip text="潜力" width="60px">
                 <div class="input">
                     <input type="number" min="1" max="65535" bind:value={selectedAbility.currentMax} class="number" required />
                 </div>
             </Tooltip>
-            <Tooltip text="上限">
+            <Tooltip text="上限" width="60px">
                 <div class="input">
                     <input type="number" min="1" max="65535" bind:value={selectedAbility.max} class="number" required />
                 </div>
