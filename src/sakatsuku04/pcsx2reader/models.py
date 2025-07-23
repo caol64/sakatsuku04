@@ -49,7 +49,7 @@ class MyPlayer:
     born: IntByteField
     born2: IntByteField
     abroad_times: IntByteField
-    injury_days: IntByteField
+    return_days: IntByteField
     height: IntByteField
     foot: IntByteField
     rank: IntByteField
@@ -78,6 +78,9 @@ class MyPlayer:
     offer_years_total: IntByteField
     test: IntByteField = IntByteField(0, 0, 0)
     un: list[int]
+    kan: IntByteField
+    moti: IntByteField
+    power: IntByteField
 
     def set_style(self, style_index: int):
         new_int = (self.style_learned2.value << 32) | self.style_learned1.value
@@ -126,6 +129,9 @@ class MyPlayer:
             salary_low=self.salary.value * 100 % 10000,
             offer_years_passed=self.offer_years_passed.value,
             offer_years_total=self.offer_years_total.value,
+            power=self.power.value,
+            moti=self.moti.value,
+            kan=self.kan.value,
         )
 
 

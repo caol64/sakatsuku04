@@ -147,6 +147,8 @@ class MainApp:
             self.save_my_town,
             self.fetch_my_scouts,
             self.fetch_my_album_players,
+            self.fetch_abroads,
+            self.fetch_one_abroad,
         )
 
     def get_version(self) -> str:
@@ -204,6 +206,12 @@ class MainApp:
 
     def fetch_my_album_players(self) -> list:
         return self.data_raader.read_my_album_players()
+
+    def fetch_abroads(self, type: int) -> list:
+        return [f.model_dump(by_alias=True) for f in self.data_raader.read_my_abroads(type)]
+
+    def fetch_one_abroad(self, index: int, type: int) -> dict:
+        return self.data_raader.read_one_abroad(index, type).model_dump(by_alias=True)
 
     def save_my_player(self, data: dict, team: int) -> dict:
         player_data = MyPlayerDto.model_validate(data)

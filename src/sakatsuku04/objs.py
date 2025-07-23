@@ -104,4 +104,27 @@ class Scout:
 
     @classmethod
     def name(cls, id: int) -> str:
-        return Scout.scout_dict().get(id)[0]
+        return cls.scout_dict().get(id)[0]
+
+
+class Coach:
+    _coach_dict: Optional[dict] = None
+
+    @classmethod
+    def coach_dict(cls) -> dict[int, list[str]]:
+        if cls._coach_dict is None:
+            cls._coach_dict = dict()
+            file = "bcoachs_zh.csv" if CnVer.is_cn else "bcoachs_jp.csv"
+            with open(get_resource_path(file), 'r', encoding='utf8', newline='') as csvfile:
+                reader = csv.reader(csvfile)
+                for i, row in enumerate(reader):
+                    cls._coach_dict[i + 20000] = row
+        return cls._coach_dict
+
+    @classmethod
+    def reset_coach_dict(cls):
+        cls._coach_dict = None
+
+    @classmethod
+    def name(cls, id: int) -> str:
+        return cls.coach_dict().get(id)[0]

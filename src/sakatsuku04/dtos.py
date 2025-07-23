@@ -2,7 +2,7 @@ from typing import Optional
 from pydantic import BaseModel, ConfigDict, computed_field
 from pydantic.alias_generators import to_camel
 
-from .objs import Player, Scout
+from .objs import Coach, Player, Scout
 from .utils import calc_abil_eval, calc_apos_eval, calc_grow_eval, find_badden_match, is_album_player, ability_to_lv, lv_to_dot
 from . import constants
 
@@ -78,6 +78,9 @@ class MyPlayerDto(BaseDto):
     salary_low: int
     offer_years_passed: int
     offer_years_total: int
+    kan: int
+    moti: int
+    power: int
 
     @computed_field
     @property
@@ -227,6 +230,48 @@ class ScoutDto(BaseDto):
     simi_exclusive_players: Optional[list[SearchDto]] = None
 
 
+abr_camp_base = [constants.abr_base, constants.camp_base]
+
+class AbroadCond(BaseDto):
+    id: int
+    cond: Optional[list[str | int]]
+
+class AbroadDto(BaseDto):
+    id: int
+    is_enabled: Optional[bool] = None
+    cond: Optional[AbroadCond] = None
+    abr_up: Optional[list[int]] = None
+    abr_uprate: Optional[list[int]] = None
+    abr_days: int = 0
+
+    @classmethod
+    def get_abr_camp_teams(cls, type: int) -> list['AbroadDto']:
+        results = []
+        for item in abr_camp_base[type]:
+            dto = AbroadDto(id=item[0])
+            results.append(dto)
+        return results
+
+    @classmethod
+    def get_abr_camp_dto(cls, index: int, type: int) -> list['AbroadDto']:
+        item = abr_camp_base[type][index]
+        dto = AbroadDto(id=item[0])
+        dto.abr_up = list(constants.abr_up[index])
+        dto.abr_uprate = list(constants.abr_uprate[index])
+        dto.abr_days = item[3]
+        cond_id = item[1] >> 4
+        cond_val = handle_cond(item[4: 14])
+        if cond_id == 1 or cond_id == 4:
+            dto.cond = AbroadCond(id=cond_id, cond=[])
+        elif cond_id == 5:
+            dto.cond = AbroadCond(id=cond_id, cond=[Player(f).name for f in cond_val])
+        elif cond_id == 6:
+            dto.cond = AbroadCond(id=cond_id, cond=[Coach.name(f + 20000) for f in cond_val])
+        elif cond_id == 7 or  cond_id == 3 or cond_id == 2:
+            dto.cond = AbroadCond(id=cond_id, cond=cond_val)
+        return dto
+
+
 def _calc_avg(player: MyPlayerDto, indices: tuple[int], mode: int) -> int:
     total = 0
     count = 0
@@ -265,3 +310,6 @@ def calc_tac(player: MyPlayerDto, mode: int = 0) -> int:
 
 def calc_sta(player: MyPlayerDto, mode: int = 0) -> int:
     return _calc_avg(player, constants.abi_sta, mode)
+
+def handle_cond(cond_value: tuple[int]) -> list[int]:
+    return [f for f in cond_value if f != 0xffff and f != 0]

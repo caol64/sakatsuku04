@@ -90,7 +90,7 @@
                 {#each selectedScout.exclusivePlayers as item}
                     <HStack>
                         <p class="w-[100px]">{item.name}</p>
-                        {#if item.teamId}
+                        {#if item.teamId != null}
                             <p class="ml-4">{teamsData[item.teamId]}</p>
                             <p class="ml-4">{item.age}岁</p>
                         {/if}
@@ -104,7 +104,7 @@
                 {#each selectedScout.simiExclusivePlayers as item}
                     <HStack>
                         <p class="w-[100px]">{item.name}</p>
-                        {#if item.teamId}
+                        {#if item.teamId != null}
                             <p class="ml-4">{teamsData[item.teamId]}</p>
                             <p class="ml-4">{item.age}岁</p>
                         {/if}

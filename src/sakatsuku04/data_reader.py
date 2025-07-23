@@ -1,6 +1,6 @@
 from typing import Protocol
 
-from .dtos import ClubDto, MyPlayerDto, OtherTeamPlayerDto, ScoutDto, SearchDto, TownDto
+from .dtos import AbroadDto, ClubDto, MyPlayerDto, OtherTeamPlayerDto, ScoutDto, SearchDto, TownDto
 
 
 class DataReader(Protocol):
@@ -36,6 +36,12 @@ class DataReader(Protocol):
         ...
 
     def read_my_album_players(self) -> list[int]:
+        ...
+
+    def read_my_abroads(self, type: int) -> list[AbroadDto]:
+        ...
+
+    def read_one_abroad(self, index: int, type: int) -> AbroadDto:
         ...
 
     def save_club(self, data: ClubDto) -> bool:

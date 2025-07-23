@@ -68,7 +68,7 @@ class MyPlayer:
     born: IntBitField
     born2: IntBitField
     abroad_times: IntBitField
-    injury_days: IntBitField
+    return_days: IntBitField
     height: IntBitField
     foot: IntBitField
     rank: IntBitField
@@ -97,6 +97,9 @@ class MyPlayer:
     offer_years_total: IntBitField
     test: IntBitField = IntBitField(0, 0, 0)
     un: list[int]
+    kan: IntBitField
+    moti: IntBitField
+    power: IntBitField
 
     def __init__(self, index: int):
         self.index = index
@@ -150,6 +153,9 @@ class MyPlayer:
             salary_low=self.salary.value * 100 % 10000,
             offer_years_passed=self.offer_years_passed.value,
             offer_years_total=self.offer_years_total.value,
+            power=self.power.value,
+            moti=self.moti.value,
+            kan=self.kan.value,
         )
 
 
@@ -245,3 +251,7 @@ class Town:
             soccer_pop=self.soccer_pop.value,
             soccer_level=self.soccer_level.value,
         )
+
+class Sche:
+    abroad_list: list[IntBitField]
+    camp_list: list[IntBitField]

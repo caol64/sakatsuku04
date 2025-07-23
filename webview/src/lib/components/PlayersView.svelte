@@ -225,12 +225,15 @@
             </div>
             <!-- <p>修正指数<span>{myPlayer?.jlFactor}</span></p> -->
             <p>隐藏属性</p>
-            <div class="pl-4  text-sm">
-                <div><span>进取</span><span class="pl-8">{myPlayer?.desire}</span></div>
-                <div><span>高傲</span><span class="pl-8">{myPlayer?.pride}</span></div>
-                <div><span>野心</span><span class="pl-8">{myPlayer?.ambition}</span></div>
-                <div><span>毅力</span><span class="pl-8">{myPlayer?.persistence}</span></div>
-                <div><span>耐心</span><span class="pl-8">{myPlayer?.patient}</span></div>
+            <div class="pl-4 grid grid-cols-2 gap-x-1 text-sm text-left">
+                <div><span>赛感</span><span class="pl-3">{myPlayer?.kan}</span></div>
+                <div><span>状态</span><span class="pl-3">{myPlayer?.moti}</span></div>
+                <div><span>气力</span><span class="pl-3">{myPlayer?.power}</span></div>
+                <div><span>进取</span><span class="pl-3">{myPlayer?.desire}</span></div>
+                <div><span>高傲</span><span class="pl-3">{myPlayer?.pride}</span></div>
+                <div><span>野心</span><span class="pl-3">{myPlayer?.ambition}</span></div>
+                <div><span>韧性</span><span class="pl-3">{myPlayer?.persistence}</span></div>
+                <div><span>耐心</span><span class="pl-3">{myPlayer?.patient}</span></div>
             </div>
         </div>
         {#if selectedTeam === 0}

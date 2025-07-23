@@ -7,7 +7,7 @@ import struct
 from ..data_reader import DataReader
 from ..dtos import ClubDto, MyPlayerDto, MyTeamPlayerDto, OtherTeamPlayerDto, ScoutDto, SearchDto, TownDto
 from ..io import CnVer, IntByteField, StrByteField
-from ..objs import Player, Scout
+from ..objs import Player, Scout, Coach
 from ..utils import find_name_matches, get_album_bit_indices, reset_char_dict
 from ..constants import scout_excl_tbl, scout_simi_excl_tbl, team_ids
 from .models import Club, MyPlayer, MyPlayerAbility, MyScout, OtherPlayer, OtherTeam, Town
@@ -189,12 +189,12 @@ class Pcsx2DataReader(DataReader):
         player.height = self._read_int_byte(offset + 0x198 + i * 0x240)
         player.number = self._read_int_byte(offset + 0x19A + i * 0x240)
         player.foot = self._read_int_byte(offset + 0x19B + i * 0x240)
-        player.desire = self._read_int_byte(offset + 0x1AB + i * 0x240)
-        player.pride = self._read_int_byte(offset + 0x1AC + i * 0x240)
-        player.ambition = self._read_int_byte(offset + 0x1AD + i * 0x240)
-        player.persistence = self._read_int_byte(offset + 0x1AE + i * 0x240)
+        player.desire = self._read_int_byte(offset + 0x1AC + i * 0x240)
+        player.pride = self._read_int_byte(offset + 0x1AD + i * 0x240)
+        player.ambition = self._read_int_byte(offset + 0x1AE + i * 0x240)
+        player.persistence = self._read_int_byte(offset + 0x1AF + i * 0x240)
         player.tone_type = self._read_int_byte(offset + 0x1B1 + i * 0x240)
-        player.patient = self._read_int_byte(offset + 0x1B7 + i * 0x240)
+        player.patient = self._read_int_byte(offset + 0x1B8 + i * 0x240)
         player.cooperation_type = self._read_int_byte(offset + 0x1BA + i * 0x240)
         player.grow_type_id = self._read_int_byte(offset + 0x1BB + i * 0x240)
         player.grow_type_phy = self._read_int_byte(offset + 0x1BC + i * 0x240)
@@ -205,7 +205,10 @@ class Pcsx2DataReader(DataReader):
         player.salary = self._read_int_byte(offset + 0x1D6 + i * 0x240, 2)
         player.offer_years_passed = self._read_int_byte(offset + 0x1D9 + i * 0x240)
         player.offer_years_total = self._read_int_byte(offset + 0x1DA + i * 0x240)
-        player.injury_days = self._read_int_byte(offset + 0x208 + i * 0x240, 2)
+        player.moti = self._read_int_byte(offset + 0x1F8 + i * 0x240, 4)
+        player.power = self._read_int_byte(offset + 0x204 + i * 0x240, 2)
+        player.kan = self._read_int_byte(offset + 0x206 + i * 0x240, 2)
+        player.return_days = self._read_int_byte(offset + 0x208 + i * 0x240, 2)
         player.abroad_times = self._read_int_byte(offset + 0x211 + i * 0x240)
         player.style_equip = self._read_int_byte(offset + 0x228 + i * 0x240)
         player.style_learned1 = self._read_int_byte(offset + 0x22C + i * 0x240, 4)
@@ -272,6 +275,7 @@ class Pcsx2DataReader(DataReader):
                 CnVer.set_ver(ver)
                 Player.reset_player_dict()
                 Scout.reset_scout_dict()
+                Coach.reset_coach_dict()
                 reset_char_dict()
             return is_connected
         except Exception as e:

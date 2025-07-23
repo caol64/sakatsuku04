@@ -86,6 +86,9 @@ export interface MyPlayer {
     phyGrows?: number[];
     tecGrows?: number[];
     sysGrows?: number[];
+    power?: number;
+    moti?: number;
+    kan?: number;
 }
 
 export interface MyPlayerAbility {
@@ -126,4 +129,18 @@ export interface Search {
     cooperation?: number;
     tone?: number;
     teamId?: number;
+}
+
+export interface AbroadCond {
+    id: number;
+    cond: number[] | string[];
+}
+
+export interface Abroad {
+    id: number;
+    isEnabled: boolean;
+    cond?: AbroadCond;
+    abrUp: number[];
+    abrUprate: number[];
+    abrDays: number;
 }

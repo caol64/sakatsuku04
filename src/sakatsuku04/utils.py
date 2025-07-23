@@ -252,3 +252,19 @@ def get_album_bit_indices(data: bytearray) -> list[int]:
                 indices.append(global_bit_index)
             start += 1
     return indices
+
+def calc_abbr_years_and_times_factor(years: int, abr_times: int, abr_team_index: int) -> float:
+    if abr_times > 2:
+        abr_times = 2
+    factor = (constants.abr_uprate[abr_team_index][years] * constants.abr_times_factor[abr_times]) / 1000 * 2000
+    return factor
+
+
+def calc_grow_factor_by_grow_type_and_age(grow_type: int, psm_type: int, age: int) -> int:
+    """
+    psm_type: 0 phy, 1: tec, 2: sys
+    """
+    age = age - 16
+    tbl_list = [constants.tbl_phy_grow_type, constants.tbl_tec_grow_type, constants.tbl_sys_grow_type]
+    factor = tbl_list[psm_type][grow_type][age]
+    return factor
