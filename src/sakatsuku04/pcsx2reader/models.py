@@ -81,6 +81,11 @@ class MyPlayer:
     kan: IntByteField
     moti: IntByteField
     power: IntByteField
+    super_sub: IntByteField
+    wild_type: IntByteField
+    weak_type: IntByteField
+    tired_type: IntByteField
+    pop: IntByteField
 
     def set_style(self, style_index: int):
         new_int = (self.style_learned2.value << 32) | self.style_learned1.value
@@ -132,6 +137,11 @@ class MyPlayer:
             power=self.power.value,
             moti=self.moti.value,
             kan=self.kan.value,
+            super_sub=self.super_sub.value,
+            wild_type=self.wild_type.value,
+            weak_type=self.weak_type.value,
+            tired_type=self.tired_type.value,
+            pop=self.pop.value,
         )
 
 
@@ -181,6 +191,7 @@ class Town:
     traffic_level: IntByteField
     soccer_pop: IntByteField
     soccer_level: IntByteField
+    town_type: IntByteField
 
     def to_dto(self):
         return TownDto(
@@ -193,6 +204,7 @@ class Town:
             traffic_level=self.traffic_level.value,
             soccer_pop=self.soccer_pop.value,
             soccer_level=self.soccer_level.value,
+            town_type=self.town_type.value,
         )
 
 
@@ -218,3 +230,7 @@ class MyScout:
             name=Scout.name(id),
         )
 
+
+class Sche:
+    abroad_list: list[IntByteField]
+    camp_list: list[IntByteField]

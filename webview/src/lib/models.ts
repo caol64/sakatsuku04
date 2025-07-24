@@ -89,6 +89,11 @@ export interface MyPlayer {
     power?: number;
     moti?: number;
     kan?: number;
+    superSub?: number;
+    wildType?: number;
+    weakType?: number;
+    tiredType?: number;
+    pop?: number;
 }
 
 export interface MyPlayerAbility {
@@ -109,6 +114,7 @@ export interface MyTown {
     trafficLevel?: number;
     soccerPop?: number;
     soccerLevel?: number;
+    townType?: number;
 }
 
 

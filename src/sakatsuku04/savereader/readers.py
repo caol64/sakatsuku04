@@ -209,7 +209,8 @@ class TeamReader(BaseReader):
             [0x10, 3, 8] * (0x12 + 0x16 * 3), 4 * (0x12 + 0x16 * 3)
         )
         # 0x71288c d788(156) 球探list
-        team.my_scouts = list()
+        team.my_scouts = []
+        team.transfer_players = []
         for _ in range(3):
             self.bit_stream.unpack_bits(4, 2)  # index
             name = self.bit_stream.unpack_str(0xD) # 2(d)
@@ -234,7 +235,12 @@ class TeamReader(BaseReader):
             id = a[3]  # 0x7128c3 0x36(2)
             # 0x7128c8 0xd7c4 转会球员list
             for _ in range(5):
-                self.bit_stream.unpack_bits([0x10, 0xB, 4, 6, 8], 8)
+                a = self.bit_stream.unpack_bits([0x10, 0xB, 4, 6, 8], 8)
+                tp_id = a[0] # 0xd7c4(2)
+                tp_age = a[1] # 0xd7c6(2)
+                if tp_id.value != 0xffff:
+                    tp = OtherPlayer(id=tp_id, age=tp_age)
+                    team.transfer_players.append(tp)
                 self.bit_stream.unpack_bits([0x10, 0x10, 3, 8], 6)
             self.bit_stream.unpack_bits([0xE, 4, 5, 3], 6)
             self.bit_stream.unpack_bits(
@@ -349,13 +355,23 @@ class TeamReader(BaseReader):
             self.bit_stream.unpack_bits([8] * (0x15 + 0x2B))
             self.bit_stream.unpack_bits([8, -6, 0x10], 5)
         # 0x72bcf4 0x26bf0 自由球员
+        team.free_players = []
         for _ in range(16):
             a = self.bit_stream.unpack_bits([0x10, 0xB], 4)
+            fp_id = a[0] # 0x26bf0
+            fp_age = a[1] # 0x26bf0
+            if fp_id.value != 0xffff:
+                team.free_players.append(OtherPlayer(id=fp_id, age=fp_age))
             self.bit_stream.unpack_bits([4, 6, 8], 4)
             self.bit_stream.unpack_bits([0x10, 0x10, 3, 8], 6)
         # 0x72bdd4 0x26cd0 新人球员
+        team.rookie_players = []
         for _ in range(36):
             a = self.bit_stream.unpack_bits([0x10, 0xB], 4)
+            rk_id = a[0] # 0x26bf0
+            rk_age = a[1] # 0x26bf0
+            if rk_id.value != 0xffff:
+                team.rookie_players.append(OtherPlayer(id=rk_id, age=rk_age))
             self.bit_stream.unpack_bits([4, 6, 8], 4)
             self.bit_stream.unpack_bits([0x10, 0x10, 3, 8], 6)
         # 0x72bfcc
@@ -456,10 +472,10 @@ class TeamReader(BaseReader):
             players[i].grow_type_tec = self.bit_stream.unpack_bits(4, 1)  # 0x70539D 1bd
             players[i].grow_type_sys = self.bit_stream.unpack_bits(4, 1)  # 0x70539E 1be
             a = self.bit_stream.unpack_bits([7, 4, 7, 3, 3, 7], 6)
-            super_sub = a[0] # 0x70539f 1bf
-            wild_type = a[2] # 0x7053a1 1c1
-            weak_type = a[3] # 0x7053a2 1c2
-            tired_type = a[4] # 0x7053a3 1c3
+            players[i].super_sub = a[0] # 0x70539f 1bf
+            players[i].wild_type = a[2] # 0x7053a1 1c1
+            players[i].weak_type = a[3] # 0x7053a2 1c2
+            players[i].tired_type = a[4] # 0x7053a3 1c3
             base_pop = a[5] # 0x7053a4 1c4
             players[i].style = self.bit_stream.unpack_bits(5, 1)  # 0x7053a5 1c5
             a = self.bit_stream.unpack_bits([1, 3, 4], 6)
@@ -485,7 +501,7 @@ class TeamReader(BaseReader):
             comp_result = a[4]  # 0x7053c6 1e6(2) 成绩不满
             comp_status = a[5]  # 0x7053c8 1e8(2) 状态不满
             comp_euipment = a[6]  # 0x7053ca 1ea(2) 训练设施不满
-            pop = a[7]  # 0x7053cc 1ec(2) 人气
+            players[i].pop = a[7]  # 0x7053cc 1ec(2) 人气
             pop_local = a[8]  # 0x7053ce 1ee(2) 本地人气
             pop_oversea = a[9]  # 0x7053d0 1f0(2) 海外人气
             tired = a[10]  # 0x7053D2 1f2(2)
@@ -660,7 +676,7 @@ class TownReader(BaseReader):
         # self.print_mem_offset(0x7354f0)
         # 0x73552c 0x3c
         a = self.bit_stream.unpack_bits([3, 4, 8], 3)
-        town_type = a[1] # 0x3d
+        town.town_type = a[1] # 0x3d
         self.bit_stream.unpack_bits([1] * 0xD, 13)
         self.bit_stream.unpack_bits([1] * (0x27 * 3), 117)
         self.bit_stream.unpack_bits([4] * 0xD, 13)
@@ -895,35 +911,65 @@ class SaveDataReader(DataReader):
         tone = data.tone
         cooperation = data.cooperation
         rank = data.rank
+        scout_action = data.scout_action
         ids = []
-        for team in self.other_teams:
-            for player in team.players:
-                if player.id.value != 0xFFFF:
-                    if age and age != player.age.value:
-                        continue
-                    ids.append(player.id.value)
+        if not scout_action:
+            for team in self.other_teams:
+                for player in team.players:
+                    if player.id.value != 0xFFFF:
+                        if age and age != player.age.value:
+                            continue
+                        ids.append(player.id.value)
+        elif scout_action == 1:
+            for p in self.my_team.transfer_players:
+                ids.append(p.id.value)
+        elif scout_action == 2:
+            for p in self.my_team.free_players:
+                ids.append(p.id.value)
+        elif scout_action == 3:
+            for p in self.my_team.rookie_players:
+                ids.append(p.id.value)
         filter_players = {k: v for k, v in Player.player_dict().items() if k in ids}
         filter_ids = find_name_matches(filter_players, name) if name else ids
         result = []
-        for i, team in enumerate(self.other_teams):
-            for player in team.players:
-                if player.id.value in filter_ids:
-                    dto = player.to_dto()
-                    if pos is not None and pos != dto.pos:
-                        continue
-                    if country is not None and (
-                        (country == 50 and dto.born > 50)
-                        or (country != 50 and dto.born != country)
-                    ):
-                        continue
-                    if tone is not None and tone != dto.tone_type:
-                        continue
-                    if cooperation is not None and cooperation != dto.cooperation_type:
-                        continue
-                    if rank is not None and rank != dto.rank:
-                        continue
-                    dto.team_index = i
-                    result.append(dto)
+        if not scout_action:
+            for i, team in enumerate(self.other_teams):
+                for player in team.players:
+                    if player.id.value in filter_ids:
+                        dto = player.to_dto()
+                        if pos is not None and pos != dto.pos:
+                            continue
+                        if country is not None and (
+                            (country == 50 and dto.born > 50)
+                            or (country != 50 and dto.born != country)
+                        ):
+                            continue
+                        if tone is not None and tone != dto.tone_type:
+                            continue
+                        if cooperation is not None and cooperation != dto.cooperation_type:
+                            continue
+                        if rank is not None and rank != dto.rank:
+                            continue
+                        dto.team_index = i
+                        result.append(dto)
+        # else:
+        #     for id in filter_ids:
+        #         dto = player.to_dto()
+        #         if pos is not None and pos != dto.pos:
+        #             continue
+        #         if country is not None and (
+        #             (country == 50 and dto.born > 50)
+        #             or (country != 50 and dto.born != country)
+        #         ):
+        #             continue
+        #         if tone is not None and tone != dto.tone_type:
+        #             continue
+        #         if cooperation is not None and cooperation != dto.cooperation_type:
+        #             continue
+        #         if rank is not None and rank != dto.rank:
+        #             continue
+        #         dto.team_index = -1
+        #         result.append(dto)
         return result
 
     def read_town(self) -> TownDto:

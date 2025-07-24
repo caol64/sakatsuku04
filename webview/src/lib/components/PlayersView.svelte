@@ -141,9 +141,9 @@
 
     <VStack className="w-1/5 mx-1">
         <div class="border border-gray-200 dark:border-gray-600 rounded-md p-4 space-y-2 bg-gray-50 dark:bg-gray-700">
-            <p class="flex items-center justify-between text-sm">
+            <p class="flex items-center justify-between">
                 姓名
-                <span class="flex-1 pl-8">{myPlayer?.name}</span>
+                <span class="flex-1 pl-8 text-sm">{myPlayer?.name}</span>
                 {#if myPlayer?.spComment}
                     {@const tooltipText = `${myPlayer.spComment}`}
                     <Tooltip text={tooltipText} width="250px">
@@ -187,9 +187,9 @@
                 对战评价
                 <span class="pl-8 text-sm">{getRank(myPlayer?.rank)}</span>
             </p>
-            <p class="flex items-center justify-between text-sm">
+            <p class="flex items-center justify-between">
                 连携
-                <span  class="flex-1 pl-8">{getCooperationType(myPlayer?.cooperationType)}</span>
+                <span  class="flex-1 pl-8 text-sm">{getCooperationType(myPlayer?.cooperationType)}</span>
                 {#if myPlayer?.baddenPlayers}
                     {@const tooltipText = `连携崩坏：<br>${myPlayer.baddenPlayers.join("<br>")}`}
                     <Tooltip text={tooltipText} width="100px">
@@ -226,14 +226,16 @@
             <!-- <p>修正指数<span>{myPlayer?.jlFactor}</span></p> -->
             <p>隐藏属性</p>
             <div class="pl-4 grid grid-cols-2 gap-x-1 text-sm text-left">
-                <div><span>赛感</span><span class="pl-3">{myPlayer?.kan}</span></div>
-                <div><span>状态</span><span class="pl-3">{myPlayer?.moti}</span></div>
-                <div><span>气力</span><span class="pl-3">{myPlayer?.power}</span></div>
+                <div><span>人气</span><span class="pl-3">{myPlayer?.pop}</span></div>
                 <div><span>进取</span><span class="pl-3">{myPlayer?.desire}</span></div>
                 <div><span>高傲</span><span class="pl-3">{myPlayer?.pride}</span></div>
                 <div><span>野心</span><span class="pl-3">{myPlayer?.ambition}</span></div>
                 <div><span>韧性</span><span class="pl-3">{myPlayer?.persistence}</span></div>
                 <div><span>耐心</span><span class="pl-3">{myPlayer?.patient}</span></div>
+                <div><span>超级替补</span><span class="pl-3">{myPlayer?.superSub}</span></div>
+                <div><span>公平竞赛</span><span class="pl-3">{myPlayer?.wildType}</span></div>
+                <div><span>受伤耐性</span><span class="pl-3">{myPlayer?.weakType}</span></div>
+                <div><span>疲劳耐性</span><span class="pl-3">{myPlayer?.tiredType}</span></div>
             </div>
         </div>
         {#if selectedTeam === 0}

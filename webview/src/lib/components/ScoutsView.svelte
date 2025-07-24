@@ -83,36 +83,38 @@
             </div>
         {/if}
     </VStack>
-    <div class="grow bg-gray-50 dark:bg-gray-700 rounded-2xl shadow p-6 flex flex-col space-y-2 mx-8 text-sm font-medium">
-        {#if selectedScout?.exclusivePlayers?.length}
-            <p>专有球员</p>
-            <div class="ml-8">
-                {#each selectedScout.exclusivePlayers as item}
-                    <HStack>
-                        <p class="w-[100px]">{item.name}</p>
-                        {#if item.teamId != null}
-                            <p class="ml-4">{teamsData[item.teamId]}</p>
-                            <p class="ml-4">{item.age}岁</p>
-                        {/if}
-                    </HStack>
-                {/each}
-            </div>
-        {/if}
-        {#if selectedScout?.simiExclusivePlayers?.length}
-            <p>半专有球员</p>
-            <div class="ml-8">
-                {#each selectedScout.simiExclusivePlayers as item}
-                    <HStack>
-                        <p class="w-[100px]">{item.name}</p>
-                        {#if item.teamId != null}
-                            <p class="ml-4">{teamsData[item.teamId]}</p>
-                            <p class="ml-4">{item.age}岁</p>
-                        {/if}
-                    </HStack>
-                {/each}
-            </div>
-        {/if}
-    </div>
+    <VStack className="grow ml-8 space-y-2">
+        <div class="h-fit bg-gray-50 dark:bg-gray-700 rounded-2xl shadow p-6 flex flex-col space-y-2 text-sm font-medium">
+            {#if selectedScout?.exclusivePlayers?.length}
+                <p>专有球员</p>
+                <div class="ml-8">
+                    {#each selectedScout.exclusivePlayers as item}
+                        <HStack>
+                            <p class="w-[100px]">{item.name}</p>
+                            {#if item.teamId != null}
+                                <p class="ml-4">{teamsData[item.teamId]}</p>
+                                <p class="ml-4">{item.age}岁</p>
+                            {/if}
+                        </HStack>
+                    {/each}
+                </div>
+            {/if}
+            {#if selectedScout?.simiExclusivePlayers?.length}
+                <p>半专有球员</p>
+                <div class="ml-8">
+                    {#each selectedScout.simiExclusivePlayers as item}
+                        <HStack>
+                            <p class="w-[100px]">{item.name}</p>
+                            {#if item.teamId != null}
+                                <p class="ml-4">{teamsData[item.teamId]}</p>
+                                <p class="ml-4">{item.age}岁</p>
+                            {/if}
+                        </HStack>
+                    {/each}
+                </div>
+            {/if}
+        </div>
+    </VStack>
 </HStack>
 
 

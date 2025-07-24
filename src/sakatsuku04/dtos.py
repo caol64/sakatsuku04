@@ -81,6 +81,11 @@ class MyPlayerDto(BaseDto):
     kan: int
     moti: int
     power: int
+    super_sub: int
+    wild_type: int
+    weak_type: int
+    tired_type: int
+    pop: int
 
     @computed_field
     @property
@@ -209,6 +214,7 @@ class SearchDto(BaseDto):
     tone: Optional[int] = None
     cooperation: Optional[int] = None
     team_id: Optional[int] = None
+    scout_action: Optional[int] = None
 
 class TownDto(BaseDto):
     living: int
@@ -220,6 +226,7 @@ class TownDto(BaseDto):
     traffic_level: int
     soccer_pop: int
     soccer_level: int
+    town_type: int
 
 
 class ScoutDto(BaseDto):
@@ -231,6 +238,8 @@ class ScoutDto(BaseDto):
 
 
 abr_camp_base = [constants.abr_base, constants.camp_base]
+abr_camp_uprate = [constants.abr_uprate, constants.camp_uprate_k]
+abr_camp_up = [constants.abr_up, constants.camp_up_k]
 
 class AbroadCond(BaseDto):
     id: int
@@ -256,11 +265,19 @@ class AbroadDto(BaseDto):
     def get_abr_camp_dto(cls, index: int, type: int) -> list['AbroadDto']:
         item = abr_camp_base[type][index]
         dto = AbroadDto(id=item[0])
-        dto.abr_up = list(constants.abr_up[index])
-        dto.abr_uprate = list(constants.abr_uprate[index])
+        dto.abr_up = list(abr_camp_up[type][index])
+        dto.abr_uprate = list(abr_camp_uprate[type][index])
         dto.abr_days = item[3]
         cond_id = item[1] >> 4
         cond_val = handle_cond(item[4: 14])
+        if type == 1:
+            abr_up = dto.abr_up
+            keep_indices = [0x29, 0x2A, 0x26, 0x24, 0x25, 0x1c, 0x1d]
+            kept = [abr_up[i] for i in keep_indices]
+            del abr_up[28:54]
+            abr_up.extend(kept)
+            abr_up.extend([0xc, 10, 0xc, 10])
+
         if cond_id == 1 or cond_id == 4:
             dto.cond = AbroadCond(id=cond_id, cond=[])
         elif cond_id == 5:

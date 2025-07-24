@@ -6,8 +6,10 @@
     import teamsData from "$locales/teams_zh.json";
     import condType from "$locales/cond_type_zh.json";
     import townType from "$locales/town_type_zh.json";
+    import sponsors from "$locales/sponsor_zh.json";
     import { getRefreshFlag, getSelectedTab, setIsLoading, setRefreshFlag } from "$lib/globalState.svelte";
     import { sortedAbilities } from "$lib/utils";
+    import abilityCamp from "$locales/ability_camp_zh.json";
     import AbrAbilityBar from "./AbrAbilityBar.svelte";
     import Check from "$lib/icons/Check.svelte";
 
@@ -26,21 +28,28 @@
         const cond = selectedAbroad.cond;
         if (cond) {
             if (cond.id === 2) {
-                return cond.cond.map((i) => townType[Number(i)]);
+                return cond.cond.map((i) => sponsors[Number(i)]);
             } else if (cond.id === 7) {
-                return cond.cond;
+                return cond.cond.map((i) => townType[Number(i)]);
             } else {
                 return cond.cond;
             }
         }
         return [];
     });
-    let abilityPairs = $derived(
-        sortedAbilities.map((label, i) => ({
-            label,
-            value: selectedAbroad.abrUp[i]
-        }))
-    );
+    let abilityPairs = $derived.by(() => {
+        if (selectedType === 0) {
+            return sortedAbilities.map((label, i) => ({
+                label,
+                value: selectedAbroad.abrUp[i]
+            }));
+        } else {
+            return abilityCamp.map((label, i) => ({
+                label,
+                value: selectedAbroad.abrUp[i]
+            }));
+        }
+    });
     let currentBestTime = $derived.by(() => {
         if (selectedAbroad.abrDays != 0) {
             return fixedTimeZh[selectedAbroad.abrDays - 1];
@@ -56,7 +65,7 @@
     let currentGrowType = $derived.by(() => {
         const abrUprate = selectedAbroad.abrUprate;
         if (abrUprate) {
-            return getGrowType([abrUprate[3], abrUprate[4]]);
+            return selectedType === 0 ? getAbrGrowType([abrUprate[3], abrUprate[4]]) : getCampGrowType(abrUprate[0]);
         }
         return "";
     });
@@ -114,7 +123,7 @@
         return diffs.indexOf(maxDiff);
     }
 
-    function getGrowType(input: [number, number]): string {
+    function getAbrGrowType(input: [number, number]): string {
         if (input[0] >= 90) {
             return "实能";
         } else if (input[1] >= 90) {
@@ -123,6 +132,24 @@
             return "平均";
         }
     }
+
+    function getCampGrowType(input: number): string {
+        if (input >= 40) {
+            return "界限";
+        } else {
+            return "实能";
+        }
+    }
+
+    $effect(() => {
+        if(getRefreshFlag() && getSelectedTab() === "Abroad") {
+            try {
+                fetchAbroads();
+            } finally {
+                setRefreshFlag(false);
+            }
+        }
+    });
 
     const bestTimeZh = ["短期", "标准", "长期"];
     const fixedTimeZh = ["半年限定", "一年限定", "两年限定"];
@@ -163,7 +190,11 @@
             <HStack className="items-center">
                 <span class="w-24 text-sm">{label}</span>
                 {#if value != null}
-                    <AbrAbilityBar value={value} />
+                    {#if selectedType === 0}
+                        <AbrAbilityBar value={value} />
+                    {:else}
+                        <AbrAbilityBar value={value} min={0} max={15} />
+                    {/if}
                 {/if}
             </HStack>
         {/each}
@@ -171,7 +202,7 @@
 
     <VStack className="grow mx-1">
         <div class="border border-gray-200 dark:border-gray-600 rounded-md space-y-4 p-4 bg-gray-50 dark:bg-gray-700">
-            <h3 class="text-xl font-bold">留学地信息</h3>
+            <h3 class="text-xl font-bold">{selectedType === 0 ? "留学地" : "集训地"}信息</h3>
             <div class="grid grid-cols-[80px_1fr] text-sm space-y-2 items-start">
 
                 <div>球队名称</div>
@@ -187,31 +218,38 @@
                     {/each}
                 </div>
 
-                <div>留学时间</div>
-                <div>{currentBestTime}</div>
+                {#if selectedType === 0}
+                    <div>留学时间</div>
+                    <div>{currentBestTime}</div>
 
-                <div>成长加成</div>
-                <VStack>
-                    <span>半年： {selectedAbroad.abrUprate[0]}</span>
-                    <span>一年： {selectedAbroad.abrUprate[1]}</span>
-                    <span>两年： {selectedAbroad.abrUprate[2]}</span>
-                </VStack>
+                    <div>成长加成</div>
+                    <VStack>
+                        <span>半年： {selectedAbroad.abrUprate[0]}</span>
+                        <span>一年： {selectedAbroad.abrUprate[1]}</span>
+                        <span>两年： {selectedAbroad.abrUprate[2]}</span>
+                    </VStack>
+                {/if}
 
                 <div>留学效果</div>
                 <div>{currentGrowType}</div>
 
                 <div>成长加成</div>
                 <VStack>
-                    <span>实能力： {selectedAbroad.abrUprate[3]}</span>
-                    <span>界限： {selectedAbroad.abrUprate[4]}</span>
+                    <span>实能力： {selectedType === 0 ? selectedAbroad.abrUprate[3] : selectedAbroad.abrUprate[1]}</span>
+                    <span>界限： {selectedType === 0 ? selectedAbroad.abrUprate[4] : selectedAbroad.abrUprate[0]}</span>
+                    {#if selectedType === 1}
+                        <span>连携： {selectedAbroad.abrUprate[2]}</span>
+                    {/if}
                 </VStack>
 
-                <div>成长加成</div>
-                <VStack>
-                    <span>第一次留学： 10</span>
-                    <span>第二次留学： 4</span>
-                    <span>第三次留学： 1</span>
-                </VStack>
+                {#if selectedType === 0}
+                    <div>成长加成</div>
+                    <VStack>
+                        <span>第一次留学： 10</span>
+                        <span>第二次留学： 4</span>
+                        <span>第三次留学： 1</span>
+                    </VStack>
+                {/if}
             </div>
         </div>
     </VStack>

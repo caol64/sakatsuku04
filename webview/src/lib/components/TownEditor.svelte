@@ -2,6 +2,7 @@
     import { getRefreshFlag, getSelectedTab, setIsLoading, setRefreshFlag } from "$lib/globalState.svelte";
     import type { MyTown } from "$lib/models";
     import { onMount } from "svelte";
+    import townType from "$locales/town_type_zh.json";
 
     let myTown: MyTown = $state({});
 
@@ -50,6 +51,11 @@
 
 <div class="bg-gray-50 dark:bg-gray-700 rounded-2xl shadow p-6 flex flex-col space-y-8 m-8">
     <h2 class="text-xl font-bold">城市信息</h2>
+    <div class="grid grid-cols-3 items-center w-fit">
+        <span class="label">类型</span>
+        <span>{myTown.townType != null ? townType[myTown.townType] : ""}</span>
+        <span class="w-52"></span>
+    </div>
     <div class="grid grid-cols-3 items-center w-fit">
         <span class="label">人口</span>
         <span>{myTown.population}</span>

@@ -100,6 +100,11 @@ class MyPlayer:
     kan: IntBitField
     moti: IntBitField
     power: IntBitField
+    super_sub: IntBitField
+    wild_type: IntBitField
+    weak_type: IntBitField
+    tired_type: IntBitField
+    pop: IntBitField
 
     def __init__(self, index: int):
         self.index = index
@@ -156,6 +161,11 @@ class MyPlayer:
             power=self.power.value,
             moti=self.moti.value,
             kan=self.kan.value,
+            super_sub=self.super_sub.value,
+            wild_type=self.wild_type.value,
+            weak_type=self.weak_type.value,
+            tired_type=self.tired_type.value,
+            pop=self.pop.value,
         )
 
 
@@ -167,13 +177,16 @@ class MyTeam:
     my_scouts: list["MyScout"]
     scout_candidates: list["MyScout"]
     album_players: list[IntBitField]
+    transfer_players: list["OtherPlayer"]
+    free_players: list["OtherPlayer"]
+    rookie_players: list["OtherPlayer"]
 
 
 @dataclass
 class OtherPlayer:
     id: IntBitField
     age: IntBitField
-    ability_graph: IntBitField
+    ability_graph: IntBitField = None
     number: IntBitField = None
 
     def to_dto(self):
@@ -238,6 +251,7 @@ class Town:
     traffic_level: IntBitField
     soccer_pop: IntBitField
     soccer_level: IntBitField
+    town_type: IntBitField
 
     def to_dto(self):
         return TownDto(
@@ -250,6 +264,7 @@ class Town:
             traffic_level=self.traffic_level.value,
             soccer_pop=self.soccer_pop.value,
             soccer_level=self.soccer_level.value,
+            town_type=self.town_type.value,
         )
 
 class Sche:

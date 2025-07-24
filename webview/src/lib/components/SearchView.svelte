@@ -22,15 +22,19 @@
     let selectedRank = $state("");
     let selectedTone = $state("");
     let selectedCooperationType = $state("");
+    let selectedScoutAction = $state("");
     let placeholderPos = "不指定";
     let placeholderAge = "不指定";
     let placeholderCountry = "不指定";
     let placeholderRank = "不指定";
     let placeholderTone = "不指定";
     let placeholderCooperationType = "不指定";
+    let placeholderScoutAction = "不指定";
 
-    function isSearchValid(name?: string, pos?: number, age?: number, country?: number, rank?: number, cooperation?: number, tone?: number): boolean {
-        return !!(name || pos || age || country || rank || cooperation || tone); // 防止返回undefined
+    const scoutActions = ["转会市场", "自由球员", "新秀"];
+
+    function isSearchValid(name?: string, pos?: number, age?: number, country?: number, rank?: number, cooperation?: number, tone?: number, scoutAction?: number): boolean {
+        return !!(name || pos || age || country || rank || cooperation || tone || scoutAction); // 防止返回undefined
     }
 
 
@@ -42,9 +46,9 @@
         const rank = selectedRank ? fromHex(selectedRank) + 1 : undefined;
         const cooperation = selectedCooperationType && !isNaN(Number(selectedCooperationType)) ? Number(selectedCooperationType) + 1 : undefined;
         const tone = selectedTone && !isNaN(Number(selectedTone)) ? Number(selectedTone) + 1 : undefined;
-
-        if (!isSearchValid(name, pos, age, country, rank, cooperation, tone)) {
-            alert("请至少填写一个搜索条件（姓名、位置、年龄、国籍、等级、连携、性格）");
+        const scoutAction = selectedScoutAction && !isNaN(Number(selectedScoutAction)) ? Number(selectedScoutAction) : undefined;
+        if (!isSearchValid(name, pos, age, country, rank, cooperation, tone, scoutAction)) {
+            alert("请至少填写一个搜索条件（姓名、位置、年龄、国籍、等级、连携、性格、球探活动）");
             return;
         }
 
@@ -59,6 +63,7 @@
                     rank,
                     cooperation,
                     tone,
+                    scoutAction
                 });
             } else {
                 alert('API 未加载');
@@ -73,7 +78,7 @@
     }
 
     function getTeamByIndex(index: number) {
-        return teamsData[index];
+        return index !== -1 ? teamsData[index] : "";
     }
 
     function reset() {
@@ -83,6 +88,7 @@
         selectedRank = "";
         selectedCooperationType = "";
         selectedTone = "";
+        selectedScoutAction = "";
     }
 </script>
 
@@ -214,7 +220,7 @@
             <div class="text-sm font-medium text-gray-700 dark:text-white mb-4">等级</div>
             <div class="input mb-4">
                 <select bind:value={selectedRank} class="select">
-                    {#if placeholderCountry}
+                    {#if placeholderRank}
                         <option value="" disabled selected>{placeholderRank}</option>
                     {/if}
                     {#each sortedRank as [key, value]}
@@ -227,7 +233,7 @@
             <div class="text-sm font-medium text-gray-700 dark:text-white mb-4">连携</div>
             <div class="input mb-4">
                 <select bind:value={selectedCooperationType} class="select">
-                    {#if placeholderCountry}
+                    {#if placeholderCooperationType}
                         <option value="" disabled selected>{placeholderCooperationType}</option>
                     {/if}
                     {#each sortedCooperationType as [key, value]}
@@ -240,7 +246,7 @@
             <div class="text-sm font-medium text-gray-700 dark:text-white mb-4">性格</div>
             <div class="input mb-4">
                 <select bind:value={selectedTone} class="select">
-                    {#if placeholderCountry}
+                    {#if placeholderTone}
                         <option value="" disabled selected>{placeholderTone}</option>
                     {/if}
                     {#each sortedToneType as [key, value]}
@@ -250,6 +256,18 @@
                 <DropDown />
             </div>
 
+            <div class="text-sm font-medium text-gray-700 dark:text-white mb-4">球探活动</div>
+            <div class="input mb-4">
+                <select bind:value={selectedScoutAction} class="select">
+                    {#if placeholderScoutAction}
+                        <option value="" disabled selected>{placeholderScoutAction}</option>
+                    {/if}
+                    {#each scoutActions as item, index}
+                        <option value={index + 1}>{item}</option>
+                    {/each}
+                </select>
+                <DropDown />
+            </div>
 
             <div class="mt-4 flex justify-end gap-2">
                 <button onclick={() => showAdvanced = false} class="px-4 py-2 cursor-pointer text-sm text-gray-600 dark:text-white hover:underline">

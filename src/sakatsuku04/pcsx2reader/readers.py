@@ -5,12 +5,12 @@ from ctypes import c_bool, c_char, c_char_p, c_uint, c_ulong, c_void_p
 import struct
 
 from ..data_reader import DataReader
-from ..dtos import ClubDto, MyPlayerDto, MyTeamPlayerDto, OtherTeamPlayerDto, ScoutDto, SearchDto, TownDto
+from ..dtos import AbroadDto, ClubDto, MyPlayerDto, MyTeamPlayerDto, OtherTeamPlayerDto, ScoutDto, SearchDto, TownDto
 from ..io import CnVer, IntByteField, StrByteField
 from ..objs import Player, Scout, Coach
 from ..utils import find_name_matches, get_album_bit_indices, reset_char_dict
 from ..constants import scout_excl_tbl, scout_simi_excl_tbl, team_ids
-from .models import Club, MyPlayer, MyPlayerAbility, MyScout, OtherPlayer, OtherTeam, Town
+from .models import Club, MyPlayer, MyPlayerAbility, MyScout, OtherPlayer, OtherTeam, Sche, Town
 
 
 class Pcsx2DataReader(DataReader):
@@ -200,11 +200,16 @@ class Pcsx2DataReader(DataReader):
         player.grow_type_phy = self._read_int_byte(offset + 0x1BC + i * 0x240)
         player.grow_type_tec = self._read_int_byte(offset + 0x1BD + i * 0x240)
         player.grow_type_sys = self._read_int_byte(offset + 0x1BE + i * 0x240)
+        player.super_sub = self._read_int_byte(offset + 0x1BF + i * 0x240)
+        player.wild_type = self._read_int_byte(offset + 0x1C1 + i * 0x240)
+        player.weak_type = self._read_int_byte(offset + 0x1C2 + i * 0x240)
+        player.tired_type = self._read_int_byte(offset + 0x1C3 + i * 0x240)
         player.style = self._read_int_byte(offset + 0x1C5 + i * 0x240)
         player.magic_value = self._read_int_byte(offset + 0x1CC + i * 0x240, 4)
         player.salary = self._read_int_byte(offset + 0x1D6 + i * 0x240, 2)
         player.offer_years_passed = self._read_int_byte(offset + 0x1D9 + i * 0x240)
         player.offer_years_total = self._read_int_byte(offset + 0x1DA + i * 0x240)
+        player.pop = self._read_int_byte(offset + 0x1EC + i * 0x240, 2)
         player.moti = self._read_int_byte(offset + 0x1F8 + i * 0x240, 4)
         player.power = self._read_int_byte(offset + 0x204 + i * 0x240, 2)
         player.kan = self._read_int_byte(offset + 0x206 + i * 0x240, 2)
@@ -235,6 +240,7 @@ class Pcsx2DataReader(DataReader):
         town.traffic_level = self._read_int_byte(start + 0x11) # 0x11
         town.soccer_pop = self._read_int_byte(start + 0x12) # 0x12
         town.soccer_level = self._read_int_byte(start + 0x1c, 2) # 0x1c(2)
+        town.town_type = self._read_int_byte(start + 0x3d, 1) # 0x3d(1)
         return town
 
     def _read_my_scout(self) -> list[MyScout]:
@@ -264,6 +270,20 @@ class Pcsx2DataReader(DataReader):
         for i in range(9):
             r.append(self._read_int_byte(start + i * 4, 4))
         return r
+
+    def _read_my_abroads(self) -> Sche:
+        sche = Sche()
+        start = 0x84c + 0x76397c
+        sche.abroad_list = []
+        for i in range(70):
+            a = self._read_int_byte(start + i * 4, 2)
+            sche.abroad_list.append(a)
+        start = 0x964 + 0x76397c
+        sche.camp_list = []
+        for i in range(40):
+            a = self._read_int_byte(start + i * 4, 2)
+            sche.camp_list.append(a)
+        return sche
 
     def check_connect(self) -> bool:
         is_connected = False
@@ -360,6 +380,17 @@ class Pcsx2DataReader(DataReader):
             scout.simi_exclusive_players = resolve_players(scout_simi_excl_tbl.get(scout.id, []))
 
         return scouts
+
+    def read_my_abroads(self, type: int) -> list[AbroadDto]:
+        dtos = AbroadDto.get_abr_camp_teams(type)
+        sche = self._read_my_abroads()
+        for i, dto in enumerate(dtos):
+            dto.is_enabled = sche.abroad_list[i].value != 0 if type == 0 else sche.camp_list[i].value != 0
+        return dtos
+
+    def read_one_abroad(self, index: int, type: int) -> AbroadDto:
+        dto = AbroadDto.get_abr_camp_dto(index, type)
+        return dto
 
     def read_town(self) -> TownDto:
         return self._read_town().to_dto()
