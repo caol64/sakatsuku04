@@ -4,7 +4,7 @@ from ..dtos import AbroadDto, ClubDto, MyPlayerDto, MyTeamPlayerDto, OtherTeamPl
 from ..io import CnVer, InputBitStream, IntBitField, OutputBitStream, StrBitField
 from ..objs import Coach, Player, Scout
 from ..savereader.memcard_reader import MemcardReader
-from ..utils import find_name_matches, get_album_bit_indices
+from ..utils import find_name_matches, get_album_bit_indices, reset_char_dict
 from ..constants import scout_excl_tbl, scout_simi_excl_tbl, team_ids
 from .entry_reader import EntryReader, HeadEntryReader
 from .models import (
@@ -56,6 +56,8 @@ class ClubReader(BaseReader):
         manager_name2 = self.bit_stream.unpack_str(0x10) # 0x1c(16)
         club.club_name = self.bit_stream.unpack_str(0x15) # 0x2c(21)
         a = self.bit_stream.unpack_str(0x1CB)  #  - 00703F5B 0x41(459)
+        b = a.byte_array
+        club.version_magic = b[0: 4]
         self.bit_stream.unpack_bits(3, 2)
         self.bit_stream.unpack_bits([0x10, 0x10], 6)
         self.bit_stream.unpack_bits(
@@ -237,7 +239,7 @@ class TeamReader(BaseReader):
             for _ in range(5):
                 a = self.bit_stream.unpack_bits([0x10, 0xB, 4, 6, 8], 8)
                 tp_id = a[0] # 0xd7c4(2)
-                tp_age = a[1] # 0xd7c6(2)
+                tp_age = a[3] # 0xd7c9(1)
                 if tp_id.value != 0xffff:
                     tp = OtherPlayer(id=tp_id, age=tp_age)
                     team.transfer_players.append(tp)
@@ -359,21 +361,21 @@ class TeamReader(BaseReader):
         for _ in range(16):
             a = self.bit_stream.unpack_bits([0x10, 0xB], 4)
             fp_id = a[0] # 0x26bf0
-            fp_age = a[1] # 0x26bf0
+            a = self.bit_stream.unpack_bits([4, 6, 8], 4)
+            fp_age = a[1] # 0x26bf5
             if fp_id.value != 0xffff:
                 team.free_players.append(OtherPlayer(id=fp_id, age=fp_age))
-            self.bit_stream.unpack_bits([4, 6, 8], 4)
             self.bit_stream.unpack_bits([0x10, 0x10, 3, 8], 6)
         # 0x72bdd4 0x26cd0 新人球员
         team.rookie_players = []
         for _ in range(36):
             a = self.bit_stream.unpack_bits([0x10, 0xB], 4)
-            rk_id = a[0] # 0x26bf0
-            rk_age = a[1] # 0x26bf0
+            rk_id = a[0] # 0x26cd0
+            a = self.bit_stream.unpack_bits([4, 6, 8], 4)
+            rk_age = a[1] # 0x26cd5
             if rk_id.value != 0xffff:
                 team.rookie_players.append(OtherPlayer(id=rk_id, age=rk_age))
-            self.bit_stream.unpack_bits([4, 6, 8], 4)
-            self.bit_stream.unpack_bits([0x10, 0x10, 3, 8], 6)
+            a = self.bit_stream.unpack_bits([0x10, 0x10, 3, 8], 6)
         # 0x72bfcc
         for _ in range(240):
             self.bit_stream.unpack_bits([0x10, 8], 4)
@@ -847,6 +849,7 @@ class SaveDataReader(DataReader):
         Player.reset_player_dict()
         Scout.reset_scout_dict()
         Coach.reset_coach_dict()
+        reset_char_dict()
 
     def read_club(self) -> ClubDto:
         if not self.selected_game:
@@ -932,44 +935,39 @@ class SaveDataReader(DataReader):
         filter_players = {k: v for k, v in Player.player_dict().items() if k in ids}
         filter_ids = find_name_matches(filter_players, name) if name else ids
         result = []
+        def _match_filters(dto: OtherTeamPlayerDto) -> bool:
+            if pos is not None and pos != dto.pos:
+                return False
+            if country is not None:
+                if (country == 50 and dto.born > 50) or (country != 50 and dto.born != country):
+                    return False
+            if tone is not None and tone != dto.tone_type:
+                return False
+            if cooperation is not None and cooperation != dto.cooperation_type:
+                return False
+            if rank is not None and rank != dto.rank:
+                return False
+            return True
         if not scout_action:
             for i, team in enumerate(self.other_teams):
                 for player in team.players:
                     if player.id.value in filter_ids:
                         dto = player.to_dto()
-                        if pos is not None and pos != dto.pos:
-                            continue
-                        if country is not None and (
-                            (country == 50 and dto.born > 50)
-                            or (country != 50 and dto.born != country)
-                        ):
-                            continue
-                        if tone is not None and tone != dto.tone_type:
-                            continue
-                        if cooperation is not None and cooperation != dto.cooperation_type:
-                            continue
-                        if rank is not None and rank != dto.rank:
-                            continue
-                        dto.team_index = i
-                        result.append(dto)
-        # else:
-        #     for id in filter_ids:
-        #         dto = player.to_dto()
-        #         if pos is not None and pos != dto.pos:
-        #             continue
-        #         if country is not None and (
-        #             (country == 50 and dto.born > 50)
-        #             or (country != 50 and dto.born != country)
-        #         ):
-        #             continue
-        #         if tone is not None and tone != dto.tone_type:
-        #             continue
-        #         if cooperation is not None and cooperation != dto.cooperation_type:
-        #             continue
-        #         if rank is not None and rank != dto.rank:
-        #             continue
-        #         dto.team_index = -1
-        #         result.append(dto)
+                        if _match_filters(dto):
+                            dto.team_index = i
+                            result.append(dto)
+        else:
+            if scout_action == 1:
+                filter_players = [f for f in self.my_team.transfer_players if f.id.value in filter_ids]
+            elif scout_action == 2:
+                filter_players = [f for f in self.my_team.free_players if f.id.value in filter_ids]
+            else:
+                filter_players = [f for f in self.my_team.rookie_players if f.id.value in filter_ids]
+            for p in filter_players:
+                dto = p.to_dto()
+                if _match_filters(dto):
+                    dto.team_index = -1
+                    result.append(dto)
         return result
 
     def read_town(self) -> TownDto:
@@ -1123,7 +1121,12 @@ class SaveDataReader(DataReader):
     def reset(self): ...
 
     def game_ver(self) -> int:
-        return 1
+        if self.club.version_magic == b"\x83\xaf\x8e\xd7":
+            return 1
+        elif self.club.version_magic == b"\x83\xaf\x8e\xd6":
+            return 2
+        else:
+            return 0
 
     def _save(
         self,

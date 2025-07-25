@@ -149,16 +149,17 @@ class MyPlayer:
 class OtherPlayer:
     id: IntByteField
     age: IntByteField
-    ability_graph: IntByteField
+    ability_graph: IntByteField = None
     number: IntByteField = None
 
     def to_dto(self):
         player = Player(self.id.value)
+        _number = 0 if not self.number else self.number.value
         return OtherTeamPlayerDto(
             id=self.id.value,
             age=self.age.value,
-            ability_graph=self.ability_graph.value,
-            number=self.number.value,
+            # ability_graph=self.ability_graph.value,
+            number=_number,
             name=player.name,
             rank=player.rank,
             pos=player.pos,

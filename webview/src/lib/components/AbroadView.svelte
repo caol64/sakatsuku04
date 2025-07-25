@@ -154,6 +154,11 @@
     const bestTimeZh = ["短期", "标准", "长期"];
     const fixedTimeZh = ["半年限定", "一年限定", "两年限定"];
 
+    function divide100(num: number): string {
+        const result = num / 100;
+        return result.toFixed(1);
+    }
+
 </script>
 
 <HStack className="flex-1 overflow-hidden m-2.5">
@@ -193,7 +198,7 @@
                     {#if selectedType === 0}
                         <AbrAbilityBar value={value} />
                     {:else}
-                        <AbrAbilityBar value={value} min={0} max={15} />
+                        <AbrAbilityBar value={value} min={0} max={15} rulerPos={10} />
                     {/if}
                 {/if}
             </HStack>
@@ -203,15 +208,15 @@
     <VStack className="grow mx-1">
         <div class="border border-gray-200 dark:border-gray-600 rounded-md space-y-4 p-4 bg-gray-50 dark:bg-gray-700">
             <h3 class="text-xl font-bold">{selectedType === 0 ? "留学地" : "集训地"}信息</h3>
-            <div class="grid grid-cols-[80px_1fr] text-sm space-y-2 items-start">
+            <div class="grid grid-cols-[80px_1fr] text-sm space-y-4 items-start">
 
-                <div>球队名称</div>
+                <div class="text-sm font-medium">球队名称</div>
                 <div>{teamsData[selectedAbroad.id - 255]}</div>
 
-                <div>获得方法</div>
+                <div class="text-sm font-medium">获得方法</div>
                 <div>{currentCondType}</div>
 
-                <div>获得条件</div>
+                <div class="text-sm font-medium">获得条件</div>
                 <div class="flex space-x-2">
                     {#each currentCondValue as item}
                         <span>{item}</span>
@@ -219,35 +224,35 @@
                 </div>
 
                 {#if selectedType === 0}
-                    <div>留学时间</div>
+                    <div class="text-sm font-medium">留学时间</div>
                     <div>{currentBestTime}</div>
 
-                    <div>成长加成</div>
+                    <div class="text-sm font-medium">成长加成</div>
                     <VStack>
-                        <span>半年： {selectedAbroad.abrUprate[0]}</span>
-                        <span>一年： {selectedAbroad.abrUprate[1]}</span>
-                        <span>两年： {selectedAbroad.abrUprate[2]}</span>
+                        <span>半年： {divide100(selectedAbroad.abrUprate[0])}</span>
+                        <span>一年： {divide100(selectedAbroad.abrUprate[1])}</span>
+                        <span>两年： {divide100(selectedAbroad.abrUprate[2])}</span>
                     </VStack>
                 {/if}
 
-                <div>留学效果</div>
+                <div class="text-sm font-medium">留学效果</div>
                 <div>{currentGrowType}</div>
 
-                <div>成长加成</div>
+                <div class="text-sm font-medium">成长加成</div>
                 <VStack>
-                    <span>实能力： {selectedType === 0 ? selectedAbroad.abrUprate[3] : selectedAbroad.abrUprate[1]}</span>
-                    <span>界限： {selectedType === 0 ? selectedAbroad.abrUprate[4] : selectedAbroad.abrUprate[0]}</span>
+                    <span>实能力： {selectedType === 0 ? divide100(selectedAbroad.abrUprate[3]) : divide100(selectedAbroad.abrUprate[1])}</span>
+                    <span>界限： {selectedType === 0 ? divide100(selectedAbroad.abrUprate[4]) : divide100(selectedAbroad.abrUprate[0])}</span>
                     {#if selectedType === 1}
-                        <span>连携： {selectedAbroad.abrUprate[2]}</span>
+                        <span>连携： {divide100(selectedAbroad.abrUprate[2])}</span>
                     {/if}
                 </VStack>
 
                 {#if selectedType === 0}
-                    <div>成长加成</div>
+                    <div class="text-sm font-medium">成长加成</div>
                     <VStack>
-                        <span>第一次留学： 10</span>
-                        <span>第二次留学： 4</span>
-                        <span>第三次留学： 1</span>
+                        <span>第一次留学： 1.0</span>
+                        <span>第二次留学： 0.4</span>
+                        <span>第三次留学： 0.1</span>
                     </VStack>
                 {/if}
             </div>

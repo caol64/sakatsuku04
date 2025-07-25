@@ -158,12 +158,12 @@ class Pcsx2DataReader(DataReader):
         return other_teams
 
     def _read_other_team_players(self, team_index: int) -> list[OtherPlayer]:
-        players = list()
+        players = []
         for i in range(0x19):
             pid = self._read_int_byte(0x72C7F2 + team_index * 0x6C + i * 4, 2)
             age = self._read_int_byte(0x72C7F4 + team_index * 0x6C + i * 4)
             ability_graph = self._read_int_byte(0x72C7F5 + team_index * 0x6C + i * 4)
-            number = self._read_int_byte(0x7337BD + team_index * 0x19 + i * 1)
+            number = self._read_int_byte(0x7337BC + team_index * 0x19 + i)
             player = OtherPlayer(pid, age, ability_graph, number)
             players.append(player)
         return players
@@ -284,6 +284,40 @@ class Pcsx2DataReader(DataReader):
             a = self._read_int_byte(start + i * 4, 2)
             sche.camp_list.append(a)
         return sche
+
+    def _read_transfer_players(self) -> list[OtherPlayer]:
+        start = 0xd7c4 + 0x705104
+        players = []
+        for i in range(3):
+            for j in range(5):
+                pid = self._read_int_byte(start + i * 156 + j * 14, 2) # 0xd7c4(2)
+                if pid.value != 0xffff:
+                    age = self._read_int_byte(start + i * 156 + j * 14 + 5, 1) # 0xd7c9(1)
+                    player = OtherPlayer(pid, age)
+                    players.append(player)
+        return players
+
+    def _read_free_players(self) -> list[OtherPlayer]:
+        start = 0x26bf0 + 0x705104
+        players = []
+        for i in range(16):
+            pid = self._read_int_byte(start + i * 14, 2) # 0x26bf0(2)
+            if pid.value != 0xffff:
+                age = self._read_int_byte(start + i * 14 + 5, 1) # 0x26bf5(1)
+                player = OtherPlayer(pid, age)
+                players.append(player)
+        return players
+
+    def _read_rookie_players(self) -> list[OtherPlayer]:
+        start = 0x26cd0 + 0x705104
+        players = []
+        for i in range(36):
+            pid = self._read_int_byte(start + i * 14, 2) # 0x26cd0(2)
+            if pid.value != 0xffff:
+                age = self._read_int_byte(start + i * 14 + 5, 1) # 0x26cd5(1)
+                player = OtherPlayer(pid, age)
+                players.append(player)
+        return players
 
     def check_connect(self) -> bool:
         is_connected = False
@@ -410,38 +444,59 @@ class Pcsx2DataReader(DataReader):
         tone = data.tone
         cooperation = data.cooperation
         rank = data.rank
+        scout_action = data.scout_action
         other_team_players: list[list[OtherPlayer]] = []
-        for i in range(0x109):
-            players = self._read_other_team_players(i)
-            other_team_players.append(players)
         ids = []
-        for team in other_team_players:
-            for player in team:
-                if player.id.value != 0xFFFF:
-                    if age and age != player.age.value:
-                        continue
-                    ids.append(player.id.value)
+        tmp_players = None
+        if not scout_action:
+            for i in range(0x109):
+                players = self._read_other_team_players(i)
+                other_team_players.append(players)
+            for team in other_team_players:
+                for player in team:
+                    if player.id.value != 0xFFFF:
+                        if age and age != player.age.value:
+                            continue
+                        ids.append(player.id.value)
+        else:
+            if scout_action == 1:
+                tmp_players = self._read_transfer_players()
+            elif scout_action == 2:
+                tmp_players = self._read_free_players()
+            elif scout_action == 3:
+                tmp_players = self._read_rookie_players()
+            for p in tmp_players:
+                ids.append(p.id.value)
         filter_players = {k: v for k, v in Player.player_dict().items() if k in ids}
         filter_ids = find_name_matches(filter_players, name) if name else ids
         result = []
-        for i, team in enumerate(other_team_players):
-            for player in team:
-                if player.id.value in filter_ids:
-                    dto = player.to_dto()
-                    if pos is not None and pos != dto.pos:
-                        continue
-                    if country is not None and (
-                        (country == 50 and dto.born > 50)
-                        or (country != 50 and dto.born != country)
-                    ):
-                        continue
-                    if tone is not None and tone != dto.tone_type:
-                        continue
-                    if cooperation is not None and cooperation != dto.cooperation_type:
-                        continue
-                    if rank is not None and rank != dto.rank:
-                        continue
-                    dto.team_index = i
+        def _match_filters(dto: OtherTeamPlayerDto) -> bool:
+            if pos is not None and pos != dto.pos:
+                return False
+            if country is not None:
+                if (country == 50 and dto.born > 50) or (country != 50 and dto.born != country):
+                    return False
+            if tone is not None and tone != dto.tone_type:
+                return False
+            if cooperation is not None and cooperation != dto.cooperation_type:
+                return False
+            if rank is not None and rank != dto.rank:
+                return False
+            return True
+        if not scout_action:
+            for i, team in enumerate(other_team_players):
+                for player in team:
+                    if player.id.value in filter_ids:
+                        dto = player.to_dto()
+                        if _match_filters(dto):
+                            dto.team_index = i
+                            result.append(dto)
+        else:
+            filter_players = [f for f in tmp_players if f.id.value in filter_ids]
+            for p in filter_players:
+                dto = p.to_dto()
+                if _match_filters(dto):
+                    dto.team_index = -1
                     result.append(dto)
         return result
 

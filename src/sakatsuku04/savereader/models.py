@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Optional
 
 from ..dtos import ClubDto, MyPlayerDto, OtherTeamPlayerDto, PlayerAbilityDto, ScoutDto, TownDto
 from ..io import IntBitField, IntByteField, StrBitField, StrByteField
@@ -34,6 +35,7 @@ class Club:
     club_name: StrBitField
     difficulty: IntBitField
     seed: IntBitField
+    version_magic = bytes
 
     def to_dto(self):
         return ClubDto(
@@ -191,11 +193,12 @@ class OtherPlayer:
 
     def to_dto(self):
         player = Player(self.id.value)
+        _number = 0 if not self.number else self.number.value
         return OtherTeamPlayerDto(
             id=self.id.value,
             age=self.age.value,
-            ability_graph=self.ability_graph.value,
-            number=self.number.value,
+            # ability_graph=self.ability_graph.value,
+            number=_number,
             name=player.name,
             rank=player.rank,
             pos=player.pos,

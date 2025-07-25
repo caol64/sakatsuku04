@@ -227,9 +227,9 @@
             <p>隐藏属性</p>
             <div class="pl-4 grid grid-cols-2 gap-x-1 text-sm text-left">
                 <div><span>人气</span><span class="pl-3">{myPlayer?.pop}</span></div>
-                <div><span>进取</span><span class="pl-3">{myPlayer?.desire}</span></div>
+                <div><span>欲求</span><span class="pl-3">{myPlayer?.desire}</span></div>
                 <div><span>高傲</span><span class="pl-3">{myPlayer?.pride}</span></div>
-                <div><span>野心</span><span class="pl-3">{myPlayer?.ambition}</span></div>
+                <div><span>雄心</span><span class="pl-3">{myPlayer?.ambition}</span></div>
                 <div><span>韧性</span><span class="pl-3">{myPlayer?.persistence}</span></div>
                 <div><span>耐心</span><span class="pl-3">{myPlayer?.patient}</span></div>
                 <div><span>超级替补</span><span class="pl-3">{myPlayer?.superSub}</span></div>

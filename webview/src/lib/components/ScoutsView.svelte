@@ -84,10 +84,10 @@
         {/if}
     </VStack>
     <VStack className="grow ml-8 space-y-2">
-        <div class="h-fit bg-gray-50 dark:bg-gray-700 rounded-2xl shadow p-6 flex flex-col space-y-2 text-sm font-medium">
+        <div class="h-fit bg-gray-50 dark:bg-gray-700 rounded-2xl shadow p-6 flex flex-col space-y-4 text-sm">
             {#if selectedScout?.exclusivePlayers?.length}
-                <p>专有球员</p>
-                <div class="ml-8">
+                <p class="font-medium">专有球员</p>
+                <div class="ml-8 space-y-2">
                     {#each selectedScout.exclusivePlayers as item}
                         <HStack>
                             <p class="w-[100px]">{item.name}</p>
@@ -100,8 +100,8 @@
                 </div>
             {/if}
             {#if selectedScout?.simiExclusivePlayers?.length}
-                <p>半专有球员</p>
-                <div class="ml-8">
+                <p class="font-medium">半专有球员</p>
+                <div class="ml-8 space-y-2">
                     {#each selectedScout.simiExclusivePlayers as item}
                         <HStack>
                             <p class="w-[100px]">{item.name}</p>

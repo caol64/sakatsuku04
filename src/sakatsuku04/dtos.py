@@ -178,7 +178,7 @@ class TeamDto(BaseDto):
 class OtherTeamPlayerDto(BaseDto):
     id: int
     age: int
-    ability_graph: int
+    ability_graph: Optional[int] = None
     number: int
     name: str
     rank: int
