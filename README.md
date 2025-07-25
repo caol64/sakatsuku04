@@ -1,10 +1,10 @@
-# Sakatsuku04 editor
+# Sakatsuku04 Editor
 
 ![](data/cover.jpg)
 
-Opensource game and save editor for J.League Pro Soccer Club o Tsukurou! 04 (PS2).
+An open-source game and save editor for **J.League Pro Soccer Club o Tsukurou! 04** (PS2).
 
-## Quick Start
+## 🚀 Quick Start
 
 The recommended way to run `Saka04Editor` is by using [`uv`](https://github.com/astral-sh/uv) to create and manage a virtual environment:
 
@@ -14,56 +14,95 @@ uv pip install Saka04Editor
 uv run Saka04Editor
 ```
 
-Alternatively, you can download the latest prebuilt releases from GitHub:
-👉 [https://github.com/caol64/sakatsuku04/releases](https://github.com/caol64/sakatsuku04/releases)
+Alternatively, you can download the latest prebuilt releases from the official site:
 
-## Features
+👉 [https://yuzhi.tech/docs/saka04/download](https://yuzhi.tech/docs/saka04/download)
 
-Currently supported viewing features:
+## ✨ Features
 
-* Club information
+Currently, the editor supports two modes:
 
-  * Club name
-  * Funds
-  * Game year, month, date
-  * Manager name
-  * Game difficulty
-* My Team information
+### 🗃 Save File Editing
 
-  * Player basic information (name, age, birthplace, rank, growth types, cooperation types, tone types, play styles)
-  * Player abilities
-* Other team information
+* Open and modify memory card save files.
+* Supports full in-game data editing (players, teams, etc.).
 
-  * Teams (name, friendliness) and players (name, age, rank, growth types, cooperation types, tone types)
-* Scout
+### ⚡ Real-Time Editing (PCSX2)
 
-  * My Scout abilities
+* Modify game data in real time while connected to a running PCSX2 emulator.
+* Offers the same editing capabilities as save file mode — now live while the game is running.
 
-Currently supported editing features:
+## 📸 Screenshots
 
-* Club information
+### 🔧 Mode Selection
 
-  * Funds
-  * Game year
-  * Game difficulty
-* My Team information
+Choose between **Save File Editing** or **Real-Time Editing**.
 
-  * Player basic information (age, birthplace, growth types, cooperation types, tone types, play styles)
-  * Player abilities
-* Other team information
+![](data/8.webp)
 
-  * Teams (friendliness)
-* **Real-time modification**
+---
 
-  * Modify game data on a connected PCSX2 emulator in real time with the same capabilities as current save file editing.
+### ⚙️ General Game Data Editing
 
-## Screenshots
+Edit key gameplay information such as club funding, game date, and more.
 
-![](data/5.png)
+![](data/9.webp)
 
-![](data/6.png)
+---
 
-![](data/7.png)
+### 🧑‍✈️ Player Editor
+
+View and modify detailed attributes of players, including abilities, skills, contracts, and positions...
+
+![](data/10.webp)
+
+---
+
+### 🏆 View Other Teams
+
+Browse data from all other clubs on the world.
+
+![](data/11.webp)
+
+---
+
+### 🔍 Player Search
+
+Search across all known players using filters like name, position, or rank.
+
+![](data/12.webp)
+
+---
+
+### 🕵️ Scout Overview
+
+Displays each scout’s exclusive and semi-exclusive players, along with their current club and age information.
+
+![](data/13.webp)
+
+---
+
+### 🏘 Edit Hometown Database
+
+Customize hometown data.
+
+![](data/14.webp)
+
+---
+
+### 📖 Player Encyclopedia Progress
+
+Track your collection progress for encyclopedia (名鉴) players.
+
+![](data/15.webp)
+
+---
+
+### ✈️ Abroad Training / Camp Locations
+
+View and modify available abroad training and camp destinations.
+
+![](data/16.webp)
 
 ## Hacker notes
 
