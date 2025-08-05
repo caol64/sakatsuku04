@@ -107,6 +107,16 @@ class MyPlayer:
     weak_type: IntBitField
     tired_type: IntBitField
     pop: IntBitField
+    comp_money: IntBitField
+    comp_discord: IntBitField
+    comp_staff: IntBitField
+    comp_usage: IntBitField
+    comp_result: IntBitField
+    comp_status: IntBitField
+    comp_euipment: IntBitField
+    tired: IntBitField
+    status: IntBitField
+    condition: IntBitField
 
     def __init__(self, index: int):
         self.index = index
@@ -168,6 +178,10 @@ class MyPlayer:
             weak_type=self.weak_type.value,
             tired_type=self.tired_type.value,
             pop=self.pop.value,
+            comp=max(self.comp_money.value, self.comp_discord.value, self.comp_staff.value, self.comp_usage.value, self.comp_result.value, self.comp_status.value, self.comp_euipment.value),
+            tired=self.tired.value,
+            status=self.status.value,
+            condition=self.condition.value,
         )
 
 
@@ -182,6 +196,7 @@ class MyTeam:
     transfer_players: list["OtherPlayer"]
     free_players: list["OtherPlayer"]
     rookie_players: list["OtherPlayer"]
+    team_status: IntBitField
 
 
 @dataclass
@@ -205,6 +220,7 @@ class OtherPlayer:
             born=player.born,
             cooperation_type=player.cooperation_type,
             tone_type=player.tone_type,
+            style=player.style,
             grow_type_phy=player.grow_type_phy,
             grow_type_tec=player.grow_type_tec,
             grow_type_sys=player.grow_type_sys,

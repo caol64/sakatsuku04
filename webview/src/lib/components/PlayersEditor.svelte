@@ -24,6 +24,8 @@
     let selectedAbroadTimes = $state(player.abroadTimes);
     let playAbilities = player.abilities.map(ability => ({ ...ability }));
     let selectedAbility: MyPlayerAbility = $state(playAbilities[0]);
+    let selectedOfferYearsPassed = $state(player.offerYearsPassed);
+    let selectedOfferYearsTotal = $state(player.offerYearsTotal);
 
     function selectAbility() {
         selectedAbility = playAbilities[selectedAbilityIndex];
@@ -95,6 +97,8 @@
             newPlayer.abroadTimes = selectedAbroadTimes;
             newPlayer.salaryHigh = selectedSalaryHigh;
             newPlayer.salaryLow = selectedSalaryLow;
+            newPlayer.offerYearsPassed = selectedOfferYearsPassed;
+            newPlayer.offerYearsTotal = selectedOfferYearsTotal;
             newPlayer.born = fromHex(selectedBorn);
             newPlayer.pos = fromHex(selectedPos);
             newPlayer.style = fromHex(selectedStyle);
@@ -176,6 +180,22 @@
                         <span>万</span>
                     </div>
                 </div>
+            </HStack>
+        </div>
+    </div>
+    <div class="form">
+        <div class="label">合同</div>
+        <div class="input">
+            <HStack className="gap-x-4 grid grid-cols-[6fr_1fr_6fr] text-left">
+                <HStack className="input items-center">
+                    <input id="offerYearsPassed" type="range" min="0" max="5" bind:value={ selectedOfferYearsPassed } class="thin-range">
+                    <span class="text-sm ml-2">{ selectedOfferYearsPassed }</span>
+                </HStack>
+                <div>/</div>
+                <HStack className="input items-center">
+                    <input id="offerYearsTotal" type="range" min="1" max="5" bind:value={ selectedOfferYearsTotal } class="thin-range">
+                    <span class="text-sm ml-2">{ selectedOfferYearsTotal }</span>
+                </HStack>
             </HStack>
         </div>
     </div>
@@ -302,6 +322,9 @@
     }
     .range {
         @apply w-52 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700;
+    }
+    .thin-range {
+        @apply w-18 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700;
     }
     .label {
         @apply justify-self-end w-fit px-4;

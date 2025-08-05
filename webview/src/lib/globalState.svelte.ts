@@ -2,7 +2,7 @@ import { type Club } from "./models";
 
 // -------mode-------
 
-export type ModeState = "saveEditor" | "memoryEditor" | "";
+export type ModeState = "saveEditor" | "memoryEditor" | "" | "bPlayerView";
 
 let modeState: ModeState = $state("");
 

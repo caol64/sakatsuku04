@@ -9,6 +9,7 @@ export interface Club {
     clubName?: string;
     difficulty?: number;
     seed?: number;
+    teamStatus?: number;
 }
 
 export interface Team {
@@ -31,6 +32,7 @@ export interface TeamPlayer {
     pos: number;
     cooperationType: number;
     toneType: number;
+    style: number;
     growTypePhy: number;
     growTypeTec: number;
     growTypeSys: number;
@@ -44,6 +46,7 @@ export interface MyTeamPlayer {
     name: string;
     pos: number;
     isAlbum: boolean;
+    scouts?: string[];
 }
 
 export interface MyPlayer {
@@ -94,6 +97,10 @@ export interface MyPlayer {
     weakType?: number;
     tiredType?: number;
     pop?: number;
+    comp?: number;
+    tired?: number;
+    status?: number;
+    condition?: number;
 }
 
 export interface MyPlayerAbility {
@@ -149,4 +156,43 @@ export interface Abroad {
     abrUp: number[];
     abrUprate: number[];
     abrDays: number;
+}
+
+export interface BPlayer {
+    name?: string;
+    born?: number;
+    pos?: number;
+    age?: number;
+    rank?: number;
+    toneType?: number;
+    cooperationType?: number;
+    waveType?: number;
+    growTypePhy?: number;
+    growTypeTec?: number;
+    growTypeSys?: number;
+    abilities: number[];
+    height?: number;
+    style?: number;
+    hexagon: number[];
+    odc: number[];
+    abilEval?: number;
+    aposEval?: number[];
+    spComment?: string;
+    baddenPlayers?: string[];
+    phyGrows?: number[];
+    tecGrows?: number[];
+    sysGrows?: number[];
+    foot?: number;
+    desire?: number;
+    pride?: number;
+    ambition?: number;
+    patient?: number;
+    persistence?: number;
+    superSub?: number;
+    wildType?: number;
+    weakType?: number;
+    tiredType?: number;
+    pop?: number;
+    debutYear?: number;
+    signingDifficulty?: number;
 }

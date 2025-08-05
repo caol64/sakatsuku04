@@ -8,11 +8,15 @@ import time
 import bottle
 import webview
 
+from .io import CnVer
+from .objs import Player
 from .data_reader import DataReader
-from .dtos import ClubDto, MyPlayerDto, SearchDto, TownDto
+from .dtos import ClubDto, MyPlayerDto, SearchDto, TownDto, SimpleBPlayerDto
 from .savereader.readers import SaveDataReader
 from .pcsx2reader.readers import Pcsx2DataReader
-from .utils import get_resource_path
+from .binreader.bplayer_reader import get_player
+from .constants import exp_to_lv
+from .utils import find_name_matches, get_probability_tbl_index, get_resource_path, is_jmodifiable, modify_jabil, random_get_0to1, random_get_0toi
 
 
 APP_NAME = "球会04修改器"
@@ -149,6 +153,8 @@ class MainApp:
             self.fetch_my_album_players,
             self.fetch_abroads,
             self.fetch_one_abroad,
+            self.fetch_bplayers,
+            self.get_bplayer,
         )
 
     def get_version(self) -> str:
@@ -239,6 +245,85 @@ class MainApp:
         self.data_raader.save_town(town_data)
         return {"message": "success"}
 
+    def fetch_bplayers(self, page: int, search_params: dict = None) -> dict:
+        CnVer.set_ver(1)
+        results = []
+        if not page:
+            page = 1
+        total = 0
+        if search_params is None:
+            total = (len(Player.player_dict()) + 24) // 25
+            start = (page - 1) * 25
+            for id in range(start, start + 25):
+                p = Player(id)
+                sp = SimpleBPlayerDto(id=p.id, name=p.name, pos=p.pos)
+                results.append(sp.model_dump(by_alias=True))
+        else:
+            keyword = search_params.get("keyword")
+            if keyword:
+                try:
+                    id = int(keyword, 16)
+                except Exception as e:
+                    id = None
+                if id is not None:
+                    p = Player(id)
+                    if not p.name:
+                        page = 1
+                        total = 0
+                    else:
+                        sp = SimpleBPlayerDto(id=p.id, name=p.name, pos=p.pos)
+                        results.append(sp.model_dump(by_alias=True))
+                        page = 1
+                        total = 1
+                else:
+                    filter_ids = find_name_matches(Player.player_dict(), keyword)
+                    sorted_ids = sorted(filter_ids)
+                    total = (len(sorted_ids) + 24) // 25
+                    start = (page - 1) * 25
+                    end = start + 25
+                    page_ids = sorted_ids[start:end]
+                    for id in page_ids:
+                        p = Player(id)
+                        sp = SimpleBPlayerDto(id=p.id, name=p.name, pos=p.pos)
+                        results.append(sp.model_dump(by_alias=True))
+            else:
+                page = 1
+                total = 0
+        return {
+            "page": page,
+            "total": total,
+            "data": results,
+        }
+
+    def get_bplayer(self, id: int, year: int = 1) -> dict:
+        CnVer.set_ver(1)
+        bplayer = get_player(id)
+        player = Player(id)
+        bplayer.name = player.name
+        if is_jmodifiable(id):
+            up_level = modify_jabil(bplayer.wave_type, year)
+            if up_level > 0:
+                for i in range(64):
+                    bplayer.abilities[i] = min(bplayer.abilities[i] + up_level, 95)
+        next_seed = id * (year - 1)
+        abils = []
+        for i in range(64):
+            val, next_seed = random_get_0to1(next_seed)
+            a = get_probability_tbl_index(bplayer.wave_type, val)
+            abil_level, next_seed = random_get_0toi(next_seed, a + 2)
+            ran, next_seed = random_get_0toi(next_seed, 2)
+            if ran != 0:
+                abil_level = -abil_level
+            abil_val = min(bplayer.abilities[i] + abil_level, 100)
+            abil_exp = exp_to_lv[abil_val]
+            if abil_exp == 0:
+                abil_exp = 1
+            abils.append(abil_exp)
+        bplayer.abilities = abils
+        dto = bplayer.to_dto()
+        dto.id = id
+        dto.sp_comment = player.sp_comment
+        return dto.model_dump(by_alias=True)
 
 def main():
     app = MainApp()

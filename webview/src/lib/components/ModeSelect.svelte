@@ -4,6 +4,7 @@
     import Pcsx2Connect from "./Pcsx2Connect.svelte";
     import { onMount } from "svelte";
     import About from "./About.svelte";
+    import PlayerDB from "./PlayerDB.svelte";
 
     onMount(async () => {
         if (window.pywebview?.api?.reset) {
@@ -12,7 +13,7 @@
     });
 </script>
 
-<VStack className="flex flex-col items-center justify-center h-full w-full">
+<VStack className="flex flex-col items-center justify-center h-full w-full space-y-8">
     <div class="absolute top-4 right-2">
         <About />
     </div>
@@ -25,8 +26,8 @@
             <Pcsx2Connect />
         </div>
     </div>
+    <div class="w-11/12 border border-dashed border-gray-300 rounded-md p-12">
+        <PlayerDB />
+    </div>
 </VStack>
 
-<style lang="postcss">
-    @reference "tailwindcss";
-</style>

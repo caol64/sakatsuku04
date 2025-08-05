@@ -3,7 +3,7 @@ from pydantic import BaseModel, ConfigDict, computed_field
 from pydantic.alias_generators import to_camel
 
 from .objs import Coach, Player, Scout
-from .utils import calc_abil_eval, calc_apos_eval, calc_grow_eval, find_badden_match, is_album_player, ability_to_lv, lv_to_dot
+from .utils import calc_abil_eval, calc_apos_eval, calc_def, calc_gk, calc_grow_eval, calc_off, calc_phy, calc_sta, calc_sys, calc_tac, find_badden_match, handle_cond, is_album_player, lv_to_dot
 from . import constants
 
 
@@ -25,6 +25,7 @@ class ClubDto(BaseDto):
     manager_name: str
     difficulty: int
     seed: int
+    team_status: int = 0
 
     def combo_funds(self) -> int:
         return self.funds_high * 10000 + self.funds_low
@@ -86,6 +87,10 @@ class MyPlayerDto(BaseDto):
     weak_type: int
     tired_type: int
     pop: int
+    comp: int
+    tired: int
+    status: int
+    condition: int
 
     @computed_field
     @property
@@ -95,33 +100,37 @@ class MyPlayerDto(BaseDto):
     @computed_field
     @property
     def hexagon(self) -> list[int]:
+        current_abils = [f.current for f in self.abilities]
+        current_max_abils = [f.current_max for f in self.abilities]
+        max_abils = [f.max for f in self.abilities]
         return [
-            calc_off(self),
-            calc_gk(self) if self.pos == 0 else calc_def(self),
-            calc_sta(self),
-            calc_phy(self),
-            calc_sys(self),
-            calc_tac(self),
-            calc_off(self, 1),
-            calc_gk(self, 1) if self.pos == 0 else calc_def(self, 1),
-            calc_sta(self, 1),
-            calc_phy(self, 1),
-            calc_sys(self, 1),
-            calc_tac(self, 1),
-            calc_off(self, 2),
-            calc_gk(self, 2) if self.pos == 0 else calc_def(self, 2),
-            calc_sta(self, 2),
-            calc_phy(self, 2),
-            calc_sys(self, 2),
-            calc_tac(self, 2),
+            calc_off(current_abils),
+            calc_gk(current_abils) if self.pos == 0 else calc_def(current_abils),
+            calc_sta(current_abils),
+            calc_phy(current_abils),
+            calc_sys(current_abils),
+            calc_tac(current_abils),
+            calc_off(current_max_abils),
+            calc_gk(current_max_abils) if self.pos == 0 else calc_def(current_max_abils),
+            calc_sta(current_max_abils),
+            calc_phy(current_max_abils),
+            calc_sys(current_max_abils),
+            calc_tac(current_max_abils),
+            calc_off(max_abils),
+            calc_gk(max_abils) if self.pos == 0 else calc_def(max_abils),
+            calc_sta(max_abils),
+            calc_phy(max_abils),
+            calc_sys(max_abils),
+            calc_tac(max_abils),
         ]
 
     @computed_field
     @property
     def odc(self) -> list[int]:
+        current_abils = [f.current for f in self.abilities]
         return [
-            lv_to_dot(calc_off(self)),
-            lv_to_dot(calc_gk(self) if self.pos == 0 else calc_def(self))
+            lv_to_dot(calc_off(current_abils)),
+            lv_to_dot(calc_gk(current_abils) if self.pos == 0 else calc_def(current_abils))
         ]
 
     @computed_field
@@ -186,6 +195,7 @@ class OtherTeamPlayerDto(BaseDto):
     born: int
     cooperation_type: int
     tone_type: int
+    style: int
     grow_type_phy: int
     grow_type_tec: int
     grow_type_sys: int
@@ -214,6 +224,7 @@ class SearchDto(BaseDto):
     tone: Optional[int] = None
     cooperation: Optional[int] = None
     team_id: Optional[int] = None
+    style: Optional[int] = None
     scout_action: Optional[int] = None
 
 class TownDto(BaseDto):
@@ -237,10 +248,6 @@ class ScoutDto(BaseDto):
     simi_exclusive_players: Optional[list[SearchDto]] = None
 
 
-abr_camp_base = [constants.abr_base, constants.camp_base]
-abr_camp_uprate = [constants.abr_uprate, constants.camp_uprate_k]
-abr_camp_up = [constants.abr_up, constants.camp_up_k]
-
 class AbroadCond(BaseDto):
     id: int
     cond: Optional[list[str | int]]
@@ -256,17 +263,17 @@ class AbroadDto(BaseDto):
     @classmethod
     def get_abr_camp_teams(cls, type: int) -> list['AbroadDto']:
         results = []
-        for item in abr_camp_base[type]:
+        for item in constants.abr_camp_base[type]:
             dto = AbroadDto(id=item[0])
             results.append(dto)
         return results
 
     @classmethod
     def get_abr_camp_dto(cls, index: int, type: int) -> list['AbroadDto']:
-        item = abr_camp_base[type][index]
+        item = constants.abr_camp_base[type][index]
         dto = AbroadDto(id=item[0])
-        dto.abr_up = list(abr_camp_up[type][index])
-        dto.abr_uprate = list(abr_camp_uprate[type][index])
+        dto.abr_up = list(constants.abr_camp_up[type][index])
+        dto.abr_uprate = list(constants.abr_camp_uprate[type][index])
         dto.abr_days = item[3]
         cond_id = item[1] >> 4
         cond_val = handle_cond(item[4: 14])
@@ -288,45 +295,102 @@ class AbroadDto(BaseDto):
             dto.cond = AbroadCond(id=cond_id, cond=cond_val)
         return dto
 
+class BPlayerDto(BaseDto):
+    id: int = 0
+    name: str
+    born: int
+    pos: int
+    age: int
+    rank: int
+    tone_type: int
+    cooperation_type: int
+    wave_type: int
+    grow_type_phy: int
+    grow_type_tec: int
+    grow_type_sys: int
+    abilities: list[int] = [0] * 64
+    height: int
+    style: int
+    super_sub: int
+    wild_type: int
+    weak_type: int
+    tired_type: int
+    pop: int
+    desire: int
+    pride: int
+    ambition: int
+    patient: int
+    persistence: int
+    foot: int
+    debut_year: int
+    signing_difficulty: int
+    sp_comment: Optional[str] = None
 
-def _calc_avg(player: MyPlayerDto, indices: tuple[int], mode: int) -> int:
-    total = 0
-    count = 0
-    for i in indices:
-        ability = player.abilities[i]
-        if mode == 0:
-            lv = ability_to_lv(ability.current)
-        elif mode == 1:
-            lv = ability_to_lv(ability.current_max)
-        elif mode == 2:
-            lv = ability_to_lv(ability.max)
-        else:
-            raise ValueError(f"Invalid mode: {mode}")
-        total += lv
-        count += 1
-    return total // count if count else 0
+    @computed_field
+    @property
+    def abil_eval(self) -> int:
+        return calc_abil_eval([r for r in self.abilities][0: 36], self.pos)
 
+    @computed_field
+    @property
+    def hexagon(self) -> list[int]:
+        return [
+            calc_off(self.abilities),
+            calc_gk(self.abilities) if self.pos == 0 else calc_def(self.abilities),
+            calc_sta(self.abilities),
+            calc_phy(self.abilities),
+            calc_sys(self.abilities),
+            calc_tac(self.abilities),
+        ]
 
-def calc_off(player: MyPlayerDto, mode: int = 0) -> int:
-    return _calc_avg(player, constants.abi_off, mode)
+    @computed_field
+    @property
+    def odc(self) -> list[int]:
+        return [
+            lv_to_dot(calc_off(self.abilities)),
+            lv_to_dot(calc_gk(self.abilities) if self.pos == 0 else calc_def(self.abilities))
+        ]
 
-def calc_def(player: MyPlayerDto, mode: int = 0) -> int:
-    return _calc_avg(player, constants.abi_def, mode)
+    @computed_field
+    @property
+    def apos_eval(self) -> list[int]:
+        return calc_apos_eval(self.abilities)
 
-def calc_gk(player: MyPlayerDto, mode: int = 0) -> int:
-    return _calc_avg(player, constants.abi_gk, mode)
+    @computed_field
+    @property
+    def badden_players(self) -> Optional[list[str]]:
+        badden_ids = find_badden_match(self.id)
+        return [Player(p).name for p in badden_ids] if badden_ids else None
 
-def calc_phy(player: MyPlayerDto, mode: int = 0) -> int:
-    return _calc_avg(player, constants.abi_phy, mode)
+    @computed_field
+    @property
+    def phy_grows(self) -> list[int]:
+        return list(constants.tbl_phy_grow_type[self.grow_type_phy])
 
-def calc_sys(player: MyPlayerDto, mode: int = 0) -> int:
-    return _calc_avg(player, constants.abi_sys, mode)
+    @computed_field
+    @property
+    def tec_grows(self) -> list[int]:
+        return list(constants.tbl_tec_grow_type[self.grow_type_tec])
 
-def calc_tac(player: MyPlayerDto, mode: int = 0) -> int:
-    return _calc_avg(player, constants.abi_tac, mode)
+    @computed_field
+    @property
+    def sys_grows(self) -> list[int]:
+        return list(constants.tbl_sys_grow_type[self.grow_type_sys])
 
-def calc_sta(player: MyPlayerDto, mode: int = 0) -> int:
-    return _calc_avg(player, constants.abi_sta, mode)
+class SimpleBPlayerDto(BaseDto):
+    id: int
+    name: str
+    pos: int
 
-def handle_cond(cond_value: tuple[int]) -> list[int]:
-    return [f for f in cond_value if f != 0xffff and f != 0]
+    @computed_field
+    @property
+    def is_album(self) -> bool:
+        return is_album_player(self.id)
+
+    @computed_field
+    @property
+    def scouts(self) -> Optional[list[str]]:
+        scouts_ids = constants.scout_excl_reversed.get(self.id)
+        if scouts_ids:
+            return [Scout.name(f) for f in scouts_ids]
+        return []

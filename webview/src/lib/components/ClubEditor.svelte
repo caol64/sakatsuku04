@@ -47,9 +47,13 @@
                     </div>
                 </div>
             </HStack>
-            <div>
+            <div class="mb-6">
                 <label for="managerName">球队经理</label>
                 <input id="managerName" bind:value={ clubData.managerName } class="input" required disabled />
+            </div>
+            <div>
+                <label for="teamStatus">球队声望</label>
+                <input id="teamStatus" bind:value={ clubData.teamStatus } class="input" required disabled />
             </div>
         </div>
     </div>

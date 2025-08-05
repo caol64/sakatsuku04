@@ -8,7 +8,7 @@
     import Tooltip from "./Tooltip.svelte";
     import Modal from "./Modal.svelte";
     import PlayersEditor from "./PlayersEditor.svelte";
-    import { getCooperationType, getGrowType, getPlayerColor, getPosition, getRank, getRegion, getStyle, getToneType, preferFoot, sortedAbilities, getGrowEval } from "$lib/utils";
+    import { getCooperationType, getGrowType, getPlayerColor, getPosition, getRank, getRegion, getStyle, getToneType, getFoot, sortedAbilities, getGrowEval } from "$lib/utils";
     import { getRefreshFlag, getSelectedTab, setIsLoading, setRefreshFlag } from "$lib/globalState.svelte";
     import AbilityBar from "./AbilityBar.svelte";
     import Football from "$lib/icons/Football.svelte";
@@ -173,7 +173,7 @@
             </p>
             <p>
                 惯用脚
-                <span class="pl-8 text-sm">{preferFoot(myPlayer?.foot)}</span>
+                <span class="pl-8 text-sm">{getFoot(myPlayer?.foot)}</span>
             </p>
             <p>
                 身高
@@ -223,19 +223,14 @@
                 <div>{getGrowType(myPlayer?.growTypeTec)}</div>
                 <div>{getGrowType(myPlayer?.growTypeSys)}</div>
             </div>
-            <!-- <p>修正指数<span>{myPlayer?.jlFactor}</span></p> -->
             <p>隐藏属性</p>
-            <div class="pl-4 grid grid-cols-2 gap-x-1 text-sm text-left">
+            <div class="pl-4 text-sm text-left">
                 <div><span>人气</span><span class="pl-3">{myPlayer?.pop}</span></div>
-                <div><span>欲求</span><span class="pl-3">{myPlayer?.desire}</span></div>
-                <div><span>高傲</span><span class="pl-3">{myPlayer?.pride}</span></div>
-                <div><span>雄心</span><span class="pl-3">{myPlayer?.ambition}</span></div>
-                <div><span>韧性</span><span class="pl-3">{myPlayer?.persistence}</span></div>
-                <div><span>耐心</span><span class="pl-3">{myPlayer?.patient}</span></div>
-                <div><span>超级替补</span><span class="pl-3">{myPlayer?.superSub}</span></div>
-                <div><span>公平竞赛</span><span class="pl-3">{myPlayer?.wildType}</span></div>
-                <div><span>受伤耐性</span><span class="pl-3">{myPlayer?.weakType}</span></div>
-                <div><span>疲劳耐性</span><span class="pl-3">{myPlayer?.tiredType}</span></div>
+                <div><span>不满</span><span class="pl-3">{myPlayer?.comp}</span></div>
+                <div><span>疲劳</span><span class="pl-3">{myPlayer?.tired}</span></div>
+                <div><span>状态</span><span class="pl-3">{myPlayer?.condition}</span></div>
+                <div><span>积极性</span><span class="pl-3">{myPlayer?.moti}</span></div>
+                <div><span>比赛感觉</span><span class="pl-3">{myPlayer?.kan}</span></div>
             </div>
         </div>
         {#if selectedTeam === 0}
@@ -266,7 +261,7 @@
         {/if}
     </VStack>
 
-    <VStack className="grow h-full overflow-auto ml-1 pl-1">
+    <VStack className="grow h-full overflow-auto ml-1 pl-1 pb-12">
         {#each abilityPairs as { label, value }}
             <HStack className="items-center">
                 <span class="w-24 text-sm">{label}</span>

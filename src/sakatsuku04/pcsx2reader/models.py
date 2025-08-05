@@ -15,6 +15,7 @@ class Club:
     club_name: StrByteField
     difficulty: IntByteField
     seed: IntByteField
+    team_status: IntByteField
 
     def to_dto(self):
         return ClubDto(
@@ -28,6 +29,7 @@ class Club:
             manager_name=self.manager_name.value,
             difficulty=self.difficulty.value,
             seed=self.seed.value,
+            team_status=self.team_status.value,
         )
 
 
@@ -86,6 +88,16 @@ class MyPlayer:
     weak_type: IntByteField
     tired_type: IntByteField
     pop: IntByteField
+    comp_money: IntByteField
+    comp_discord: IntByteField
+    comp_staff: IntByteField
+    comp_usage: IntByteField
+    comp_result: IntByteField
+    comp_status: IntByteField
+    comp_euipment: IntByteField
+    tired: IntByteField
+    status: IntByteField
+    condition: IntByteField
 
     def set_style(self, style_index: int):
         new_int = (self.style_learned2.value << 32) | self.style_learned1.value
@@ -142,6 +154,10 @@ class MyPlayer:
             weak_type=self.weak_type.value,
             tired_type=self.tired_type.value,
             pop=self.pop.value,
+            comp=max(self.comp_money.value, self.comp_discord.value, self.comp_staff.value, self.comp_usage.value, self.comp_result.value, self.comp_status.value, self.comp_euipment.value),
+            tired=self.tired.value,
+            status=self.status.value,
+            condition=self.condition.value,
         )
 
 
@@ -166,6 +182,7 @@ class OtherPlayer:
             born=player.born,
             cooperation_type=player.cooperation_type,
             tone_type=player.tone_type,
+            style=player.style,
             grow_type_phy=player.grow_type_phy,
             grow_type_tec=player.grow_type_tec,
             grow_type_sys=player.grow_type_sys,

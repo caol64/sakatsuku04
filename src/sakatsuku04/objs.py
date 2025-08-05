@@ -80,6 +80,10 @@ class Player:
         return self._player_properties[8] if self._player_properties else 0
 
     @property
+    def style(self) -> int:
+        return self._player_properties[9] if self._player_properties else 0
+
+    @property
     def sp_comment(self) -> Optional[str]:
         return Player.player_comments_dict().get(str(self.id), None)
 

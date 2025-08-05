@@ -1,4 +1,5 @@
 import region from "$locales/region_zh.json";
+import foot from "$locales/foot_zh.json";
 import style from "$locales/style_zh.json";
 import tone from "$locales/tone_zh.json";
 import cooperation from "$locales/cooperation_zh.json";
@@ -25,6 +26,7 @@ function lookupDirect(dict: Record<string, string>, num: number | undefined): st
 }
 
 export const getRegion = (num: number | undefined) => lookup(region, num);
+export const getFoot = (num: number | undefined) => lookup(foot, num);
 export const getStyle = (num: number | undefined) => lookup(style, num);
 export const getToneType = (num: number | undefined) => lookup(tone, num);
 export const getCooperationType = (num: number | undefined) => lookup(cooperation, num);
@@ -32,16 +34,6 @@ export const getGrowType = (num: number | undefined) => lookup(grow, num);
 export const getPosition = (num: number | undefined) => lookup(position, num);
 export const getRank = (num: number | undefined) => lookup(rank, num);
 export const getGrowEval = (num: number | undefined) => lookupDirect(growEval, num);
-
-export function preferFoot(footValue: number | undefined): string {
-    if (footValue === 0) {
-        return '左脚';
-    } else if (footValue === 1) {
-        return '右脚';
-    } else {
-        return '双脚';
-    }
-}
 
 export const sortedRegion = Object.entries(region).sort((a, b) => a[0].localeCompare(b[0]));
 export const sortedStyle = Object.entries(style).sort((a, b) => a[0].localeCompare(b[0]));
@@ -64,4 +56,18 @@ export function getPlayerColor(pos: number): string {
         case 7: return "#34d399"; // green-400
         default: return "#e5e7eb"; // gray-200 fallback
     }
+}
+
+export function debounce(
+    func: (...args: any[]) => void,
+    delay: number
+): (...args: any[]) => void {
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    return function(this: any, ...args: any[]) {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+            func.apply(this, args);
+        }, delay);
+    };
 }

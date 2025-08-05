@@ -121,6 +121,7 @@ class Pcsx2DataReader(DataReader):
         club.manager_name = self._read_str_byte(0x703D5C, 0x10)
         club.club_name = self._read_str_byte(0x703D7C, 0x15)
         club.seed = self._read_int_byte(0x7050CC, 4)
+        club.team_status = self._read_int_byte(0x70e676, 2)
         return club
 
     def _read_myteam(self) -> list[MyPlayer]:
@@ -209,7 +210,17 @@ class Pcsx2DataReader(DataReader):
         player.salary = self._read_int_byte(offset + 0x1D6 + i * 0x240, 2)
         player.offer_years_passed = self._read_int_byte(offset + 0x1D9 + i * 0x240)
         player.offer_years_total = self._read_int_byte(offset + 0x1DA + i * 0x240)
+        player.comp_money = self._read_int_byte(offset + 0x1DE + i * 0x240, 2)
+        player.comp_discord = self._read_int_byte(offset + 0x1E0 + i * 0x240, 2)
+        player.comp_staff = self._read_int_byte(offset + 0x1E2 + i * 0x240, 2)
+        player.comp_usage = self._read_int_byte(offset + 0x1E4 + i * 0x240, 2)
+        player.comp_result = self._read_int_byte(offset + 0x1E6 + i * 0x240, 2)
+        player.comp_status = self._read_int_byte(offset + 0x1E8 + i * 0x240, 2)
+        player.comp_euipment = self._read_int_byte(offset + 0x1EA + i * 0x240, 2)
         player.pop = self._read_int_byte(offset + 0x1EC + i * 0x240, 2)
+        player.tired = self._read_int_byte(offset + 0x1F2 + i * 0x240, 2)
+        player.status = self._read_int_byte(offset + 0x1F4 + i * 0x240, 2)
+        player.condition = self._read_int_byte(offset + 0x1F6 + i * 0x240, 2)
         player.moti = self._read_int_byte(offset + 0x1F8 + i * 0x240, 4)
         player.power = self._read_int_byte(offset + 0x204 + i * 0x240, 2)
         player.kan = self._read_int_byte(offset + 0x206 + i * 0x240, 2)
@@ -444,6 +455,7 @@ class Pcsx2DataReader(DataReader):
         tone = data.tone
         cooperation = data.cooperation
         rank = data.rank
+        style = data.style
         scout_action = data.scout_action
         other_team_players: list[list[OtherPlayer]] = []
         ids = []
@@ -476,6 +488,8 @@ class Pcsx2DataReader(DataReader):
             if country is not None:
                 if (country == 50 and dto.born > 50) or (country != 50 and dto.born != country):
                     return False
+            if style is not None and style != dto.style:
+                return False
             if tone is not None and tone != dto.tone_type:
                 return False
             if cooperation is not None and cooperation != dto.cooperation_type:
@@ -529,6 +543,8 @@ class Pcsx2DataReader(DataReader):
             player.grow_type_tec.value = data.grow_type_tec
             player.grow_type_sys.value = data.grow_type_sys
             player.salary.value = data.combo_salary()
+            player.offer_years_passed.value = min(data.offer_years_passed, data.offer_years_total)
+            player.offer_years_total.value = data.offer_years_total
             bits_fields = list()
             bits_fields.append(player.age)
             bits_fields.append(player.abroad_times)
@@ -545,6 +561,8 @@ class Pcsx2DataReader(DataReader):
             bits_fields.append(player.grow_type_tec)
             bits_fields.append(player.grow_type_sys)
             bits_fields.append(player.salary)
+            bits_fields.append(player.offer_years_passed)
+            bits_fields.append(player.offer_years_total)
 
             for ability, new_ability in zip(player.abilities, data.abilities):
                 ability.current.value = new_ability.current

@@ -5,6 +5,15 @@
     const angleStep = (2 * Math.PI) / numSides;
     const radius = 100;
 
+    let flag: boolean = $derived(abilities.length == 18);
+    let maxAbilities = $derived.by(() => {
+        if (flag) {
+            return abilities.slice(12, 18);
+        } else {
+            return abilities;
+        }
+    })
+
     function point(factor: number, index: number) {
         const angle = angleStep * index - Math.PI / 2;
         return {
@@ -68,7 +77,7 @@
         <polygon
             fill="rgba(251, 191, 36, 0.6)"
             stroke-width="0"
-            points={abilities.slice(12, 18)
+            points={maxAbilities
                 .map((factor, i) => {
                     const value = playerHexagonConvert(factor) / 100;
                     const p = point(value, i);
@@ -77,31 +86,32 @@
                 .join(" ")}
         />
 
-        <!-- 能力区域 2：当前最大值 -->
-        <polygon
-            fill="rgba(76, 175, 80, 0.4)"
-            stroke-width="0"
-            points={abilities.slice(6, 12)
-                .map((factor, i) => {
-                    const value = playerHexagonConvert(factor) / 100;
-                    const p = point(value, i);
-                    return `${p.x},${p.y}`;
-                })
-                .join(" ")}
-        />
+        {#if flag}
+            <!-- 能力区域 2：当前最大值 -->
+            <polygon
+                fill="rgba(76, 175, 80, 0.4)"
+                stroke-width="0"
+                points={abilities.slice(6, 12)
+                    .map((factor, i) => {
+                        const value = playerHexagonConvert(factor) / 100;
+                        const p = point(value, i);
+                        return `${p.x},${p.y}`;
+                    })
+                    .join(" ")}
+            />
 
-        <!-- 能力区域 1：当前值 -->
-        <polygon
-            fill="rgba(0, 150, 136, 0.6)"
-            stroke-width="1"
-            points={abilities.slice(0, 6)
-                .map((factor, i) => {
-                    const value = playerHexagonConvert(factor) / 100;
-                    const p = point(value, i);
-                    return `${p.x},${p.y}`;
-                })
-                .join(" ")}
-        />
-
+            <!-- 能力区域 1：当前值 -->
+            <polygon
+                fill="rgba(0, 150, 136, 0.6)"
+                stroke-width="1"
+                points={abilities.slice(0, 6)
+                    .map((factor, i) => {
+                        const value = playerHexagonConvert(factor) / 100;
+                        const p = point(value, i);
+                        return `${p.x},${p.y}`;
+                    })
+                    .join(" ")}
+            />
+    {/if}
     </svg>
 </div>

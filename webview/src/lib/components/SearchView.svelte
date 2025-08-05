@@ -1,7 +1,7 @@
 <script lang="ts">
     import Football from "$lib/icons/Football.svelte";
     import type { TeamPlayer } from "$lib/models";
-    import { getPlayerColor, sortedPosition, sortedRegion, getCooperationType, getGrowType, getPosition, getRank, getToneType, fromHex, sortedRank, sortedCooperationType, sortedToneType } from "$lib/utils";
+    import { getPlayerColor, sortedPosition, sortedRegion, getCooperationType, getGrowType, getPosition, getRank, getToneType, fromHex, sortedRank, sortedCooperationType, sortedToneType, sortedStyle, getStyle } from "$lib/utils";
     import VStack from "./Stack/VStack.svelte";
     import teamsData from "$locales/teams_zh.json";
     import DropDown from "$lib/icons/DropDown.svelte";
@@ -22,6 +22,7 @@
     let selectedRank = $state("");
     let selectedTone = $state("");
     let selectedCooperationType = $state("");
+    let selectedStyle = $state("");
     let selectedScoutAction = $state("");
     let placeholderPos = "不指定";
     let placeholderAge = "不指定";
@@ -29,12 +30,13 @@
     let placeholderRank = "不指定";
     let placeholderTone = "不指定";
     let placeholderCooperationType = "不指定";
+    let placeholderStyle = "不指定";
     let placeholderScoutAction = "不指定";
 
     const scoutActions = ["转会市场", "自由球员", "新秀"];
 
-    function isSearchValid(name?: string, pos?: number, age?: number, country?: number, rank?: number, cooperation?: number, tone?: number, scoutAction?: number): boolean {
-        return !!(name || pos || age || country || rank || cooperation || tone || scoutAction); // 防止返回undefined
+    function isSearchValid(name?: string, pos?: number, age?: number, country?: number, rank?: number, cooperation?: number, tone?: number, style?: number, scoutAction?: number): boolean {
+        return !!(name || pos || age || country || rank || cooperation || tone || style || scoutAction); // 防止返回undefined
     }
 
 
@@ -46,9 +48,10 @@
         const rank = selectedRank ? fromHex(selectedRank) + 1 : undefined;
         const cooperation = selectedCooperationType && !isNaN(Number(selectedCooperationType)) ? Number(selectedCooperationType) + 1 : undefined;
         const tone = selectedTone && !isNaN(Number(selectedTone)) ? Number(selectedTone) + 1 : undefined;
+        const style = selectedStyle ? fromHex(selectedStyle) : undefined;
         const scoutAction = selectedScoutAction && !isNaN(Number(selectedScoutAction)) ? Number(selectedScoutAction) : undefined;
-        if (!isSearchValid(name, pos, age, country, rank, cooperation, tone, scoutAction)) {
-            alert("请至少填写一个搜索条件（姓名、位置、年龄、国籍、等级、连携、性格、球探活动）");
+        if (!isSearchValid(name, pos, age, country, rank, cooperation, tone, style, scoutAction)) {
+            alert("请至少填写一个搜索条件（姓名、位置、年龄、国籍、等级、连携、性格、风格、球探活动）");
             return;
         }
 
@@ -63,6 +66,7 @@
                     rank,
                     cooperation,
                     tone,
+                    style,
                     scoutAction
                 });
             } else {
@@ -117,9 +121,9 @@
                 <tr>
                     <th class="px-4 py-3 w-44">球员</th>
                     <th class="px-4 py-3">年龄</th>
-                    <th class="px-4 py-3">号码</th>
                     <th class="px-4 py-3">位置</th>
                     <th class="px-4 py-3">等级</th>
+                    <th class="px-4 py-3">风格</th>
                     <th class="px-4 py-3">连携</th>
                     <th class="px-4 py-3">性格</th>
                     <th class="px-4 py-3">身体</th>
@@ -150,9 +154,9 @@
                             </span>
                         </th>
                         <td class="px-4 py-2">{item.age}</td>
-                        <td class="px-4 py-2">{item.number}</td>
                         <td class="px-4 py-2">{getPosition(item.pos)}</td>
                         <td class="px-4 py-2">{getRank(item.rank)}</td>
+                        <td class="px-4 py-2">{getStyle(item.style)}</td>
                         <td class="px-4 py-2">{getCooperationType(item.cooperationType)}</td>
                         <td class="px-4 py-2">{getToneType(item.toneType)}</td>
                         <td class="px-4 py-2">{getGrowType(item.growTypePhy)}</td>
@@ -250,6 +254,19 @@
                         <option value="" disabled selected>{placeholderTone}</option>
                     {/if}
                     {#each sortedToneType as [key, value]}
+                        <option value={key}>{value}</option>
+                    {/each}
+                </select>
+                <DropDown />
+            </div>
+
+            <div class="text-sm font-medium text-gray-700 dark:text-white mb-4">风格</div>
+            <div class="input mb-4">
+                <select bind:value={selectedStyle} class="select">
+                    {#if placeholderStyle}
+                        <option value="" disabled selected>{placeholderStyle}</option>
+                    {/if}
+                    {#each sortedStyle.slice(1, 25) as [key, value]}
                         <option value={key}>{value}</option>
                     {/each}
                 </select>

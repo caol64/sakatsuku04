@@ -235,7 +235,7 @@
                     </VStack>
                 {/if}
 
-                <div class="text-sm font-medium">留学效果</div>
+                <div class="text-sm font-medium">{ selectedType === 0 ? "留学" : "集训" }效果</div>
                 <div>{currentGrowType}</div>
 
                 <div class="text-sm font-medium">成长加成</div>

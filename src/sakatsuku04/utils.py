@@ -2,6 +2,7 @@ import codecs
 import csv
 import importlib.resources
 from pathlib import Path
+import random
 from typing import Optional
 
 from . import constants
@@ -142,7 +143,7 @@ def is_album_player(id: int) -> bool:
     return id in constants.album_players
 
 
-def find_name_matches(players: dict, name: str) -> list[id]:
+def find_name_matches(players: dict, name: str) -> list[int]:
     result = []
     for id, value in players.items():
         if name in value[0]:
@@ -268,3 +269,97 @@ def calc_grow_factor_by_grow_type_and_age(grow_type: int, psm_type: int, age: in
     tbl_list = [constants.tbl_phy_grow_type, constants.tbl_tec_grow_type, constants.tbl_sys_grow_type]
     factor = tbl_list[psm_type][grow_type][age]
     return factor
+
+def update_seed(current_seed: int) -> int:
+    """
+    精确模拟C语言的32位线性同余生成器 (LCG) 算法。
+
+    Args:
+        current_seed: 当前的32位种子值。
+
+    Returns:
+        下一个32位的种子值。
+    """
+    # 乘数和增量
+    multiplier = 0x41c64e6d
+    increment = 0x3039
+
+    # 模数 (2^32)，通过位运算 & 0xFFFFFFFF 来高效实现
+    # (current_seed * multiplier) & 0xFFFFFFFF 模拟乘法溢出
+    # (+ increment) & 0xFFFFFFFF 模拟加法溢出
+
+    # 将所有操作限制在32位无符号整数范围内
+    new_seed = (current_seed * multiplier + increment) & 0xFFFFFFFF
+    return new_seed
+
+
+def get_random_int32() -> int:
+    return random.randint(0, 0xFFFFFFFF)
+
+def random_get_0toi(seed: int, max: int = 0xffff) -> tuple[float, int]:
+    next_seed = update_seed(seed)
+    max_val_16bit = max & 0xFFFF
+    result = 0
+    if 1 < max_val_16bit:
+        high_16_bits = next_seed >> 16
+        result = (high_16_bits * max_val_16bit) >> 16
+    return result, next_seed
+
+
+def random_get_0to1(seed: int) -> tuple[float, int]:
+    result_int, next_seed = random_get_0toi(seed, 0xffff)
+    return result_int / 65535.0, next_seed
+
+
+def get_probability_tbl_index(wave_type: int, random_val: float) -> int:
+    probability = constants.probability_tables[wave_type]
+    cumulative = 0.0
+    for i, p in enumerate(probability):
+        cumulative += p
+        if random_val < cumulative:
+            return i
+    return len(probability) - 1
+
+
+def is_jmodifiable(id: int) -> bool:
+    return id < 0x33c or id in constants.oversea_players
+
+
+def modify_jabil(wave_type: int, year: int) -> int:
+    return (wave_type + 8) * year // 0x50
+
+
+def _calc_avg(abilities: list[int], indices: tuple[int]) -> int:
+    total = 0
+    count = 0
+    for i in indices:
+        ability = abilities[i]
+        lv = ability_to_lv(ability)
+        total += lv
+        count += 1
+    return total // count if count else 0
+
+
+def calc_off(abilities: list[int]) -> int:
+    return _calc_avg(abilities, constants.abi_off)
+
+def calc_def(abilities: list[int]) -> int:
+    return _calc_avg(abilities, constants.abi_def)
+
+def calc_gk(abilities: list[int]) -> int:
+    return _calc_avg(abilities, constants.abi_gk)
+
+def calc_phy(abilities: list[int]) -> int:
+    return _calc_avg(abilities, constants.abi_phy)
+
+def calc_sys(abilities: list[int]) -> int:
+    return _calc_avg(abilities, constants.abi_sys)
+
+def calc_tac(abilities: list[int]) -> int:
+    return _calc_avg(abilities, constants.abi_tac)
+
+def calc_sta(abilities: list[int]) -> int:
+    return _calc_avg(abilities, constants.abi_sta)
+
+def handle_cond(cond_value: tuple[int]) -> list[int]:
+    return [f for f in cond_value if f != 0xffff and f != 0]

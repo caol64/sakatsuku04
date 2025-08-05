@@ -7,7 +7,7 @@
     import teamGroupsData from "$locales/team_groups_zh.json";
     import { getRefreshFlag, getSelectedTab, setRefreshFlag } from "$lib/globalState.svelte";
     import Football from "$lib/icons/Football.svelte";
-    import { getCooperationType, getGrowType, getPlayerColor, getPosition, getRank, getToneType } from "$lib/utils";
+    import { getCooperationType, getGrowType, getPlayerColor, getPosition, getRank, getStyle, getToneType } from "$lib/utils";
     import Tooltip from "./Tooltip.svelte";
     import Avatar from "$lib/icons/Avatar.svelte";
 
@@ -91,7 +91,7 @@
 </script>
 
 <HStack className="flex-1 overflow-hidden m-2">
-    <div class="w-1/4 overflow-y-auto">
+    <div class="w-1/5 overflow-y-auto">
         {#each treeData as item}
             <div class="py-0.5 flex items-center gap-x-0.5 w-full">
                 <button onclick={() => toggleRegion(item.region)} class="size-6 flex justify-center items-center hover:bg-gray-100 rounded-md">
@@ -139,16 +139,16 @@
         <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                 <tr>
-                    <th scope="col" class="w-48">球员</th>
-                    <th scope="col">年龄</th>
-                    <th scope="col">号码</th>
-                    <th scope="col">位置</th>
-                    <th scope="col">等级</th>
-                    <th scope="col">连携</th>
-                    <th scope="col">性格</th>
-                    <th scope="col">身体</th>
-                    <th scope="col">技术</th>
-                    <th scope="col">头脑</th>
+                    <th class="w-48">球员</th>
+                    <th>年龄</th>
+                    <th>位置</th>
+                    <th>等级</th>
+                    <th class="w-30">风格</th>
+                    <th>连携</th>
+                    <th class="w-24">性格</th>
+                    <th class="w-16">身体</th>
+                    <th class="w-16">技术</th>
+                    <th class="w-16">头脑</th>
                 </tr>
             </thead>
             <tbody>
@@ -173,9 +173,9 @@
                             </span>
                         </th>
                         <td>{item.age}</td>
-                        <td>{item.number}</td>
                         <td>{getPosition(item.pos)}</td>
                         <td>{getRank(item.rank)}</td>
+                        <td>{getStyle(item.style)}</td>
                         <td>{getCooperationType(item.cooperationType)}</td>
                         <td>{getToneType(item.toneType)}</td>
                         <td>{getGrowType(item.growTypePhy)}</td>
