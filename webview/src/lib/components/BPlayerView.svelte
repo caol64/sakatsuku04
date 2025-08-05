@@ -128,9 +128,20 @@
                 type="text"
                 placeholder="球员姓名或id，如：0F8D"
                 bind:value={keyword}
+                onkeydown={(e) => {
+                    if (e.key === 'Enter') {
+                        page = 1;
+                        fetchBPlayers();
+                    }
+                }}
                 class="w-72 px-4 py-1 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
             />
-            <button onclick={fetchBPlayers} class="flex items-center ml-2 cursor-pointer justify-center border border-gray-200 text-gray-800 py-1 px-3 text-sm rounded-lg dark:border-neutral-700 dark:text-white">
+            <button
+                onclick={() => {
+                    page = 1;
+                    fetchBPlayers();
+                }}
+                class="flex items-center ml-2 cursor-pointer justify-center border border-gray-200 text-gray-800 py-1 px-3 text-sm rounded-lg dark:border-neutral-700 dark:text-white">
                 搜索
             </button>
         </nav>
@@ -180,7 +191,7 @@
                                     <span>{item.name}</span>
                                     {#if item.scouts && item.scouts.length > 0}
                                         {@const tooltipText = `${item.scouts.join("<br>")}`}
-                                        <div class="ml-4 mt-1">
+                                        <div class="ml-4">
                                             <Tooltip text={tooltipText} width="80px">
                                                 <Avatar />
                                             </Tooltip>

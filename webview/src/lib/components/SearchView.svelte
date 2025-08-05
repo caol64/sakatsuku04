@@ -104,6 +104,9 @@
             type="text"
             placeholder="输入球员姓名关键字"
             bind:value={keyword}
+            onkeydown={(e) => {
+                if (e.key === 'Enter') search();
+            }}
             class="w-96 px-4 py-1 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
         />
         <button onclick={search} class="w-18 h-8 rounded-md cursor-pointer text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium text-sm dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 ml-4">
