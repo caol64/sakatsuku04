@@ -9,7 +9,7 @@ import bottle
 import webview
 
 from .io import CnVer
-from .objs import Player
+from .objs import Coach, Player, Reseter, Scout
 from .data_reader import DataReader
 from .dtos import ClubDto, MyPlayerDto, SearchDto, TownDto, SimpleBPlayerDto
 from .savereader.readers import SaveDataReader
@@ -177,6 +177,7 @@ class MainApp:
     def reset(self):
         if self.data_raader:
             self.data_raader.reset()
+        Reseter.reset()
 
     def select_game(self, game: str):
         self.data_raader.select_game(game)
@@ -252,9 +253,11 @@ class MainApp:
             page = 1
         total = 0
         if search_params is None:
-            total = (len(Player.player_dict()) + 24) // 25
+            player_count = len(Player.player_dict())
+            total = (player_count + 24) // 25
             start = (page - 1) * 25
-            for id in range(start, start + 25):
+            end = min(start + 25, player_count)
+            for id in range(start, end):
                 p = Player(id)
                 sp = SimpleBPlayerDto(id=p.id, name=p.name, pos=p.pos)
                 results.append(sp.model_dump(by_alias=True))
@@ -263,7 +266,7 @@ class MainApp:
             if keyword:
                 try:
                     id = int(keyword, 16)
-                except Exception as e:
+                except Exception:
                     id = None
                 if id is not None:
                     p = Player(id)
@@ -296,7 +299,6 @@ class MainApp:
         }
 
     def get_bplayer(self, id: int, year: int = 1) -> dict:
-        CnVer.set_ver(1)
         bplayer = get_player(id)
         player = Player(id)
         bplayer.name = player.name

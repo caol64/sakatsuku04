@@ -143,7 +143,7 @@
         <div class="border border-gray-200 dark:border-gray-600 rounded-md p-4 space-y-2 bg-gray-50 dark:bg-gray-700">
             <p class="flex items-center justify-between">
                 姓名
-                <span class="flex-1 pl-8 text-sm">{myPlayer?.name}</span>
+                <span class="flex-1 pl-8 text-sm select-text">{myPlayer?.name}</span>
                 {#if myPlayer?.spComment}
                     {@const tooltipText = `${myPlayer.spComment}`}
                     <Tooltip text={tooltipText} width="250px">

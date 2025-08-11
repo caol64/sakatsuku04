@@ -1,6 +1,6 @@
 [project]
 name = "saka04-editor"
-version = "1.0.14"
+version = "1.0.15"
 description = "Open-source real-time game trainer and save editor for J.League Pro Soccer Club o Tsukurou! 04 (サカつく04)."
 authors = [{ name = "Lei", email = "caol64@gmail.com" }]
 readme = "README.md"

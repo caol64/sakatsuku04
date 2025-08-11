@@ -355,7 +355,7 @@ wheels = [
 
 [[package]]
 name = "saka04-editor"
-version = "1.0.14"
+version = "1.0.15"
 source = { editable = "." }
 dependencies = [
     { name = "ps2mc" },

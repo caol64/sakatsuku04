@@ -3,8 +3,7 @@ import json
 from typing import Optional
 
 from .io import CnVer
-from .utils import get_resource_path
-
+from .utils import get_resource_path, reset_char_dict
 
 
 class Player:
@@ -132,3 +131,13 @@ class Coach:
     @classmethod
     def name(cls, id: int) -> str:
         return cls.coach_dict().get(id)[0]
+
+
+class Reseter:
+
+    @classmethod
+    def reset(cls):
+        Player.reset_player_dict()
+        Scout.reset_scout_dict()
+        Coach.reset_coach_dict()
+        reset_char_dict()

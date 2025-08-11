@@ -5,11 +5,13 @@
     import { onMount } from "svelte";
     import teamsData from "$locales/teams_zh.json";
     import teamGroupsData from "$locales/team_groups_zh.json";
-    import { getRefreshFlag, getSelectedTab, setRefreshFlag } from "$lib/globalState.svelte";
+    import { getRefreshFlag, getSelectedTab, setRefreshFlag, getClubData } from "$lib/globalState.svelte";
     import Football from "$lib/icons/Football.svelte";
     import { getCooperationType, getGrowType, getPlayerColor, getPosition, getRank, getStyle, getToneType } from "$lib/utils";
     import Tooltip from "./Tooltip.svelte";
     import Avatar from "$lib/icons/Avatar.svelte";
+    import BplayerDetails from "./BplayerDetails.svelte";
+    import Close from "$lib/icons/Close.svelte";
 
 
     let treeData: TeamsWithRegion[] = $state([]);
@@ -20,6 +22,17 @@
     });
     let teamPlayers: TeamPlayer[] = $state([]);
     let teamFriendly = $state(0);
+    let showDrawer = $state(false);
+    let playerId = $state(0);
+
+    function toggleDrawer() {
+        showDrawer = !showDrawer;
+    }
+
+    function showBPlayer(id: number) {
+        playerId = id;
+        showDrawer = true;
+    }
 
 	function toggleRegion(region: string) {
 		openedRegion = openedRegion === region ? "" : region;
@@ -157,7 +170,9 @@
                         <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white" style={`background-image: linear-gradient(to right, transparent 66%, ${getPlayerColor(item.pos)} 100%)`}>
                             <span class="flex items-center justify-between w-full">
                                 <HStack className="items-center">
-                                    <span>{item.name}</span>
+                                    <button onclick={() => { showBPlayer(item.id) }} class="cursor-pointer select-text">
+                                        {item.name}
+                                    </button>
                                     {#if item.scouts && item.scouts.length > 0}
                                         {@const tooltipText = `${item.scouts.join("<br>")}`}
                                         <div class="ml-4">
@@ -186,6 +201,19 @@
             </tbody>
         </table>
     </VStack>
+
+    <div class="fixed top-0 left-0 h-full w-full bg-white dark:bg-gray-800 shadow-lg transition-transform duration-300 z-50"
+        class:translate-x-0={showDrawer}
+        class:translate-x-full={!showDrawer}>
+        <HStack className="flex-1 h-full overflow-hidden m-2.5">
+            <VStack className="w-1/5">
+                <button onclick={toggleDrawer} class="cursor-pointer">
+                    <Close />
+                </button>
+            </VStack>
+            <BplayerDetails selectedPlayer={playerId} selectedYear={getClubData().year} />
+        </HStack>
+    </div>
 
 </HStack>
 

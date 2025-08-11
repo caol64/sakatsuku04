@@ -2,9 +2,9 @@ import struct
 from ..data_reader import DataReader
 from ..dtos import AbroadDto, ClubDto, MyPlayerDto, MyTeamPlayerDto, OtherTeamPlayerDto, ScoutDto, SearchDto, TownDto
 from ..io import CnVer, InputBitStream, IntBitField, OutputBitStream, StrBitField
-from ..objs import Coach, Player, Scout
+from ..objs import Player, Reseter
 from ..savereader.memcard_reader import MemcardReader
-from ..utils import find_name_matches, get_album_bit_indices, reset_char_dict
+from ..utils import find_name_matches, get_album_bit_indices
 from ..constants import scout_excl_tbl, scout_simi_excl_tbl, team_ids
 from .entry_reader import EntryReader, HeadEntryReader
 from .models import (
@@ -271,7 +271,8 @@ class TeamReader(BaseReader):
             self.bit_stream.unpack_bits([0x20] * 0x10)
             self.bit_stream.unpack_bits([8] * 0x10)
         # 0x714fc0 0xfebc
-        self.bit_stream.unpack_bits([8] * (8 * 12))
+        for _ in range(8):
+            self.bit_stream.unpack_bits([8] * 12)
         # 0x715020
         self.bit_stream.unpack_bits(1, 2)
         self.bit_stream.unpack_bits(4, 2)
@@ -864,10 +865,7 @@ class SaveDataReader(DataReader):
         sche_reader = ScheReader(in_bit_stream)
         self.sche = sche_reader.read()
         CnVer.set_ver(self.game_ver())
-        Player.reset_player_dict()
-        Scout.reset_scout_dict()
-        Coach.reset_coach_dict()
-        reset_char_dict()
+        Reseter.reset()
 
     def read_club(self) -> ClubDto:
         if not self.selected_game:

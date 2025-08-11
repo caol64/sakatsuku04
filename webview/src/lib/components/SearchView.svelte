@@ -5,10 +5,12 @@
     import VStack from "./Stack/VStack.svelte";
     import teamsData from "$locales/teams_zh.json";
     import DropDown from "$lib/icons/DropDown.svelte";
-    import { setIsLoading } from "$lib/globalState.svelte";
+    import { setIsLoading, getClubData } from "$lib/globalState.svelte";
     import HStack from "./Stack/HStack.svelte";
     import Tooltip from "./Tooltip.svelte";
     import Avatar from "$lib/icons/Avatar.svelte";
+    import BplayerDetails from "./BplayerDetails.svelte";
+    import Close from "$lib/icons/Close.svelte";
 
     let keyword = $state("");
     let teamPlayers: TeamPlayer[] = $state([]);
@@ -34,6 +36,20 @@
     let placeholderScoutAction = "不指定";
 
     const scoutActions = ["转会市场", "自由球员", "新秀"];
+
+    let showDrawer = $state(false);
+    let playerId = $state(0);
+
+    function toggleDrawer() {
+        showAdvanced = false;
+        showDrawer = !showDrawer;
+    }
+
+    function showBPlayer(id: number) {
+        showAdvanced = false;
+        playerId = id;
+        showDrawer = true;
+    }
 
     function isSearchValid(name?: string, pos?: number, age?: number, country?: number, rank?: number, cooperation?: number, tone?: number, style?: number, scoutAction?: number): boolean {
         return !!(name || pos || age || country || rank || cooperation || tone || style || scoutAction); // 防止返回undefined
@@ -77,7 +93,8 @@
         }
     }
 
-    function toggleDrawer() {
+    function toggleAdvance() {
+        showDrawer = false;
         showAdvanced = !showAdvanced;
     }
 
@@ -112,7 +129,7 @@
         <button onclick={search} class="w-18 h-8 rounded-md cursor-pointer text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium text-sm dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 ml-4">
             搜索
         </button>
-        <button onclick={toggleDrawer} class="h-8 px-4 rounded-md cursor-pointer text-sm border border-gray-300 dark:border-gray-600 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white ml-2">
+        <button onclick={toggleAdvance} class="h-8 px-4 rounded-md cursor-pointer text-sm border border-gray-300 dark:border-gray-600 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white ml-2">
             高级
         </button>
     </div>
@@ -141,7 +158,9 @@
                         <th scope="row" class="px-4 font-medium text-gray-900 whitespace-nowrap dark:text-white" style={`background-image: linear-gradient(to right, transparent 66%, ${getPlayerColor(item.pos)} 100%)`}>
                             <span class="flex items-center justify-between w-full">
                                 <HStack className="items-center">
-                                    <span>{item.name}</span>
+                                    <button onclick={() => { showBPlayer(item.id) }} class="cursor-pointer select-text">
+                                        {item.name}
+                                    </button>
                                     {#if item.scouts && item.scouts.length > 0}
                                         {@const tooltipText = `${item.scouts.join("<br>")}`}
                                         <div class="ml-4">
@@ -298,6 +317,19 @@
                 </button>
             </div>
         </div>
+    </div>
+
+    <div class="fixed top-0 left-0 h-full w-full bg-white dark:bg-gray-800 shadow-lg transition-transform duration-300 z-50"
+        class:translate-x-0={showDrawer}
+        class:translate-x-full={!showDrawer}>
+        <HStack className="flex-1 h-full overflow-hidden m-2.5">
+            <VStack className="w-1/5">
+                <button onclick={toggleDrawer} class="cursor-pointer">
+                    <Close />
+                </button>
+            </VStack>
+            <BplayerDetails selectedPlayer={playerId} selectedYear={getClubData().year} />
+        </HStack>
     </div>
 </VStack>
 

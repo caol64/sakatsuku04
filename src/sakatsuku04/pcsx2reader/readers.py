@@ -7,8 +7,8 @@ import struct
 from ..data_reader import DataReader
 from ..dtos import AbroadDto, ClubDto, MyPlayerDto, MyTeamPlayerDto, OtherTeamPlayerDto, ScoutDto, SearchDto, TownDto
 from ..io import CnVer, IntByteField, StrByteField
-from ..objs import Player, Scout, Coach
-from ..utils import find_name_matches, get_album_bit_indices, reset_char_dict
+from ..objs import Player, Reseter
+from ..utils import find_name_matches, get_album_bit_indices
 from ..constants import scout_excl_tbl, scout_simi_excl_tbl, team_ids
 from .models import Club, MyPlayer, MyPlayerAbility, MyScout, OtherPlayer, OtherTeam, Sche, Town
 
@@ -338,10 +338,7 @@ class Pcsx2DataReader(DataReader):
             if is_connected:
                 ver = self.game_ver()
                 CnVer.set_ver(ver)
-                Player.reset_player_dict()
-                Scout.reset_scout_dict()
-                Coach.reset_coach_dict()
-                reset_char_dict()
+                Reseter.reset()
             return is_connected
         except Exception as e:
             print(f"Error getting emulator status: {e}")
