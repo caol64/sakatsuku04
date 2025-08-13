@@ -5,6 +5,7 @@
     import { fromHex, sortedAbilities, sortedCooperationType, sortedGrowType, sortedPosition, sortedRegion, sortedStyle, sortedToneType, toHex } from "$lib/utils";
     import HStack from "./Stack/HStack.svelte";
     import Tooltip from "./Tooltip.svelte";
+    import comp from "$locales/comp_zh.json";
 
     type Props = { player: MyPlayer, team: number, onSave: () => void; };
 
@@ -68,8 +69,6 @@
     }
 
     function checkMoney(): boolean {
-        console.log(selectedSalaryHigh);
-        console.log(selectedSalaryLow);
         if (selectedSalaryHigh === undefined || selectedSalaryLow === undefined || isNaN(selectedSalaryHigh) || isNaN(selectedSalaryLow)) {
             alert("金额不正确");
             return false;
@@ -117,6 +116,14 @@
                 }
             } else {
                 alert('API 未加载');
+            }
+        }
+    }
+
+    function clearComp() {
+        if (player.comp) {
+            for (let i = 0; i < player.comp.length; i++) {
+                player.comp[i] = 0;
             }
         }
     }
@@ -298,8 +305,21 @@
             </Tooltip>
         </HStack>
     </div>
+    <div class="form">
+        <div class="label">不满</div>
+        <HStack className="items-center space-x-2">
+            {#if player.comp && player.comp.length > 0}
+                {#each player.comp as item, i}
+                    <Tooltip text={comp[i]} width="80px">
+                        <span class="text-sm">{item}</span>
+                    </Tooltip>
+                {/each}
+            {/if}
+        </HStack>
+    </div>
 
     <div class="mt-1 flex items-center justify-end p-4 border-t border-gray-200 rounded-b dark:border-gray-600">
+        <button onclick={clearComp} class="ms-3 py-2.5 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 cursor-pointer">消除不满</button>
         <button onclick={toCurrentMax} class="ms-3 py-2.5 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 cursor-pointer">所有能力到达当前上限</button>
         <button onclick={toMax} class="ms-3 py-2.5 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 cursor-pointer">所有能力到达最高上限</button>
         <button onclick={submitSave} class="ms-3 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 cursor-pointer">保存</button>

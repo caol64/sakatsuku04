@@ -98,6 +98,11 @@ class MyPlayer:
     tired: IntByteField
     status: IntByteField
     condition: IntByteField
+    explosion_exp: IntByteField
+    explosion_level: IntByteField
+    explo_countdown: IntByteField
+    explo_pending_reason: IntByteField
+    explo_final_reason: IntByteField
 
     def set_style(self, style_index: int):
         new_int = (self.style_learned2.value << 32) | self.style_learned1.value
@@ -154,10 +159,15 @@ class MyPlayer:
             weak_type=self.weak_type.value,
             tired_type=self.tired_type.value,
             pop=self.pop.value,
-            comp=max(self.comp_money.value, self.comp_discord.value, self.comp_staff.value, self.comp_usage.value, self.comp_result.value, self.comp_status.value, self.comp_euipment.value),
+            comp=[self.comp_money.value, self.comp_discord.value, self.comp_staff.value, self.comp_usage.value, self.comp_result.value, self.comp_status.value, self.comp_euipment.value],
             tired=self.tired.value,
             status=self.status.value,
             condition=self.condition.value,
+            explosion_exp=self.explosion_exp.value,
+            explosion_level=self.explosion_level.value,
+            explo_countdown=self.explo_countdown.value,
+            explo_pending_reason=self.explo_pending_reason.value,
+            explo_final_reason=self.explo_final_reason.value,
         )
 
 

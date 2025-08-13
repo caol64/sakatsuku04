@@ -493,12 +493,12 @@ class TeamReader(BaseReader):
             contract_cond = a[3] # 0x7053B9B 1db(1)
             # 0x7053be
             a = self.bit_stream.unpack_bits([0x10] * 13, 26)
-            players[i].comp_money = a[0]  # 0x7053be 1de(2) 金钱不满
+            players[i].comp_money = a[0]  # 0x7053be 1de(2) 待遇不满
             players[i].comp_discord = a[1]  # 0x7053c0 1e0(2) 人际关系不满
             players[i].comp_staff = a[2]  # 0x7053c2 1e2(2) 教练组不满
             players[i].comp_usage = a[3]  # 0x7053c4 1e4(2) 启用不满
-            players[i].comp_result = a[4]  # 0x7053c6 1e6(2) 成绩不满
-            players[i].comp_status = a[5]  # 0x7053c8 1e8(2) 声望不满
+            players[i].comp_result = a[4]  # 0x7053c6 1e6(2) 球队成绩不满
+            players[i].comp_status = a[5]  # 0x7053c8 1e8(2) 球队声望不满
             players[i].comp_euipment = a[6]  # 0x7053ca 1ea(2) 设施不满
             players[i].pop = a[7]  # 0x7053cc 1ec(2) 人气
             pop_local = a[8]  # 0x7053ce 1ee(2) 本地人气
@@ -522,12 +522,12 @@ class TeamReader(BaseReader):
             a = self.bit_stream.unpack_bits([-8] * 9, 9)  # not use
             # 0x705400
             a = self.bit_stream.unpack_bits([0x10, 0x10, 8, -8, 5, 5, 6], 12)
-            a[0]  # 0x705400 220(2)
-            a[1]  # 0x705402 222(2)
-            a[2]  # 0x705404 224(1) 能力爆发（强度）
-            a[3]  # 0x705405 225(1) 能力爆发（倒计时）为0爆发
-            a[4]  # 0x705406 226(1)
-            a[5]  # 0x705407 227(1) 能力爆发（原因）
+            a[0]  # 0x705400 220(2) mr_number
+            players[i].explosion_exp = a[1]  # 0x705402 222(2) explosion_exp
+            players[i].explosion_level = a[2]  # 0x705404 224(1) explosion_level
+            players[i].explo_countdown = a[3]  # 0x705405 225(1) explo_countdown
+            players[i].explo_pending_reason = a[4]  # 0x705406 226(1) explo_pending_reason
+            players[i].explo_final_reason = a[5]  # 0x705407 227(1) explo_final_reason
             players[i].style_equip = a[6]  # 0x705408 228(4)
             # 0x70540c
             a = self.bit_stream.unpack_bits([0x20, 0x20, 0x20, 0x20, 0x10], 20)
@@ -1081,6 +1081,13 @@ class SaveDataReader(DataReader):
             player.salary.value = data.combo_salary()
             player.offer_years_passed.value = min(data.offer_years_passed, data.offer_years_total)
             player.offer_years_total.value = data.offer_years_total
+            player.comp_money.value = data.comp[0]
+            player.comp_discord.value = data.comp[1]
+            player.comp_staff.value = data.comp[2]
+            player.comp_usage.value = data.comp[3]
+            player.comp_result.value = data.comp[4]
+            player.comp_status.value = data.comp[5]
+            player.comp_euipment.value = data.comp[6]
             bits_fields = list()
             bits_fields.append(player.age)
             bits_fields.append(player.abroad_times)
@@ -1099,6 +1106,13 @@ class SaveDataReader(DataReader):
             bits_fields.append(player.salary)
             bits_fields.append(player.offer_years_passed)
             bits_fields.append(player.offer_years_total)
+            bits_fields.append(player.comp_money)
+            bits_fields.append(player.comp_discord)
+            bits_fields.append(player.comp_staff)
+            bits_fields.append(player.comp_usage)
+            bits_fields.append(player.comp_result)
+            bits_fields.append(player.comp_status)
+            bits_fields.append(player.comp_euipment)
 
             for ability, new_ability in zip(player.abilities, data.abilities):
                 ability.current.value = new_ability.current

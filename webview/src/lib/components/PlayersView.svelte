@@ -226,7 +226,7 @@
             <p>隐藏属性</p>
             <div class="pl-4 text-sm text-left">
                 <div><span>人气</span><span class="pl-3">{myPlayer?.pop}</span></div>
-                <div><span>不满</span><span class="pl-3">{myPlayer?.comp}</span></div>
+                <div><span>不满</span><span class="pl-3">{myPlayer?.comp && myPlayer.comp.length > 0 ? Math.max(...myPlayer.comp) : '' }</span></div>
                 <div><span>疲劳</span><span class="pl-3">{myPlayer?.tired}</span></div>
                 <div><span>状态</span><span class="pl-3">{myPlayer?.condition}</span></div>
                 <div><span>积极性</span><span class="pl-3">{myPlayer?.moti}</span></div>

@@ -97,7 +97,7 @@ export interface MyPlayer {
     weakType?: number;
     tiredType?: number;
     pop?: number;
-    comp?: number;
+    comp?: number[];
     tired?: number;
     status?: number;
     condition?: number;

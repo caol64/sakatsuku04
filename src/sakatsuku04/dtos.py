@@ -87,10 +87,15 @@ class MyPlayerDto(BaseDto):
     weak_type: int
     tired_type: int
     pop: int
-    comp: int
+    comp: list[int]
     tired: int
     status: int
     condition: int
+    explosion_exp: int
+    explosion_level: int
+    explo_countdown: int
+    explo_pending_reason: int
+    explo_final_reason: int
 
     @computed_field
     @property

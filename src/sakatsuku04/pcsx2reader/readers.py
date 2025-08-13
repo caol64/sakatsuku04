@@ -226,6 +226,11 @@ class Pcsx2DataReader(DataReader):
         player.kan = self._read_int_byte(offset + 0x206 + i * 0x240, 2)
         player.return_days = self._read_int_byte(offset + 0x208 + i * 0x240, 2)
         player.abroad_times = self._read_int_byte(offset + 0x211 + i * 0x240)
+        player.explosion_exp = self._read_int_byte(offset + 0x222 + i * 0x240, 2)
+        player.explosion_level = self._read_int_byte(offset + 0x224 + i * 0x240)
+        player.explo_countdown = self._read_int_byte(offset + 0x225 + i * 0x240)
+        player.explo_pending_reason = self._read_int_byte(offset + 0x226 + i * 0x240)
+        player.explo_final_reason = self._read_int_byte(offset + 0x227 + i * 0x240)
         player.style_equip = self._read_int_byte(offset + 0x228 + i * 0x240)
         player.style_learned1 = self._read_int_byte(offset + 0x22C + i * 0x240, 4)
         player.style_learned2 = self._read_int_byte(offset + 0x230 + i * 0x240, 4)
@@ -542,6 +547,13 @@ class Pcsx2DataReader(DataReader):
             player.salary.value = data.combo_salary()
             player.offer_years_passed.value = min(data.offer_years_passed, data.offer_years_total)
             player.offer_years_total.value = data.offer_years_total
+            player.comp_money.value = data.comp[0]
+            player.comp_discord.value = data.comp[1]
+            player.comp_staff.value = data.comp[2]
+            player.comp_usage.value = data.comp[3]
+            player.comp_result.value = data.comp[4]
+            player.comp_status.value = data.comp[5]
+            player.comp_euipment.value = data.comp[6]
             bits_fields = list()
             bits_fields.append(player.age)
             bits_fields.append(player.abroad_times)
@@ -560,6 +572,13 @@ class Pcsx2DataReader(DataReader):
             bits_fields.append(player.salary)
             bits_fields.append(player.offer_years_passed)
             bits_fields.append(player.offer_years_total)
+            bits_fields.append(player.comp_money)
+            bits_fields.append(player.comp_discord)
+            bits_fields.append(player.comp_staff)
+            bits_fields.append(player.comp_usage)
+            bits_fields.append(player.comp_result)
+            bits_fields.append(player.comp_status)
+            bits_fields.append(player.comp_euipment)
 
             for ability, new_ability in zip(player.abilities, data.abilities):
                 ability.current.value = new_ability.current

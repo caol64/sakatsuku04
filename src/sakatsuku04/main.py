@@ -9,7 +9,7 @@ import bottle
 import webview
 
 from .io import CnVer
-from .objs import Coach, Player, Reseter, Scout
+from .objs import Player, Reseter
 from .data_reader import DataReader
 from .dtos import ClubDto, MyPlayerDto, SearchDto, TownDto, SimpleBPlayerDto
 from .savereader.readers import SaveDataReader

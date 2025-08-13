@@ -227,6 +227,13 @@ def find_badden_match(id: int) -> list[int]:
             result.append(a)
     return result
 
+def find_golden_match(id: int) -> list[int]:
+    result = []
+    for tup in constants.tbl_golden:
+        if id in tup:
+            result.extend([x for x in tup if x != id])
+    return result
+
 def team_to_nati(team_id: int) -> int:
     nati_id = 50
     if 0x100 <= team_id < 0x208:
