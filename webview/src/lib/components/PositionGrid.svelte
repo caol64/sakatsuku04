@@ -1,7 +1,7 @@
 <script lang="ts">
     let { aposEval = Array(11).fill(0) }: { aposEval?: number[] } = $props();
     // 颜色映射表
-    const colorMap = ["bg-white", "bg-cyan-400", "bg-yellow-300", "bg-orange-400", "bg-red-500"];
+    const colorMap = ["", "bg-cyan-400", "bg-yellow-300", "bg-orange-400", "bg-red-500"];
 
     // 三列颜色（从下往上）
     let leftCol = $derived([
@@ -35,28 +35,28 @@
             <!-- 左列 -->
             <div class="flex flex-col w-1/3">
                 {#each leftCol as color}
-                    <div class="{color} aspect-square border border-slate-800 h-[26.6667px]"></div>
+                    <div class="{color} aspect-square border border-gray-500 h-[26.6667px]"></div>
                 {/each}
             </div>
 
             <!-- 中列 -->
             <div class="flex flex-col w-1/3">
                 {#each middleCol as color}
-                    <div class="{color} flex-1 border border-slate-800"></div>
+                    <div class="{color} flex-1 border border-gray-500"></div>
                 {/each}
             </div>
 
             <!-- 右列 -->
             <div class="flex flex-col w-1/3">
                 {#each rightCol as color}
-                    <div class="{color} aspect-square border border-slate-800 h-[26.6667px]"></div>
+                    <div class="{color} aspect-square border border-gray-500 h-[26.6667px]"></div>
                 {/each}
             </div>
         </div>
 
         <!-- 额外的中间格子：直接位于主图形下方 -->
         <div class="w-1/3 flex-none">
-            <div class="{extraCol} flex-1 h-[20px] border-2 border-slate-800"></div>
+            <div class="{extraCol} flex-1 h-[20px] border-2 border-gray-500"></div>
         </div>
     </div>
 </div>

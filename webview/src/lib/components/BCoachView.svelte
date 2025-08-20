@@ -1,41 +1,32 @@
 <script lang="ts">
-    import type { MyTeamPlayer } from "$lib/models";
+    import type { Coach } from "$lib/models";
     import { onMount } from "svelte";
     import HStack from "./Stack/HStack.svelte";
     import VStack from "./Stack/VStack.svelte";
-    import Tooltip from "./Tooltip.svelte";
-    import { getPlayerColor } from "$lib/utils";
     import { setIsLoading, setModeState } from "$lib/globalState.svelte";
-    import Football from "$lib/icons/Football.svelte";
     import About from "./About.svelte";
     import Back from "$lib/icons/Back.svelte";
-    import Avatar from "$lib/icons/Avatar.svelte";
-    import BPlayerDetails from "./BPlayerDetails.svelte";
 
     let page = $state(1);
     let total = $state(1);
-    let bPlayers: MyTeamPlayer[] = $derived([]);
+    let bCoachs: Coach[] = $derived([]);
     let keyword = $state("");
+    let selectedCoach = $state(0);
 
-    let selectedPlayer = $state(0);
-    let selectedYear = $state(1);
-    let sliderValue = $state(1);
-    let debounceTimer: ReturnType<typeof setTimeout>;
-
-    async function fetchBPlayers() {
+    async function fetchBCoachs() {
         try {
             setIsLoading(true);
-            if (window.pywebview?.api?.fetch_bplayers) {
+            if (window.pywebview?.api?.fetch_bcoachs) {
                 const searchParams = keyword ? { "keyword": keyword } : undefined;
-                const resp = await window.pywebview.api.fetch_bplayers(page, searchParams);
+                const resp = await window.pywebview.api.fetch_bcoachs(page, searchParams);
                 page = resp["page"];
                 total = resp["total"];
-                bPlayers = resp["data"];
-                if (bPlayers && bPlayers.length > 0) {
-                    selectedPlayer = bPlayers[0].id;
+                bCoachs = resp["data"];
+                if (bCoachs && bCoachs.length > 0) {
+                    selectedCoach = bCoachs[0].id;
                 } else {
-                    selectedPlayer = 0;
-                    bPlayers = [];
+                    selectedCoach = 0;
+                    bCoachs = [];
                 }
             } else {
                 alert('API 未加载');
@@ -46,7 +37,7 @@
     }
 
     onMount(async () => {
-        fetchBPlayers();
+        fetchBCoachs();
 	});
 
     async function reset() {
@@ -56,42 +47,19 @@
     async function nextPage() {
         if (page < total) {
             page++;
-            fetchBPlayers();
+            fetchBCoachs();
         }
     }
 
     async function prevPage() {
         if (page > 1) {
             page--;
-            fetchBPlayers();
+            fetchBCoachs();
         }
     }
 
-    async function playerClick(id: number) {
-        selectedPlayer = id;
-    }
-
-    async function nextYear() {
-        if (selectedYear < 100) {
-            selectedYear++;
-        }
-    }
-
-    async function prevYear() {
-        if (selectedYear > 1) {
-            selectedYear--;
-        }
-    }
-
-    $effect(() => {
-        sliderValue = selectedYear;
-    });
-
-    function handleSliderInput() {
-        clearTimeout(debounceTimer);
-        debounceTimer = window.setTimeout(() => {
-            selectedYear = Number(sliderValue);
-        }, 300);
+    async function scoutClick(id: number) {
+        selectedCoach = id;
     }
 
 </script>
@@ -106,12 +74,12 @@
         <nav class="flex items-center gap-x-1">
             <input
                 type="text"
-                placeholder="球员姓名或id，如：0F8D"
+                placeholder="教练姓名或id，如：0F8D"
                 bind:value={keyword}
                 onkeydown={(e) => {
                     if (e.key === 'Enter') {
                         page = 1;
-                        fetchBPlayers();
+                        fetchBCoachs();
                     }
                 }}
                 class="w-72 px-4 py-1 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
@@ -119,34 +87,10 @@
             <button
                 onclick={() => {
                     page = 1;
-                    fetchBPlayers();
+                    fetchBCoachs();
                 }}
                 class="flex items-center ml-2 cursor-pointer justify-center border border-gray-200 text-gray-800 py-1 px-3 text-sm rounded-lg dark:border-neutral-700 dark:text-white">
                 搜索
-            </button>
-        </nav>
-
-        <nav class="flex items-center gap-x-1 ml-8">
-            <span class="min-h-8 min-w-8 flex justify-center items-center text-gray-800 py-1 px-3 text-sm rounded-lg focus:outline-hidden focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:border-neutral-700 dark:text-white dark:focus:bg-neutral-800">
-                年份：
-            </span>
-            <input type="range" min="1" max="100" bind:value={sliderValue} oninput={handleSliderInput} class="range">
-            <button onclick={prevYear} type="button" class="min-h-8 min-w-8 py-2 px-2 inline-flex justify-center items-center gap-x-2 text-sm rounded-lg text-gray-800 hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-white dark:hover:bg-white/10 dark:focus:bg-white/10 cursor-pointer" aria-label="Previous">
-                <svg class="shrink-0 size-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="m15 18-6-6 6-6"></path>
-                </svg>
-                <span class="sr-only">Previous</span>
-            </button>
-            <div class="flex items-center gap-x-1">
-                <span class="min-h-8 w-12 flex justify-center items-center border border-gray-200 text-gray-800 py-1 px-3 text-sm rounded-lg focus:outline-hidden focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:border-neutral-700 dark:text-white dark:focus:bg-neutral-800">
-                    {selectedYear}
-                </span>
-            </div>
-            <button onclick={nextYear} type="button" class="min-h-8 min-w-8 py-2 px-2 inline-flex justify-center items-center gap-x-2 text-sm rounded-lg text-gray-800 hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-white dark:hover:bg-white/10 dark:focus:bg-white/10 cursor-pointer" aria-label="Next">
-                <span class="sr-only">Next</span>
-                <svg class="shrink-0 size-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="m9 18 6-6-6-6"></path>
-                </svg>
             </button>
         </nav>
 
@@ -155,29 +99,17 @@
     </HStack>
     <HStack className="flex-1 overflow-hidden m-2.5">
         <VStack className="w-1/5 mr-1 space-y-2">
-            {#if bPlayers && bPlayers.length > 0}
+            {#if bCoachs && bCoachs.length > 0}
                 <div class="sidebar">
-                    {#each bPlayers as item}
+                    {#each bCoachs as item}
                         <button
-                            onclick={() => playerClick(item.id)}
-                            class={selectedPlayer === item.id ? "activate" : ""}
-                            style={`background-image: linear-gradient(to right, transparent 66%, ${getPlayerColor(item.pos)} 100%)`}
+                            onclick={() => scoutClick(item.id)}
+                            class={selectedCoach === item.id ? "activate" : ""}
                         >
                             <span class="flex items-center justify-between w-full">
                                 <HStack className="items-center">
                                     <span>{item.name}</span>
-                                    {#if item.scouts && item.scouts.length > 0}
-                                        {@const tooltipText = `${item.scouts.join("<br>")}`}
-                                        <div class="ml-4">
-                                            <Tooltip text={tooltipText} width="80px">
-                                                <Avatar />
-                                            </Tooltip>
-                                        </div>
-                                    {/if}
                                 </HStack>
-                                {#if item.isAlbum}
-                                    <div class="mx-2"><Football /></div>
-                                {/if}
                             </span>
                         </button>
                     {/each}
@@ -216,7 +148,7 @@
             {/if}
         </VStack>
 
-        <BPlayerDetails selectedPlayer={selectedPlayer} selectedYear={selectedYear} />
+        <!-- <BPlayerDetails selectedPlayer={selectedPlayer} selectedYear={selectedYear} /> -->
     </HStack>
 </VStack>
 
@@ -230,8 +162,5 @@
     }
     .activate {
         @apply bg-gray-100 text-blue-700 dark:bg-gray-600 dark:text-white;
-    }
-    .range {
-        @apply w-52 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700;
     }
 </style>

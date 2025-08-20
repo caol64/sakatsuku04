@@ -370,3 +370,15 @@ def calc_sta(abilities: list[int]) -> int:
 
 def handle_cond(cond_value: tuple[int]) -> list[int]:
     return [f for f in cond_value if f != 0xffff and f != 0]
+
+def sabil_2_apt(param: int) -> int:
+    if param <= 0x28:   # 40
+        return 0
+    elif param <= 0x37: # 55
+        return 1
+    elif param <= 0x46: # 70
+        return 2
+    elif param <= 0x55: # 85
+        return 3
+    else:
+        return 4

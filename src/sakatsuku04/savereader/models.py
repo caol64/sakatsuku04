@@ -93,7 +93,7 @@ class MyPlayer:
     ambition: IntBitField
     patient: IntBitField
     persistence: IntBitField
-    grow_type_id: IntBitField
+    wave_type: IntBitField
     salary: IntBitField
     offer_years_passed: IntBitField
     offer_years_total: IntBitField
@@ -169,7 +169,7 @@ class MyPlayer:
             ambition=self.ambition.value,
             patient=self.patient.value,
             persistence=self.persistence.value,
-            grow_type_id=self.grow_type_id.value,
+            wave_type=self.wave_type.value,
             sp_comment=player.sp_comment,
             salary_high=self.salary.value * 100 // 10000,
             salary_low=self.salary.value * 100 % 10000,

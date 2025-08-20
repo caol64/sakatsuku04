@@ -73,7 +73,7 @@ export interface MyPlayer {
     ambition?: number;
     patient?: number;
     persistence?: number;
-    growTypeId?: number;
+    waveType?: number;
     hexagon: number[];
     odc: number[];
     abilEval?: number;
@@ -128,7 +128,6 @@ export interface MyTown {
 export interface Scout {
     id: number;
     name: string;
-    abilities?: number[];
     exclusivePlayers?: Search[];
     simiExclusivePlayers?: Search[];
 }
@@ -195,4 +194,22 @@ export interface BPlayer {
     pop?: number;
     debutYear?: number;
     signingDifficulty?: number;
+}
+
+export interface Coach {
+    id: number;
+    name: string;
+}
+
+export interface BScout {
+    name?: string;
+    born?: number;
+    abilities: number[];
+    hexagon: number[];
+    aposEval?: number[];
+}
+
+export interface BCoach {
+    name?: string;
+    born?: number;
 }

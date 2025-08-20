@@ -3,7 +3,7 @@ from pydantic import BaseModel, ConfigDict, computed_field
 from pydantic.alias_generators import to_camel
 
 from .objs import Coach, Player, Scout
-from .utils import calc_abil_eval, calc_apos_eval, calc_def, calc_gk, calc_grow_eval, calc_off, calc_phy, calc_sta, calc_sys, calc_tac, find_badden_match, handle_cond, is_album_player, lv_to_dot
+from .utils import calc_abil_eval, calc_apos_eval, calc_def, calc_gk, calc_grow_eval, calc_off, calc_phy, calc_sta, calc_sys, calc_tac, find_badden_match, handle_cond, is_album_player, lv_to_dot, sabil_2_apt
 from . import constants
 
 
@@ -73,7 +73,7 @@ class MyPlayerDto(BaseDto):
     ambition: int
     patient: int
     persistence: int
-    grow_type_id: int
+    wave_type: int
     sp_comment: Optional[str]
     salary_high: int
     salary_low: int
@@ -313,7 +313,7 @@ class BPlayerDto(BaseDto):
     grow_type_phy: int
     grow_type_tec: int
     grow_type_sys: int
-    abilities: list[int] = [0] * 64
+    abilities: list[int]
     height: int
     style: int
     super_sub: int
@@ -399,3 +399,42 @@ class SimpleBPlayerDto(BaseDto):
         if scouts_ids:
             return [Scout.name(f) for f in scouts_ids]
         return []
+
+
+class SimpleBScoutDto(BaseDto):
+    id: int
+    name: str
+
+
+class SimpleBCoachDto(BaseDto):
+    id: int
+    name: str
+
+
+class BScoutDto(BaseDto):
+    id: int = 0
+    name: str
+    born: int
+    abilities: list[int]
+
+    @computed_field
+    @property
+    def hexagon(self) -> list[int]:
+        return [
+            (self.abilities[2] + self.abilities[4]) // 2,
+            (self.abilities[3] + self.abilities[4] + self.abilities[5]) // 3,
+            (self.abilities[1] + self.abilities[3]) // 2,
+            (self.abilities[1] + self.abilities[2]) // 2,
+        ]
+
+    @computed_field
+    @property
+    def apos_eval(self) -> list[int]:
+        return [
+            sabil_2_apt(self.abilities[constants.epos_to_pos[constants.apos_to_epos[i]] + 0x11])
+            for i in range(11)
+        ]
+
+
+class BCoachDto(BaseDto):
+    ...

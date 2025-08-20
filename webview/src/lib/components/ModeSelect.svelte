@@ -4,7 +4,7 @@
     import Pcsx2Connect from "./Pcsx2Connect.svelte";
     import { onMount } from "svelte";
     import About from "./About.svelte";
-    import PlayerDB from "./PlayerDB.svelte";
+    import GameDB from "./GameDB.svelte";
 
     onMount(async () => {
         if (window.pywebview?.api?.reset) {
@@ -27,7 +27,7 @@
         </div>
     </div>
     <div class="w-11/12 border border-dashed border-gray-300 rounded-md p-12">
-        <PlayerDB />
+        <GameDB />
     </div>
 </VStack>
 

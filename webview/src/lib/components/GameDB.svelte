@@ -4,6 +4,14 @@
     async function gotoPlayerDB() {
         setModeState("bPlayerView");
     }
+
+    async function gotoCoachDB() {
+        setModeState("bCoachView");
+    }
+
+    async function gotoScoutDB() {
+        setModeState("bScoutView");
+    }
 </script>
 
 <div class="flex items-center justify-center space-x-20 w-full">
@@ -17,12 +25,25 @@
         </svg>
     </div>
     <div class="flex flex-col space-y-2">
-        <p class="text-gray-700 dark:text-gray-300 text-base font-medium">
-            球员数据库
-        </p>
         <div class="flex items-center space-x-2 text-sm">
             <button onclick={ gotoPlayerDB } class="text-blue-600 cursor-pointer flex items-center">
-                进入
+                球员数据库
+                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            </button>
+        </div>
+        <div class="flex items-center space-x-2 text-sm">
+            <button onclick={ gotoCoachDB } class="text-blue-600 cursor-pointer flex items-center">
+                教练数据库
+                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            </button>
+        </div>
+        <div class="flex items-center space-x-2 text-sm">
+            <button onclick={ gotoScoutDB } class="text-blue-600 cursor-pointer flex items-center">
+                球探数据库
                 <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                 </svg>

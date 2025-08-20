@@ -106,6 +106,10 @@ class Scout:
         cls._scout_dict = None
 
     @classmethod
+    def exsists(cls, id: int) -> bool:
+        return cls.scout_dict().get(id) is not None
+
+    @classmethod
     def name(cls, id: int) -> str:
         return cls.scout_dict().get(id)[0]
 
@@ -127,6 +131,10 @@ class Coach:
     @classmethod
     def reset_coach_dict(cls):
         cls._coach_dict = None
+
+    @classmethod
+    def exsists(cls, id: int) -> bool:
+        return cls.coach_dict().get(id) is not None
 
     @classmethod
     def name(cls, id: int) -> str:

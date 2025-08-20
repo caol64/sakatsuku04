@@ -1,18 +1,9 @@
 <script lang="ts">
-    let { abilities = Array(18).fill(0) }: { abilities: number[] } = $props();
-    const labels = ["进攻", "防守", "体能", "身体", "阵型", "战术"];
-    const numSides = 6;
+    let { abilities = Array(4).fill(0) }: { abilities: number[] } = $props();
+    const labels = ["新人", "谈判", "现役", "搜索"];
+    const numSides = 4;
     const angleStep = (2 * Math.PI) / numSides;
     const radius = 100;
-
-    let flag: boolean = $derived(abilities.length == 18);
-    let maxAbilities = $derived.by(() => {
-        if (flag) {
-            return abilities.slice(12, 18);
-        } else {
-            return abilities;
-        }
-    });
 
     function point(factor: number, index: number) {
         const angle = angleStep * index - Math.PI / 2;
@@ -23,7 +14,9 @@
     }
 
     function playerHexagonConvert(input_value: number) {
-        return Math.floor(Math.min(input_value + 10, 90) * 100 / 90);
+        let p = input_value + 10;
+        let v = p > 90 ? 360 : p * 4;
+        return Math.floor(((v + Math.min(p, 90)) * 20) / 90);
     }
 </script>
 
@@ -77,7 +70,7 @@
         <polygon
             fill="rgba(251, 191, 36, 0.6)"
             stroke-width="0"
-            points={maxAbilities
+            points={abilities
                 .map((factor, i) => {
                     const value = playerHexagonConvert(factor) / 100;
                     const p = point(value, i);
@@ -85,33 +78,5 @@
                 })
                 .join(" ")}
         />
-
-        {#if flag}
-            <!-- 能力区域 2：当前最大值 -->
-            <polygon
-                fill="rgba(76, 175, 80, 0.4)"
-                stroke-width="0"
-                points={abilities.slice(6, 12)
-                    .map((factor, i) => {
-                        const value = playerHexagonConvert(factor) / 100;
-                        const p = point(value, i);
-                        return `${p.x},${p.y}`;
-                    })
-                    .join(" ")}
-            />
-
-            <!-- 能力区域 1：当前值 -->
-            <polygon
-                fill="rgba(0, 150, 136, 0.6)"
-                stroke-width="1"
-                points={abilities.slice(0, 6)
-                    .map((factor, i) => {
-                        const value = playerHexagonConvert(factor) / 100;
-                        const p = point(value, i);
-                        return `${p.x},${p.y}`;
-                    })
-                    .join(" ")}
-            />
-        {/if}
     </svg>
 </div>

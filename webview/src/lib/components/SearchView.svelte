@@ -9,7 +9,7 @@
     import HStack from "./Stack/HStack.svelte";
     import Tooltip from "./Tooltip.svelte";
     import Avatar from "$lib/icons/Avatar.svelte";
-    import BplayerDetails from "./BplayerDetails.svelte";
+    import BPlayerDetails from "./BPlayerDetails.svelte";
     import Close from "$lib/icons/Close.svelte";
 
     let keyword = $state("");
@@ -328,7 +328,7 @@
                     <Close />
                 </button>
             </VStack>
-            <BplayerDetails selectedPlayer={playerId} selectedYear={getClubData().year} />
+            <BPlayerDetails selectedPlayer={playerId} selectedYear={getClubData().year} />
         </HStack>
     </div>
 </VStack>

@@ -9,12 +9,14 @@ import bottle
 import webview
 
 from .io import CnVer
-from .objs import Player, Reseter
+from .objs import Player, Reseter, Scout, Coach
 from .data_reader import DataReader
-from .dtos import ClubDto, MyPlayerDto, SearchDto, TownDto, SimpleBPlayerDto
+from .dtos import ClubDto, MyPlayerDto, SearchDto, SimpleBCoachDto, SimpleBScoutDto, TownDto, SimpleBPlayerDto
 from .savereader.readers import SaveDataReader
 from .pcsx2reader.readers import Pcsx2DataReader
 from .binreader.bplayer_reader import get_player
+from .binreader.bscout_reader import get_scout
+from .binreader.bcoach_reader import get_coach
 from .constants import exp_to_lv
 from .utils import find_name_matches, get_probability_tbl_index, get_resource_path, is_jmodifiable, modify_jabil, random_get_0to1, random_get_0toi
 
@@ -155,6 +157,10 @@ class MainApp:
             self.fetch_one_abroad,
             self.fetch_bplayers,
             self.get_bplayer,
+            self.fetch_bscouts,
+            self.fetch_bcoachs,
+            self.get_bscout,
+            self.get_bcoach,
         )
 
     def get_version(self) -> str:
@@ -326,6 +332,125 @@ class MainApp:
         dto.id = id
         dto.sp_comment = player.sp_comment
         return dto.model_dump(by_alias=True)
+
+    def fetch_bscouts(self, page: int, search_params: dict = None) -> dict:
+        CnVer.set_ver(1)
+        results = []
+        if not page:
+            page = 1
+        total = 0
+        if search_params is None:
+            player_count = len(Scout.scout_dict())
+            total = (player_count + 24) // 25
+            start = (page - 1) * 25
+            end = min(start + 25, player_count)
+            for i in range(start, end):
+                id = i + 30000
+                sp = SimpleBScoutDto(id=id, name=Scout.name(id))
+                results.append(sp.model_dump(by_alias=True))
+        else:
+            keyword = search_params.get("keyword")
+            if keyword:
+                try:
+                    id = int(keyword, 16)
+                except Exception:
+                    id = None
+                if id is not None:
+                    if not Scout.exsists(id):
+                        page = 1
+                        total = 0
+                    else:
+                        sp = SimpleBScoutDto(id=id, name=Scout.name(id))
+                        results.append(sp.model_dump(by_alias=True))
+                        page = 1
+                        total = 1
+                else:
+                    filter_ids = find_name_matches(Scout.scout_dict(), keyword)
+                    sorted_ids = sorted(filter_ids)
+                    total = (len(sorted_ids) + 24) // 25
+                    start = (page - 1) * 25
+                    end = start + 25
+                    page_ids = sorted_ids[start:end]
+                    for id in page_ids:
+                        sp = SimpleBScoutDto(id=id, name=Scout.name(id))
+                        results.append(sp.model_dump(by_alias=True))
+            else:
+                page = 1
+                total = 0
+        return {
+            "page": page,
+            "total": total,
+            "data": results,
+        }
+
+    def get_bscout(self, id: int) -> dict:
+        if id:
+            bscout = get_scout(id)
+            bscout.name = Scout.name(id)
+            dto = bscout.to_dto()
+            dto.id = id
+            return dto.model_dump(by_alias=True)
+        else:
+            return {}
+
+    def fetch_bcoachs(self, page: int, search_params: dict = None) -> dict:
+        CnVer.set_ver(1)
+        results = []
+        if not page:
+            page = 1
+        total = 0
+        if search_params is None:
+            player_count = len(Coach.coach_dict())
+            total = (player_count + 24) // 25
+            start = (page - 1) * 25
+            end = min(start + 25, player_count)
+            for i in range(start, end):
+                id = i + 20000
+                sp = SimpleBCoachDto(id=id, name=Coach.name(id))
+                results.append(sp.model_dump(by_alias=True))
+        else:
+            keyword = search_params.get("keyword")
+            if keyword:
+                try:
+                    id = int(keyword, 16)
+                except Exception:
+                    id = None
+                if id is not None:
+                    if not Coach.exsists(id):
+                        page = 1
+                        total = 0
+                    else:
+                        sp = SimpleBCoachDto(id=id, name=Coach.name(id))
+                        results.append(sp.model_dump(by_alias=True))
+                        page = 1
+                        total = 1
+                else:
+                    filter_ids = find_name_matches(Coach.coach_dict(), keyword)
+                    sorted_ids = sorted(filter_ids)
+                    total = (len(sorted_ids) + 24) // 25
+                    start = (page - 1) * 25
+                    end = start + 25
+                    page_ids = sorted_ids[start:end]
+                    for id in page_ids:
+                        sp = SimpleBCoachDto(id=id, name=Coach.name(id))
+                        results.append(sp.model_dump(by_alias=True))
+            else:
+                page = 1
+                total = 0
+        return {
+            "page": page,
+            "total": total,
+            "data": results,
+        }
+
+    def get_bcoach(self, id: int) -> dict:
+        if id:
+            bcoach = get_coach(id)
+            dto = bcoach.to_dto()
+            dto.id = id
+            return dto.model_dump(by_alias=True)
+        else:
+            return {}
 
 def main():
     app = MainApp()

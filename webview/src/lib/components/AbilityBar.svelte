@@ -1,9 +1,9 @@
 <script lang="ts">
-    let { abilities = [0, 0, 0] } = $props();
+    let { abilities = [0, 0, 0], is100 = false } = $props();
 
-    let current = $derived.by(() => `${Math.round(abilities[0] / 65535 * 100)}%`);
-    let currentMax = $derived.by(() => `${Math.round((abilities[1] - abilities[0]) / 65535 * 100)}%`);
-    let max = $derived.by(() => `${Math.round((abilities[2] - abilities[1]) / 65535 * 100)}%`);
+    let current = $derived.by(() => `${is100 ? abilities[0] : Math.round(abilities[0] / 65535 * 100)}%`);
+    let currentMax = $derived.by(() => `${is100 ? abilities[1] : Math.round(abilities[1] / 65535 * 100)}%`);
+    let max = $derived.by(() => `${is100 ? abilities[2] : Math.round(abilities[2] / 65535 * 100)}%`);
 </script>
 
 <div class="flex w-full h-3 bg-gray-200 overflow-hidden dark:bg-neutral-700">

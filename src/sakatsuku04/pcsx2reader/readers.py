@@ -197,7 +197,7 @@ class Pcsx2DataReader(DataReader):
         player.tone_type = self._read_int_byte(offset + 0x1B1 + i * 0x240)
         player.patient = self._read_int_byte(offset + 0x1B8 + i * 0x240)
         player.cooperation_type = self._read_int_byte(offset + 0x1BA + i * 0x240)
-        player.grow_type_id = self._read_int_byte(offset + 0x1BB + i * 0x240)
+        player.wave_type = self._read_int_byte(offset + 0x1BB + i * 0x240)
         player.grow_type_phy = self._read_int_byte(offset + 0x1BC + i * 0x240)
         player.grow_type_tec = self._read_int_byte(offset + 0x1BD + i * 0x240)
         player.grow_type_sys = self._read_int_byte(offset + 0x1BE + i * 0x240)

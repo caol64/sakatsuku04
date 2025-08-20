@@ -426,9 +426,8 @@ class TeamReader(BaseReader):
                 players[i].abilities.append(
                     MyPlayerAbility(ll, current, current_max, max)
                 )  # 705364
-            self.bit_stream.unpack_bits(0xB)  # pop?
+            from_team_id = self.bit_stream.unpack_bits(0xB)  # 184(2)
             players[i].name = self.bit_stream.unpack_str(0xD)  # 705364 186(13)
-            # print(players[i].name.value)
             a = self.bit_stream.unpack_bits(
                 [8, 8, 4, 4, 7, 8, 4, 7, 3, 7], 11
             )  # 70537E
@@ -465,7 +464,7 @@ class TeamReader(BaseReader):
             players[i].patient = a[12]  # 0x705398 1b8
             un = a[13]  # 00705399
             players[i].cooperation_type = a[14]  # 0x70539A 1ba
-            players[i].grow_type_id = a[15]  # 0x70539B 1bb
+            players[i].wave_type = a[15]  # 0x70539B 1bb
             # 70539C
             players[i].grow_type_phy = self.bit_stream.unpack_bits(4, 1)  # 0x70539C 1bc
             players[i].grow_type_tec = self.bit_stream.unpack_bits(4, 1)  # 0x70539D 1bd
@@ -478,6 +477,7 @@ class TeamReader(BaseReader):
             base_pop = a[5] # 0x7053a4 1c4
             players[i].style = self.bit_stream.unpack_bits(5, 1)  # 0x7053a5 1c5
             a = self.bit_stream.unpack_bits([1, 3, 4], 6)
+            style_lock = a[0] # 1c6
             # 0x7053ac
             a = self.bit_stream.unpack_bits([0x20, 2], 6)
             players[i].magic_value = a[0]  # 0x7053ac 1cc(4)

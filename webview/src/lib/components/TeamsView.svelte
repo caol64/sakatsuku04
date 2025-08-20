@@ -10,7 +10,7 @@
     import { getCooperationType, getGrowType, getPlayerColor, getPosition, getRank, getStyle, getToneType } from "$lib/utils";
     import Tooltip from "./Tooltip.svelte";
     import Avatar from "$lib/icons/Avatar.svelte";
-    import BplayerDetails from "./BplayerDetails.svelte";
+    import BPlayerDetails from "./BPlayerDetails.svelte";
     import Close from "$lib/icons/Close.svelte";
 
 
@@ -211,7 +211,7 @@
                     <Close />
                 </button>
             </VStack>
-            <BplayerDetails selectedPlayer={playerId} selectedYear={getClubData().year} />
+            <BPlayerDetails selectedPlayer={playerId} selectedYear={getClubData().year} />
         </HStack>
     </div>
 
