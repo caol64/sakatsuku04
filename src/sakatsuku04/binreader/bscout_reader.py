@@ -12,14 +12,31 @@ class BScout:
     name: str
     born: int
     abilities = [0] * 21
-    area1: int
-    area2: int
+    nati1: int
+    nati2: int
+    age: int
+    rank: int
+    salary: int
+    signing_difficulty: int
+    ambition: int
+    persistence: int
+    x14: int
+    x18: int
 
     def to_dto(self) -> BScoutDto:
         return BScoutDto(
             name=self.name,
             born=self.born,
             abilities=self.abilities,
+            nati1=self.nati1,
+            nati2=self.nati2,
+            age=self.age,
+            rank=self.rank,
+            salary_high=self.salary * 100 // 10000,
+            salary_low=self.salary * 100 % 10000,
+            signing_difficulty=self.signing_difficulty,
+            ambition=self.ambition,
+            persistence=self.persistence,
         )
 
 
@@ -27,23 +44,23 @@ def get_scout(id: int) -> BScout:
     with open(get_resource_path("bpdata.bin"), "rb") as f:
         f.seek(offset + (id - 30000) * scouts_bytes)
         byte_array = f.read(scouts_bytes)
-        return unpack_coach(byte_array)
+        return unpack_scout(byte_array)
 
 
-def unpack_coach(byte_array: bytes) -> BScout:
+def unpack_scout(byte_array: bytes) -> BScout:
     bit_stream = InputBitStream(byte_array)
     bscout = BScout()
     bscout.name = bit_stream.unpack_str(0xc).value
     bit_stream.align(1) # c
     bscout.born = bit_stream.unpack_bits(8).value # d
-    a = bit_stream.unpack_bits(8, 1).value # e
-    rank = bit_stream.unpack_bits(4, 1).value # f
-    a = bit_stream.unpack_bits(6, 1).value * 100 // 63 # 10
-    a = bit_stream.unpack_bits(6, 1).value * 100 // 63 # 11
-    a = bit_stream.unpack_bits(0x10, 2).value # 12
-    a = bit_stream.unpack_bits(8, 2).value # 14
-    a = bit_stream.unpack_bits(9, 2).value * 100 # 16
-    a = bit_stream.unpack_bits(4, 1).value # 18
+    bscout.age = bit_stream.unpack_bits(8, 1).value # e
+    bscout.rank = bit_stream.unpack_bits(4, 1).value # f
+    bscout.ambition = bit_stream.unpack_bits(6, 1).value * 100 // 63 # 10
+    bscout.persistence = bit_stream.unpack_bits(6, 1).value * 100 // 63 # 11
+    bscout.salary = bit_stream.unpack_bits(0x10, 2).value # 12
+    bscout.x14 = bit_stream.unpack_bits(8, 2).value # 14
+    bscout.signing_difficulty = bit_stream.unpack_bits(9, 2).value * 100 # 16
+    bscout.x18 = bit_stream.unpack_bits(4, 1).value # 18
     a = bit_stream.unpack_bits(4, 1).value # 19
     a = bit_stream.unpack_bits(4, 1).value # 1a
     a = bit_stream.unpack_bits(4, 1).value # 1b
@@ -68,9 +85,9 @@ def unpack_coach(byte_array: bytes) -> BScout:
     bscout.abilities[18] = bit_stream.unpack_bits(7, 1).value # 2e
     bscout.abilities[19] = bit_stream.unpack_bits(7, 1).value # 2f
     bscout.abilities[20] = bit_stream.unpack_bits(7, 1).value # 30
-    bscout.area1 = bit_stream.unpack_bits(8, 1).value # 31
-    bscout.area2 = bit_stream.unpack_bits(8, 1).value # 32
-    a = bit_stream.unpack_bits(8, 1).value # 33
+    a = bit_stream.unpack_bits(8, 1).value # 31
+    bscout.nati1 = bit_stream.unpack_bits(8, 1).value # 32
+    bscout.nati2 = bit_stream.unpack_bits(8, 1).value # 33
     return bscout
 
 

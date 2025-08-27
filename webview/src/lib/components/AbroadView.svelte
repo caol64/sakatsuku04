@@ -9,9 +9,10 @@
     import sponsors from "$locales/sponsor_zh.json";
     import { getRefreshFlag, getSelectedTab, setIsLoading, setRefreshFlag } from "$lib/globalState.svelte";
     import { sortedAbilities } from "$lib/utils";
-    import abilityCamp from "$locales/ability_camp_zh.json";
     import AbrAbilityBar from "./AbrAbilityBar.svelte";
     import Check from "$lib/icons/Check.svelte";
+    import campThemeSame from "$locales/camp_theme_same.json";
+    import campThemeDiff from "$locales/camp_theme_diff.json";
 
     let selectedType = $state(0);
     let selectedIndex = $state(0);
@@ -38,17 +39,10 @@
         return [];
     });
     let abilityPairs = $derived.by(() => {
-        if (selectedType === 0) {
-            return sortedAbilities.map((label, i) => ({
-                label,
-                value: selectedAbroad.abrUp[i]
-            }));
-        } else {
-            return abilityCamp.map((label, i) => ({
-                label,
-                value: selectedAbroad.abrUp[i]
-            }));
-        }
+        return sortedAbilities.map((label, i) => ({
+            label,
+            value: selectedAbroad.abrUp[i]
+        }));
     });
     let currentBestTime = $derived.by(() => {
         if (selectedAbroad.abrDays != 0) {
@@ -159,6 +153,40 @@
         return result.toFixed(1);
     }
 
+    let themes = ["攻击力强化", "守备力强化", "战术理解强化", "阵型理解强化", "身体强化", "连携强化"];
+    let selected: string[] = $state([]);
+    let stats = $derived.by(() => {
+        if (selected.length == 2) {
+            const selected1 = themes.indexOf(selected[0]);
+            const selected2 = themes.indexOf(selected[1]);
+            if (selected1 === selected2) {
+                return campThemeSame[selected1];
+            } else {
+                return campThemeDiff[selected1].map((element, index) => {
+                    return element + campThemeDiff[selected2][index];
+                });
+            }
+        }
+        return Array(64).fill(0);
+    });
+
+    let campThemeAbilityPairs = $derived.by(() => {
+        return sortedAbilities.map((label, i) => ({
+            label,
+            value: stats[i]
+        }));
+    });
+
+    function addItem(item: string) {
+        if (selected.length >= 2) {
+            selected = [...selected.slice(1), item];
+        } else {
+            selected = [...selected, item];
+        }
+    }
+
+
+
 </script>
 
 <HStack className="flex-1 overflow-hidden m-2.5">
@@ -217,9 +245,9 @@
                 <div>{currentCondType}</div>
 
                 <div class="text-sm font-medium">获得条件</div>
-                <div class="flex space-x-2">
+                <div class="">
                     {#each currentCondValue as item}
-                        <span>{item}</span>
+                        <div>{item}</div>
                     {/each}
                 </div>
 
@@ -257,7 +285,46 @@
                 {/if}
             </div>
         </div>
+
+        {#if selectedType !== 0}
+            <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-6 bg-gray-50 dark:bg-gray-700 shadow-sm mt-4">
+                <h3 class="text-xl font-bold mb-4">集训主题</h3>
+
+                <div class="flex gap-6">
+                    <div class="flex flex-col space-y-3 w-32">
+                        {#each themes as btn}
+                            <button onclick={() => addItem(btn)} class="badges transition">
+                                {btn}
+                            </button>
+                        {/each}
+                    </div>
+
+                    <div>
+                        <h2 class="text-lg font-semibold mb-3">已选择</h2>
+                        {#each selected as item}
+                            <div class="text-sm">
+                                {item}
+                            </div>
+                        {/each}
+                    </div>
+                </div>
+            </div>
+        {/if}
+
     </VStack>
+
+    {#if selectedType !== 0}
+        <VStack className="w-1/4 h-full overflow-auto mx-2 pl-1">
+            {#each campThemeAbilityPairs as { label, value }}
+                <HStack className="items-center">
+                    <span class="w-24 text-sm">{label}</span>
+                    {#if value != null}
+                        <AbrAbilityBar value={value} />
+                    {/if}
+                </HStack>
+            {/each}
+        </VStack>
+    {/if}
 </HStack>
 
 

@@ -33,7 +33,7 @@ class BPlayer:
     patient: int
     persistence: int
     foot: int
-    debut_year: int
+    unlock_year: int
     signing_difficulty: int
 
     def to_dto(self) -> BPlayerDto:
@@ -63,7 +63,7 @@ class BPlayer:
             patient=self.patient,
             persistence=self.persistence,
             foot=self.foot,
-            debut_year=self.debut_year,
+            unlock_year=self.unlock_year,
             signing_difficulty=self.signing_difficulty,
         )
 
@@ -89,7 +89,7 @@ def unpack_player(byte_array: bytes) -> BPlayer:
     bit_stream.align(1) # 13
     base_number = bit_stream.unpack_bits(7, 1).value # 14
     bplayer.foot = bit_stream.unpack_bits(3, 1).value # 15
-    bplayer.debut_year = bit_stream.unpack_bits(4, 2).value # 16
+    bplayer.unlock_year = bit_stream.unpack_bits(4, 2).value # 16
     un = bit_stream.unpack_bits(0x10).value # 18
     bplayer.signing_difficulty = bit_stream.unpack_bits(9, 2).value * 100 # 1a
     enable_flag = bit_stream.unpack_bits(4, 1).value # 1c

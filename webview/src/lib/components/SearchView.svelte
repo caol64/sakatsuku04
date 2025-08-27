@@ -39,6 +39,7 @@
 
     let showDrawer = $state(false);
     let playerId = $state(0);
+    let age = $state(0);
 
     function toggleDrawer() {
         showAdvanced = false;
@@ -48,6 +49,7 @@
     function showBPlayer(id: number) {
         showAdvanced = false;
         playerId = id;
+        age = teamPlayers.filter(i => i.id === id)[0].age;
         showDrawer = true;
     }
 
@@ -328,7 +330,7 @@
                     <Close />
                 </button>
             </VStack>
-            <BPlayerDetails selectedPlayer={playerId} selectedYear={getClubData().year} />
+            <BPlayerDetails selectedPlayer={playerId} selectedYear={getClubData().year} age={age} />
         </HStack>
     </div>
 </VStack>

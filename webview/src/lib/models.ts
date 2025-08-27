@@ -192,8 +192,9 @@ export interface BPlayer {
     weakType?: number;
     tiredType?: number;
     pop?: number;
-    debutYear?: number;
+    unlockYear?: number;
     signingDifficulty?: number;
+    growEval?: number;
 }
 
 export interface Coach {
@@ -207,9 +208,41 @@ export interface BScout {
     abilities: number[];
     hexagon: number[];
     aposEval?: number[];
+    nati1?: number;
+    nati2?: number;
+    age?: number;
+    rank?: number;
+    salaryHigh?: number;
+    salaryLow?: number;
+    exclusivePlayers?: string[];
+    simiExclusivePlayers?: string[];
+    signingDifficulty?: number;
+    eval?: string;
+    ambition?: number;
+    persistence?: number;
 }
 
 export interface BCoach {
     name?: string;
     born?: number;
+    abilities: number[];
+    hexagon: number[];
+    age?: number;
+    rank?: number;
+    salaryHigh?: number;
+    salaryLow?: number;
+    signingDifficulty?: number;
+    eval?: string;
+    styles?: number[];
+    coachType?: number;
+    desire?: number;
+    ambition?: number;
+    persistence?: number;
+    activatePlan?: number;
+    trainingPlan?: number;
+    trainingStrength?: number;
+    acSpPractice1?: number;
+    acSpPractice2?: number;
+    spSkill?: number;
+    coachTypeCnv?: number;
 }

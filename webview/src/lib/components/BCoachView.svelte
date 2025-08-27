@@ -6,6 +6,7 @@
     import { setIsLoading, setModeState } from "$lib/globalState.svelte";
     import About from "./About.svelte";
     import Back from "$lib/icons/Back.svelte";
+    import BCoachDetails from "./BCoachDetails.svelte";
 
     let page = $state(1);
     let total = $state(1);
@@ -148,7 +149,7 @@
             {/if}
         </VStack>
 
-        <!-- <BPlayerDetails selectedPlayer={selectedPlayer} selectedYear={selectedYear} /> -->
+        <BCoachDetails selectedCoach={selectedCoach} />
     </HStack>
 </VStack>
 

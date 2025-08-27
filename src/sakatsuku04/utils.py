@@ -382,3 +382,32 @@ def sabil_2_apt(param: int) -> int:
         return 3
     else:
         return 4
+
+def get_rank_to_number(scout_rank: int) -> int:
+    for i, val in enumerate(constants.common_rank_tbl):
+        if scout_rank <= val:
+            return i
+    return 4
+
+def calc_mhex_sys(abilities: list[int]) -> int:
+    total = 0
+    for coef, start, count, weightA, weightB in constants.syslist:
+        values = abilities[start: start + count]
+        vmax = max(values)
+        vsum = sum(values)
+        vavg = vsum // count
+        total += coef * (vmax * weightA + vavg * weightB)
+
+    return total // 100
+
+def mcoach_eval(abilities: list[int]) -> tuple:
+    indices = constants.mcoach_eval_abil
+    candidates = [(abilities[i], i) for i in indices if 0 <= i < len(abilities)]
+    result = max(candidates, key=lambda x: x[0])
+    return (mcoach_get_score_to_index(result[0]), constants.mcoach_eval_abil.index(result[1]))
+
+def mcoach_get_score_to_index(score: int) -> int:
+    for i, val in enumerate(constants.mcoach_eval_score):
+        if score <= val:
+            return i
+    return 0

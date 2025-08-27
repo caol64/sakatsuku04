@@ -3,7 +3,7 @@ from pydantic import BaseModel, ConfigDict, computed_field
 from pydantic.alias_generators import to_camel
 
 from .objs import Coach, Player, Scout
-from .utils import calc_abil_eval, calc_apos_eval, calc_def, calc_gk, calc_grow_eval, calc_off, calc_phy, calc_sta, calc_sys, calc_tac, find_badden_match, handle_cond, is_album_player, lv_to_dot, sabil_2_apt
+from .utils import calc_abil_eval, calc_apos_eval, calc_def, calc_gk, calc_grow_eval, calc_mhex_sys, calc_off, calc_phy, calc_sta, calc_sys, calc_tac, find_badden_match, get_rank_to_number, handle_cond, is_album_player, lv_to_dot, sabil_2_apt, mcoach_eval
 from . import constants
 
 
@@ -282,13 +282,6 @@ class AbroadDto(BaseDto):
         dto.abr_days = item[3]
         cond_id = item[1] >> 4
         cond_val = handle_cond(item[4: 14])
-        if type == 1:
-            abr_up = dto.abr_up
-            keep_indices = [0x29, 0x2A, 0x26, 0x24, 0x25, 0x1c, 0x1d]
-            kept = [abr_up[i] for i in keep_indices]
-            del abr_up[28:54]
-            abr_up.extend(kept)
-            abr_up.extend([0xc, 10, 0xc, 10])
 
         if cond_id == 1 or cond_id == 4:
             dto.cond = AbroadCond(id=cond_id, cond=[])
@@ -327,9 +320,8 @@ class BPlayerDto(BaseDto):
     patient: int
     persistence: int
     foot: int
-    debut_year: int
+    unlock_year: int
     signing_difficulty: int
-    sp_comment: Optional[str] = None
 
     @computed_field
     @property
@@ -382,6 +374,26 @@ class BPlayerDto(BaseDto):
     def sys_grows(self) -> list[int]:
         return list(constants.tbl_sys_grow_type[self.grow_type_sys])
 
+    @computed_field
+    @property
+    def sp_comment(self) -> str:
+        player = Player(self.id)
+        sp_comment = player.sp_comment
+        if sp_comment:
+            return sp_comment
+        index = self.rank // 2 * 8 if self.rank < 10 else 32
+        if self.age < constants.bplayer_eval_age_threshold[self.grow_type_tec]:
+            return Player.player_eval_list()[index]
+        else:
+            return Player.player_eval_list()[index + 40]
+
+    @computed_field
+    @property
+    def grow_eval(self) -> int:
+        if Player(self.id).sp_comment:
+            return 0
+        return calc_grow_eval(self.grow_type_tec, self.age)
+
 class SimpleBPlayerDto(BaseDto):
     id: int
     name: str
@@ -416,6 +428,15 @@ class BScoutDto(BaseDto):
     name: str
     born: int
     abilities: list[int]
+    nati1: int
+    nati2: int
+    age: int
+    rank: int
+    salary_high: int
+    salary_low: int
+    signing_difficulty: int
+    ambition: int
+    persistence: int
 
     @computed_field
     @property
@@ -435,6 +456,80 @@ class BScoutDto(BaseDto):
             for i in range(11)
         ]
 
+    @computed_field
+    @property
+    def exclusive_players(self) -> list[str]:
+        return [Player(f).name for f in constants.scout_excl_tbl.get(self.id, [])]
+
+    @computed_field
+    @property
+    def simi_exclusive_players(self) -> list[str]:
+        return [Player(f).name for f in constants.scout_simi_excl_tbl.get(self.id, [])]
+
+    @computed_field
+    @property
+    def eval(self) -> str:
+        plus = 2
+        if constants.scout_excl_tbl.get(self.id) is not None:
+            plus = 0
+        comment = Scout.scout_comments_list()[get_rank_to_number(self.rank) * 8 + plus]
+        return comment
 
 class BCoachDto(BaseDto):
-    ...
+    id: int = 0
+    name: str
+    born: int
+    age: int
+    abilities: list[int]
+    rank: int
+    salary_high: int
+    salary_low: int
+    signing_difficulty: int
+    styles: list[int]
+    coach_type: int
+    desire: int
+    ambition: int
+    persistence: int
+    activate_plan: int
+    training_plan: int
+    training_strength: int
+    ac_sp_practice1: int
+    ac_sp_practice2: int
+
+    @computed_field
+    @property
+    def hexagon(self) -> list[int]:
+        tac_sum = self.abilities[25] + self.abilities[26] + self.abilities[27]
+        tac_max = max([self.abilities[25], self.abilities[26], self.abilities[27]])
+        tac_avg = (tac_sum - tac_max) // 27
+        return [
+            self.abilities[10],
+            self.abilities[11],
+            ((self.abilities[28] + self.abilities[29]) * 250 + (tac_max * 6 + tac_avg * 4) * 50) // 1000,
+            calc_mhex_sys(self.abilities),
+            (self.abilities[1] + self.abilities[2] + self.abilities[3]) // 3,
+            (self.abilities[0] + self.abilities[2]) // 2,
+        ]
+
+    @computed_field
+    @property
+    def eval(self) -> str:
+        plus = 0
+        rank = get_rank_to_number(self.rank)
+        if constants.mcoach_skill.get(self.id - 20000) is not None:
+            plus = constants.mcoach_skill.get(self.id - 20000)
+            return Coach.mcoach_comments_list()[rank * 10 + plus]
+        eval_tuple = mcoach_eval(self.abilities)
+        index = constants.mcoach_eval_rank_abil_mapping.get(rank)[eval_tuple[1]][eval_tuple[0]]
+        comment = Coach.mcoach_comments_list()[index - 700]
+        return comment
+
+    @computed_field
+    @property
+    def sp_skill(self) -> Optional[int]:
+        return constants.mcoach_skill.get(self.id - 20000)
+
+    @computed_field
+    @property
+    def coach_type_cnv(self) -> int:
+        return constants.coach_mapping[self.coach_type]

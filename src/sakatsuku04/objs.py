@@ -9,6 +9,7 @@ from .utils import get_resource_path, reset_char_dict
 class Player:
     _player_dict: Optional[dict] = None
     _player_comments_dict: Optional[dict] = None
+    _player_eval_list: Optional[list] = None
 
     def __init__(self, id: int):
         self.id = id
@@ -31,16 +32,23 @@ class Player:
     @classmethod
     def player_comments_dict(cls) -> dict[int, str]:
         if cls._player_comments_dict is None:
-            cls._player_comments_dict = dict()
             file = ("sp_comments_zh18.json" if CnVer.is_i8 else "sp_comments_zh.json") if CnVer.is_cn else "sp_comments_jp.json"
             with open(get_resource_path(file), 'r', encoding='utf8', newline='') as f:
                 cls._player_comments_dict = json.load(f)
         return cls._player_comments_dict
 
     @classmethod
+    def player_eval_list(cls) -> list[str]:
+        if cls._player_eval_list is None:
+            with open(get_resource_path("player_eval_zh.json"), 'r', encoding='utf8', newline='') as f:
+                cls._player_eval_list = json.load(f)
+        return cls._player_eval_list
+
+    @classmethod
     def reset_player_dict(cls):
         cls._player_dict = None
         cls._player_comments_dict = None
+        cls._player_eval_list = None
 
     @property
     def name(self) -> str:
@@ -89,6 +97,7 @@ class Player:
 
 class Scout:
     _scout_dict: Optional[dict] = None
+    _scout_comments_list: Optional[list] = None
 
     @classmethod
     def scout_dict(cls) -> dict[int, list[str]]:
@@ -104,6 +113,7 @@ class Scout:
     @classmethod
     def reset_scout_dict(cls):
         cls._scout_dict = None
+        cls._scout_comments_list = None
 
     @classmethod
     def exsists(cls, id: int) -> bool:
@@ -113,9 +123,17 @@ class Scout:
     def name(cls, id: int) -> str:
         return cls.scout_dict().get(id)[0]
 
+    @classmethod
+    def scout_comments_list(cls) -> list[str]:
+        if cls._scout_comments_list is None:
+            with open(get_resource_path("scout_eval_zh.json"), 'r', encoding='utf8', newline='') as f:
+                cls._scout_comments_list = json.load(f)
+        return cls._scout_comments_list
+
 
 class Coach:
     _coach_dict: Optional[dict] = None
+    _mcoach_comments_list: Optional[list] = None
 
     @classmethod
     def coach_dict(cls) -> dict[int, list[str]]:
@@ -131,6 +149,7 @@ class Coach:
     @classmethod
     def reset_coach_dict(cls):
         cls._coach_dict = None
+        cls._mcoach_comments_list = None
 
     @classmethod
     def exsists(cls, id: int) -> bool:
@@ -139,6 +158,13 @@ class Coach:
     @classmethod
     def name(cls, id: int) -> str:
         return cls.coach_dict().get(id)[0]
+
+    @classmethod
+    def mcoach_comments_list(cls) -> list[str]:
+        if cls._mcoach_comments_list is None:
+            with open(get_resource_path("mcoach_eval_zh.json"), 'r', encoding='utf8', newline='') as f:
+                cls._mcoach_comments_list = json.load(f)
+        return cls._mcoach_comments_list
 
 
 class Reseter:

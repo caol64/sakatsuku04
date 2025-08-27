@@ -304,10 +304,12 @@ class MainApp:
             "data": results,
         }
 
-    def get_bplayer(self, id: int, year: int = 1) -> dict:
+    def get_bplayer(self, id: int, year: int = 1, age = 0) -> dict:
         bplayer = get_player(id)
         player = Player(id)
         bplayer.name = player.name
+        if age:
+            bplayer.age = age
         if is_jmodifiable(id):
             up_level = modify_jabil(bplayer.wave_type, year)
             if up_level > 0:
@@ -330,7 +332,6 @@ class MainApp:
         bplayer.abilities = abils
         dto = bplayer.to_dto()
         dto.id = id
-        dto.sp_comment = player.sp_comment
         return dto.model_dump(by_alias=True)
 
     def fetch_bscouts(self, page: int, search_params: dict = None) -> dict:
@@ -446,6 +447,7 @@ class MainApp:
     def get_bcoach(self, id: int) -> dict:
         if id:
             bcoach = get_coach(id)
+            bcoach.name = Coach.name(id)
             dto = bcoach.to_dto()
             dto.id = id
             return dto.model_dump(by_alias=True)

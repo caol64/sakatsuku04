@@ -6,15 +6,14 @@
     import StatusBars from "./StatusBars.svelte";
     import VStack from "./Stack/VStack.svelte";
     import Tooltip from "./Tooltip.svelte";
-    import { getCooperationType, getGrowType, getPosition, getRank, getRegion, getStyle, getToneType, getFoot, sortedAbilities } from "$lib/utils";
+    import { getCooperationType, getGrowType, getPosition, getRank, getRegion, getStyle, getToneType, getFoot, sortedAbilities, getGrowEval } from "$lib/utils";
     import AbilityBar from "./AbilityBar.svelte";
     import abilEval from "$locales/abil_eval_zh.json";
-    import Comment from "$lib/icons/Comment.svelte";
     import Skull from "$lib/icons/Skull.svelte";
     import Waveform from "./Waveform.svelte";
     import PositionGrid from "./PositionGrid.svelte";
 
-    let { selectedPlayer = 0, selectedYear = 0 } = $props();
+    let { selectedPlayer = 0, selectedYear = 0, age = 0 } = $props();
 
     let bPlayer: BPlayer = $state({hexagon: [], odc: [], abilities: []});
     let stats = $state(Array(6).fill(0));
@@ -29,7 +28,7 @@
 
     async function fetchBPlayer() {
         if (window.pywebview?.api?.get_bplayer) {
-            bPlayer = await window.pywebview.api.get_bplayer(selectedPlayer, selectedYear);
+            bPlayer = await window.pywebview.api.get_bplayer(selectedPlayer, selectedYear, age);
             stats = bPlayer.hexagon;
             bars = [bPlayer.odc[0], bPlayer.odc[1], 0];
         } else {
@@ -54,19 +53,13 @@
         <p class="flex items-center justify-between select-text">
             姓名
             <span class="flex-1 pl-8 text-sm">{bPlayer?.name}</span>
-            {#if bPlayer?.spComment}
-                {@const tooltipText = `${bPlayer.spComment}`}
-                <Tooltip text={tooltipText} width="250px">
-                    <Comment />
-                </Tooltip>
-            {/if}
         </p>
         <p>
             位置
             <span class="pl-8 text-sm">{getPosition(bPlayer?.pos)}</span>
         </p>
         <p>
-            基础年龄
+            年龄
             <span class="pl-8 text-sm">{bPlayer?.age}</span>
         </p>
         <p>
@@ -91,7 +84,7 @@
         </p>
         <p>
             出现年份
-            <span class="pl-8 text-sm">{bPlayer?.debutYear}</span>
+            <span class="pl-8 text-sm">{bPlayer?.unlockYear}</span>
         </p>
         <p>
             签约所需声望
@@ -147,9 +140,12 @@
         <PositionGrid aposEval={bPlayer.aposEval} />
     </HStack>
     <Waveform phyGrows={bPlayer?.phyGrows} tecGrows={bPlayer?.tecGrows} sysGrows={bPlayer?.sysGrows} />
-    {#if bPlayer?.abilEval}
+    {#if bPlayer?.spComment}
         <div class="border border-gray-200 dark:border-gray-600 rounded-md py-2 px-3 space-y-2 bg-gray-50 dark:bg-gray-700 my-2">
-            <p>{abilEval[bPlayer.abilEval]}</p>
+            <p>{bPlayer.spComment}</p>
+            {#if bPlayer?.growEval}
+                <p>{getGrowEval(bPlayer.growEval)}</p>
+            {/if}
         </div>
     {/if}
 </VStack>

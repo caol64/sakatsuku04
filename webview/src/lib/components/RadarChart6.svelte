@@ -1,9 +1,18 @@
 <script lang="ts">
-    let { abilities = Array(4).fill(0) }: { abilities: number[] } = $props();
-    const labels = ["新人", "谈判", "现役", "搜索"];
-    const numSides = 4;
+    let { abilities = Array(18).fill(0) }: { abilities: number[] } = $props();
+    const labels = ["进攻", "防守", "战术", "阵型", "精神", "指导"];
+    const numSides = 6;
     const angleStep = (2 * Math.PI) / numSides;
     const radius = 100;
+
+    let flag: boolean = $derived(abilities.length == 18);
+    let maxAbilities = $derived.by(() => {
+        if (flag) {
+            return abilities.slice(12, 18);
+        } else {
+            return abilities;
+        }
+    });
 
     function point(factor: number, index: number) {
         const angle = angleStep * index - Math.PI / 2;
@@ -14,9 +23,7 @@
     }
 
     function playerHexagonConvert(input_value: number) {
-        let p = input_value + 10;
-        let v = p > 90 ? 360 : p * 4;
-        return Math.floor(((v + Math.min(p, 90)) * 20) / 90);
+        return input_value;
     }
 </script>
 
@@ -24,7 +31,7 @@
     <svg
         width="240"
         height="240"
-        viewBox="-125 -125 250 250"
+        viewBox="-120 -120 240 240"
         class="m-2"
     >
         <!-- 绘制雷达网格 -->
@@ -66,11 +73,10 @@
             </text>
         {/each}
 
-        <!-- 能力区域 -->
         <polygon
             fill="rgba(251, 191, 36, 0.6)"
             stroke-width="0"
-            points={abilities
+            points={maxAbilities
                 .map((factor, i) => {
                     const value = playerHexagonConvert(factor) / 100;
                     const p = point(value, i);

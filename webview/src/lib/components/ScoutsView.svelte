@@ -5,6 +5,8 @@
     import VStack from "./Stack/VStack.svelte";
     import teamsData from "$locales/teams_zh.json";
     import { getRefreshFlag, getSelectedTab, setIsLoading, setRefreshFlag } from "$lib/globalState.svelte";
+    import Close from "$lib/icons/Close.svelte";
+    import BScoutDetails from "./BScoutDetails.svelte";
 
     let myScouts: Scout[] = $state([]);
     let selectedScoutId = $state(0);
@@ -13,6 +15,7 @@
         if (!myScouts || myScouts.length === 0) return null;
         return myScouts.find(a => a.id === selectedScoutId) ?? null;
     });
+    let showDrawer = $state(false);
 
     async function fetchMyScouts() {
         try {
@@ -56,6 +59,14 @@
             }
         }
     });
+
+    function toggleDrawer() {
+        showDrawer = !showDrawer;
+    }
+
+    function showBScout() {
+        showDrawer = true;
+    }
 </script>
 
 <HStack className="flex-1 overflow-hidden m-2.5">
@@ -85,6 +96,11 @@
     </VStack>
     <VStack className="grow ml-8 space-y-2">
         <div class="h-fit bg-gray-50 dark:bg-gray-700 rounded-2xl shadow p-6 flex flex-col space-y-4 text-sm">
+            {#if selectedScout?.id && selectedScout.id >= 20000}
+                <button onclick={showBScout} class="cursor-pointer select-text">
+                    查看详情
+                </button>
+            {/if}
             {#if selectedScout?.exclusivePlayers?.length}
                 <p class="font-medium">专有球员</p>
                 <div class="ml-8 space-y-2">
@@ -115,6 +131,20 @@
             {/if}
         </div>
     </VStack>
+    {#if selectedScout?.id && selectedScout.id >= 20000}
+        <div class="fixed top-0 left-0 h-full w-full bg-white dark:bg-gray-800 shadow-lg transition-transform duration-300 z-50"
+            class:translate-x-0={showDrawer}
+            class:translate-x-full={!showDrawer}>
+            <HStack className="flex-1 h-full overflow-hidden m-2.5">
+                <VStack className="w-1/5">
+                    <button onclick={toggleDrawer} class="cursor-pointer">
+                        <Close />
+                    </button>
+                </VStack>
+                <BScoutDetails selectedScout={selectedScoutId} />
+            </HStack>
+        </div>
+    {/if}
 </HStack>
 
 

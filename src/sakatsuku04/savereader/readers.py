@@ -157,41 +157,43 @@ class TeamReader(BaseReader):
             self.bit_stream.unpack_bits([7, 7, 7, 7, 7, 7, 7, 7, 0xA], 9)
             self.bit_stream.unpack_bits([7, 7, 7, 7, 7, 7, 7, 7, 0xA], 9)
             self.bit_stream.unpack_bits([2] * 48, 48)
-        # 0x70efa0
+        # 0x70efa0 0x9e9c
         self.bit_stream.unpack_bits([2, 8, 6], 4)
-        # 0x70efa4
+        # 0x70efa4 0x9ea0
         for _ in range(7):
             self.bit_stream.unpack_bits([1, 1, 0x10, 6], 6)
-        # 0x70efce
+        # 0x70efce 0x9eca
         self.bit_stream.align(2)
         self.bit_stream.unpack_bits([0x20] * 2)
-        # 0x70efd8
+        # 0x70efd8 0x9ed4
         self.bit_stream.unpack_bits([8] * (0x2E + 9))
-        # 0x70f00f
+        # 0x70f00f 0x9f0b
         self.bit_stream.align(1)
         self.bit_stream.unpack_bits([1] * (3 + 0x2E + 21), 3 + 0x2E + 21)
-        # 0x70f056
+        # 0x70f056 0x9f52
         self.bit_stream.unpack_bits([6], 2)
         self.bit_stream.unpack_bits([5, 5, 1, 1, 0x10], 7)
-        # 0x70f05f
+        # 0x70f05f 0x9f5b
         self.bit_stream.unpack_bits([8, 0x20], 5)
-        # 0x70f064
+        # 0x70f064 0x9f60
         self.bit_stream.unpack_bits([8] * 0xF)
-        # 0x70f073
+        # 0x70f073 0x9f6f
         self.bit_stream.unpack_bits([1] * (0x11 * 2 + 0xF), 0x11 * 2 + 0xF + 4)
         # 0x70f0a8 0x9fa4
         team.youth_players = self._read_my_players(0x18)
-        # 0x7126a8
+        # 0x7126a8 0xd5a4
         self.bit_stream.unpack_bits([-3, 3], 2)
-        # 0x7126aa
+        # 0x7126aa 0xd5a6
         for _ in range(0x18):
             self.bit_stream.unpack_bits([7] * 6, 6)
-        # 0x71273a
+        # 0x71273a d636
         self.bit_stream.align(2)
-        # 0x71273c 教练list d638
-        self.bit_stream.unpack_bits(
-            [0x10, 3, 8] * (0x12 + 0x16 * 3), 4 * (0x12 + 0x16 * 3)
-        )
+        # 0x71273c d638 監督候補list
+        for _ in range(0x12):
+            self.bit_stream.unpack_bits([0x10, 3, 8], 4)
+        # 0x712784 d680 監督候補n人目のコーチlist
+        for _ in range(0x16 * 3):
+            self.bit_stream.unpack_bits([0x10, 3, 8], 4)
         # 0x71288c d788(156) 球探list
         team.my_scouts = []
         team.transfer_players = []
@@ -215,8 +217,9 @@ class TeamReader(BaseReader):
             abilities = self.bit_stream.unpack_bits([7] * 21, 21)
             # 0x7128bf 0x33
             a = self.bit_stream.unpack_bits([8, 8, 8, 0x10, 3, 3, 2], 9)
-            area1 = a[0]  # 0x7128c0 0x33(1)
-            area2 = a[1]  # 0x7128c1 0x34(1)
+            un = a[0]  # 0x7128c0 0x33(1)
+            area1 = a[1]  # 0x7128c1 0x34(1)
+            area2 = a[2]  # 0x7128c2 0x35(1)
             id = a[3]  # 0x7128c3 0x36(2)
             task_type = a[6] # 0x3a(2)
             # 0x7128c8 0xd7c4 转会球员list 0x3c
@@ -376,7 +379,7 @@ class TeamReader(BaseReader):
             self.bit_stream.unpack_bits([0x10, 0x10, 0x10, 0x10])
         # 0x72c490 0x2738c
         self.bit_stream.unpack_bits([0x10] * 200)
-        # 0x72c620 0x2751c
+        # 0x72c620 0x2751c tenshoku_scout_work 転職
         for _ in range(2):
             self.bit_stream.unpack_bits([4], 2)
             un = self.bit_stream.unpack_str(0xD)
@@ -514,6 +517,7 @@ class TeamReader(BaseReader):
             a = self.bit_stream.unpack_bits([0x10, 0x10, 4, 7, 4, 7, 6, 4, 8, 4], 12)
             players[i].kan = a[0]  # 0x7053e6 206(2) 試合勘 比赛感觉
             players[i].return_days = a[1]  # 0x7053e8 208(2)
+            injury_kind = a[2]  # 0x7053ea 20a(1)
             players[i].abroad_times = a[9]  # 0x7053f1 211(1)
             # 0x7053f2
             a = self.bit_stream.unpack_bits([0x10, 0x10, 7])
@@ -574,7 +578,6 @@ class TeamReader(BaseReader):
         self.bit_stream.unpack_bits([-0x10, 3, 3, 3, 3, 2, 3, 4, 8, 4, 4, 3, 2], 14)
         # 708FBA
         a = self.bit_stream.unpack_bits([7] * 0x35, 0x35)
-        # print([z.value for z in a ])
         self.bit_stream.unpack_bits([8, 8, 5, 5, 5, 5, 5, 5, 3, 0x10, 3, 3, 3], 15)
         self.bit_stream.unpack_bits([0x10] * 9)
         self.bit_stream.unpack_bits(1, 2)
