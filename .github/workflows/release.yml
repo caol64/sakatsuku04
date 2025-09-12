@@ -7,23 +7,16 @@ on:
 jobs:
   build:
     name: Build on ${{ matrix.os }}
-    # 定义矩阵策略，用于在多个操作系统上执行
     strategy:
       matrix:
         include:
           - os: windows-latest
             asset_name_suffix: win.zip
             build_path: dist/Saka04Editor.exe
-            # Windows 上使用 PowerShell 打包命令
-            package_command: |
-              Compress-Archive -Path ${{ matrix.build_path }} -DestinationPath ${{ env.ASSET_NAME }}
 
           - os: macos-latest
             asset_name_suffix: mac.zip
             build_path: dist/Saka04Editor.app
-            # macOS 上使用 zip 打包命令
-            package_command: |
-              zip -r "${{ env.ASSET_NAME }}" "${{ matrix.build_path }}" "assets/README.txt"
 
     # 在矩阵指定的系统上运行
     runs-on: ${{ matrix.os }}
@@ -31,13 +24,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      # 使用统一的方式获取 pyproject.toml 中的版本号
-      - name: Get version from pyproject.toml
-        id: get_version
-        run: |
-          version=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
-          echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -48,6 +34,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
+
+      - name: Get version from pyproject.toml
+        id: get_version
+        run: |
+          version=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Build webview frontend
         run: |
@@ -67,9 +59,17 @@ jobs:
       - name: Set asset name
         run: echo "ASSET_NAME=Saka04Editor_${{ steps.get_version.outputs.version }}_${{ matrix.asset_name_suffix }}" >> $GITHUB_ENV
 
-      - name: Package artifact
-        shell: ${{ matrix.os == 'windows-latest' && 'pwsh' || 'bash' }}
-        run: ${{ matrix.package_command }}
+      # Windows 打包
+      - name: Package artifact (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: Compress-Archive -Path "${{ matrix.build_path }}" -DestinationPath "${{ env.ASSET_NAME }}"
+
+      # macOS 打包
+      - name: Package artifact (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: zip -r "${{ env.ASSET_NAME }}" "${{ matrix.build_path }}" "assets/README.txt"
 
       # 上传构建产物，以便后续 release 任务使用
       - name: Upload artifact
