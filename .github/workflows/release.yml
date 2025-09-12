@@ -1,0 +1,115 @@
+name: Build and Release
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    # 定义矩阵策略，用于在多个操作系统上执行
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            asset_name_suffix: win.zip
+            build_path: dist/Saka04Editor.exe
+            # Windows 上使用 PowerShell 打包命令
+            package_command: |
+              Compress-Archive -Path ${{ matrix.build_path }} -DestinationPath ${{ env.ASSET_NAME }}
+
+          - os: macos-latest
+            asset_name_suffix: mac.zip
+            build_path: dist/Saka04Editor.app
+            # macOS 上使用 zip 打包命令
+            package_command: |
+              zip -r "${{ env.ASSET_NAME }}" "${{ matrix.build_path }}" "assets/README.txt"
+
+    # 在矩阵指定的系统上运行
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 使用统一的方式获取 pyproject.toml 中的版本号
+      - name: Get version from pyproject.toml
+        id: get_version
+        run: |
+          version=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Build webview frontend
+        run: |
+          cd webview
+          npm install
+          npm run build
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ".[dev]"
+
+      - name: Build application executable
+        run: python pyinstaller.py
+
+      # 构建动态的打包文件名
+      - name: Set asset name
+        run: echo "ASSET_NAME=Saka04Editor_${{ steps.get_version.outputs.version }}_${{ matrix.asset_name_suffix }}" >> $GITHUB_ENV
+
+      - name: Package artifact
+        shell: ${{ matrix.os == 'windows-latest' && 'pwsh' || 'bash' }}
+        run: ${{ matrix.package_command }}
+
+      # 上传构建产物，以便后续 release 任务使用
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ASSET_NAME }}
+          path: ${{ env.ASSET_NAME }}
+
+  # 发布任务
+  release:
+    name: Upload to Release and R2
+    runs-on: ubuntu-latest
+    # 依赖 build 任务成功完成
+    needs: build
+    # 需要写入 Release 的权限
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      # 将构建产物上传到 GitHub Release
+      - name: Upload assets to GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # 使用 GitHub CLI 上传 artifacts 目录下的所有 zip 文件
+        run: gh release upload "${{ github.event.release.tag_name }}" artifacts/**/*.zip
+
+      # 将产物同步上传到 Cloudflare R2
+      - name: Upload to Cloudflare R2
+        uses: aws-actions/s3-sync@v2
+        with:
+          bucket: ${{ secrets.R2_BUCKET }}
+          endpoint-url: ${{ secrets.R2_ENDPOINT }}
+          region: auto
+          # 同步整个 artifacts 目录内容（包含所有 zip）
+          source-dir: artifacts
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}

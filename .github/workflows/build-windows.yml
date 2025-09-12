@@ -37,11 +37,6 @@ jobs:
           PYTHONPATH: "${{ github.workspace }}:${{ github.workspace }}/src:${{ github.workspace }}/tests"
       run: python pyinstaller.py
 
-    # - name: Upload build artifacts
-    #   uses: actions/upload-artifact@v4
-    #   with:
-    #     path: dist/Saka04Editor.exe
-
     - name: Get version from pyproject.toml
       id: get_version
       run: |
