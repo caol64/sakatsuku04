@@ -114,7 +114,7 @@ jobs:
           aws-access-key-id: ${{ secrets.R2_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           # For R2, region is often 'auto' but must be set.
-          aws-region: auto
+          aws-region: us-east-1
 
       - name: Upload to Cloudflare R2 using AWS CLI
         run: |
