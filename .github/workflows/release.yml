@@ -35,11 +35,19 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Get version from pyproject.toml
-        id: get_version
+      - name: Get version from pyproject.toml (macOS)
+        id: get_version_mac
+        if: runner.os == 'macOS'
         run: |
           version=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
           echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Get version from pyproject.toml (Windows)
+        id: get_version_win
+        if: runner.os == 'Windows'
+        run: |
+          $version = (Select-String -Path "pyproject.toml" -Pattern '^version\s*=\s*"(.*)"').Matches[0].Groups[1].Value
+          echo "version=$version" >> $env:GITHUB_OUTPUT
 
       - name: Build webview frontend
         run: |
@@ -59,7 +67,7 @@ jobs:
 
       # 构建动态的打包文件名
       - name: Set asset name
-        run: echo "ASSET_NAME=Saka04Editor_${{ steps.get_version.outputs.version }}_${{ matrix.asset_name_suffix }}" >> $GITHUB_ENV
+        run: echo "ASSET_NAME=Saka04Editor_${{ steps.get_version_mac.outputs.version || steps.get_version_win.outputs.version }}_${{ matrix.asset_name_suffix }}" >> $GITHUB_ENV
 
       # Windows 打包
       - name: Package artifact (Windows)
