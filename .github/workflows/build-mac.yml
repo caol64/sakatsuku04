@@ -48,7 +48,7 @@ jobs:
       shell: bash
       run: |
         VERSION="${{ steps.get_version_mac.outputs.version || steps.get_version_win.outputs.version }}"
-        ASSET_NAME="Saka04Editor_${VERSION}_${{ matrix.asset_name_suffix }}"
+        ASSET_NAME="Saka04Editor_${VERSION}_mac.zip"
         echo "Generated asset name: ${ASSET_NAME}"
         echo "ASSET_NAME=${ASSET_NAME}" >> $GITHUB_ENV
 
