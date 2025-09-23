@@ -32,25 +32,65 @@ jobs:
           python -m pip install --upgrade pip
           pip install ".[dev]"
 
-    - name: Build
-      env:
-          PYTHONPATH: "${{ github.workspace }}:${{ github.workspace }}/src:${{ github.workspace }}/tests"
-      run: python pyinstaller.py
-
-    - name: Get version from pyproject.toml
-      id: get_version
+    - name: Get version from pyproject.toml (macOS)
+      id: get_version_mac
+      if: runner.os == 'macOS'
       run: |
         version=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
         echo "version=$version" >> "$GITHUB_OUTPUT"
 
-    - name: Package .app
+    - name: Build application executable
+      env:
+        PYTHONPATH: "${{ github.workspace }}:${{ github.workspace }}/src:${{ github.workspace }}/tests"
+      run: python pyinstaller.py
+
+    - name: Set asset name
+      shell: bash
+      run: |
+        VERSION="${{ steps.get_version_mac.outputs.version || steps.get_version_win.outputs.version }}"
+        ASSET_NAME="Saka04Editor_${VERSION}_${{ matrix.asset_name_suffix }}"
+        echo "Generated asset name: ${ASSET_NAME}"
+        echo "ASSET_NAME=${ASSET_NAME}" >> $GITHUB_ENV
+
+    # macOS 打包
+    - name: Package artifact (macOS)
+      if: runner.os == 'macOS'
+      shell: bash
       run: |
         mkdir -p out
         cp assets/README.txt out/
-        cp -r dist/Saka04Editor.app out/
+        cp -r "${{ matrix.build_path }}" out/
+        cd out
+        zip -r "${{ env.ASSET_NAME }}" *
+        mv "${{ env.ASSET_NAME }}" ..
 
-    - name: Upload build artifact
+    # 上传构建产物，以便后续 release 任务使用
+    - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: Saka04Editor_${{ steps.get_version.outputs.version }}_mac
-        path: out/
+        name: ${{ env.ASSET_NAME }}
+        path: ${{ env.ASSET_NAME }}
+
+
+  # 发布任务
+  release:
+    name: Upload to Release and R2
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Upload to Cloudflare R2
+        uses: ryand56/r2-upload-action@latest
+        with:
+          r2-account-id: ${{ secrets.R2_ACCOUNT_ID }}
+          r2-access-key-id: ${{ secrets.R2_ACCESS_KEY_ID }}
+          r2-secret-access-key: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          r2-bucket: ${{ secrets.R2_BUCKET }}
+          source-dir: ./artifacts
+          destination-dir: ./

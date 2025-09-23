@@ -84,7 +84,13 @@ jobs:
       - name: Package artifact (macOS)
         if: runner.os == 'macOS'
         shell: bash
-        run: zip -r "${{ env.ASSET_NAME }}" "${{ matrix.build_path }}" "assets/README.txt"
+        run: |
+          mkdir -p out
+          cp assets/README.txt out/
+          cp -r "${{ matrix.build_path }}" out/
+          cd out
+          zip -r "${{ env.ASSET_NAME }}" *
+          mv "${{ env.ASSET_NAME }}" ..
 
       # 上传构建产物，以便后续 release 任务使用
       - name: Upload artifact
@@ -98,9 +104,6 @@ jobs:
     name: Upload to Release and R2
     runs-on: ubuntu-latest
     needs: build
-    permissions:
-      contents: write
-      id-token: write
 
     steps:
       - name: Download all build artifacts

@@ -32,11 +32,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install ".[dev]"
 
-    - name: Build
-      env:
-          PYTHONPATH: "${{ github.workspace }}:${{ github.workspace }}/src:${{ github.workspace }}/tests"
-      run: python pyinstaller.py
-
     - name: Get version from pyproject.toml (Windows)
       id: get_version_win
       if: runner.os == 'Windows'
@@ -76,9 +71,6 @@ jobs:
     name: Upload to Release and R2
     runs-on: ubuntu-latest
     needs: build
-    permissions:
-      contents: write
-      id-token: write
 
     steps:
       - name: Download all build artifacts
