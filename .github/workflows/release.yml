@@ -73,7 +73,7 @@ jobs:
       - name: Package artifact (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
-        run: Compress-Archive -Path "${{ matrix.build_path }}" -DestinationPath "${{ env.ASSET_NAME }}"
+        run: Compress-Archive -Path "${{ matrix.build_path }}" -DestinationPath "$env:ASSET_NAME"
 
       # macOS 打包
       - name: Package artifact (macOS)
