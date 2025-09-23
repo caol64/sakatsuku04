@@ -86,11 +86,6 @@ jobs:
         with:
           path: artifacts
 
-      - name: Upload assets to GitHub Release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload "${{ github.event.release.tag_name }}" artifacts/**/*.zip
-
       - name: Configure AWS Credentials for Cloudflare R2
         uses: aws-actions/configure-aws-credentials@v4
         with:
