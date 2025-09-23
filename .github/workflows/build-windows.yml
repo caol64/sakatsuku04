@@ -54,7 +54,7 @@ jobs:
       shell: bash
       run: |
         VERSION="${{ steps.get_version_mac.outputs.version || steps.get_version_win.outputs.version }}"
-        ASSET_NAME="Saka04Editor_${VERSION}_${{ matrix.asset_name_suffix }}"
+        ASSET_NAME="Saka04Editor_${VERSION}_win.zip"
         echo "Generated asset name: ${ASSET_NAME}"
         echo "ASSET_NAME=${ASSET_NAME}" >> $GITHUB_ENV
 
@@ -62,7 +62,7 @@ jobs:
     - name: Package artifact (Windows)
       if: runner.os == 'Windows'
       shell: pwsh
-      run: Compress-Archive -Path "${{ matrix.build_path }}" -DestinationPath "${{ env.ASSET_NAME }}"
+      run: Compress-Archive -Path "dist/Saka04Editor.exe" -DestinationPath "${{ env.ASSET_NAME }}"
 
     # 上传构建产物，以便后续 release 任务使用
     - name: Upload artifact
@@ -75,11 +75,10 @@ jobs:
   release:
     name: Upload to Release and R2
     runs-on: ubuntu-latest
-    # 依赖 build 任务成功完成
     needs: build
-    # 需要写入 Release 的权限
     permissions:
       contents: write
+      id-token: write
 
     steps:
       - name: Download all build artifacts
@@ -87,22 +86,19 @@ jobs:
         with:
           path: artifacts
 
-      # 将构建产物上传到 GitHub Release
       - name: Upload assets to GitHub Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        # 使用 GitHub CLI 上传 artifacts 目录下的所有 zip 文件
         run: gh release upload "${{ github.event.release.tag_name }}" artifacts/**/*.zip
 
-      # 将产物同步上传到 Cloudflare R2
-      - name: Upload to Cloudflare R2
-        uses: aws-actions/s3-sync@v2
+      - name: Configure AWS Credentials for Cloudflare R2
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          bucket: ${{ secrets.R2_BUCKET }}
-          endpoint-url: ${{ secrets.R2_ENDPOINT }}
-          region: auto
-          # 同步整个 artifacts 目录内容（包含所有 zip）
-          source-dir: artifacts
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          aws-access-key-id: ${{ secrets.R2_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          # For R2, region is often 'auto' but must be set.
+          aws-region: auto
+
+      - name: Upload to Cloudflare R2 using AWS CLI
+        run: |
+          aws s3 sync ./artifacts s3://${{ secrets.R2_BUCKET }} --endpoint-url ${{ secrets.R2_ENDPOINT }}
