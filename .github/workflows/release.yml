@@ -45,7 +45,7 @@ jobs:
         run: |
           cd webview
           npm install
-          npm run build
+          npx vite build
 
       - name: Install Python dependencies
         run: |
@@ -53,6 +53,8 @@ jobs:
           pip install ".[dev]"
 
       - name: Build application executable
+        env:
+          PYTHONPATH: "${{ github.workspace }}:${{ github.workspace }}/src:${{ github.workspace }}/tests"
         run: python pyinstaller.py
 
       # 构建动态的打包文件名
