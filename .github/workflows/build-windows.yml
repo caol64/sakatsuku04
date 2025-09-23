@@ -86,14 +86,12 @@ jobs:
         with:
           path: artifacts
 
-      - name: Configure AWS Credentials for Cloudflare R2
-        uses: aws-actions/configure-aws-credentials@v4
+      - name: Upload to Cloudflare R2
+        uses: ryand56/r2-upload-action@latest
         with:
-          aws-access-key-id: ${{ secrets.R2_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          # For R2, region is often 'auto' but must be set.
-          aws-region: us-east-1
-
-      - name: Upload to Cloudflare R2 using AWS CLI
-        run: |
-          aws s3 sync ./artifacts s3://${{ secrets.R2_BUCKET }} --endpoint-url ${{ secrets.R2_ENDPOINT }}
+          r2-account-id: ${{ secrets.R2_ACCOUNT_ID }}
+          r2-access-key-id: ${{ secrets.R2_ACCESS_KEY_ID }}
+          r2-secret-access-key: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          r2-bucket: ${{ secrets.R2_BUCKET }}
+          source-dir: ./artifacts
+          destination-dir: ./
