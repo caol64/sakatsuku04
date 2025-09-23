@@ -31,7 +31,7 @@ export const getStyle = (num: number | undefined) => lookup(style, num);
 export const getToneType = (num: number | undefined) => lookup(tone, num);
 export const getCooperationType = (num: number | undefined) => lookup(cooperation, num);
 export const getGrowType = (num: number | undefined) => lookup(grow, num);
-export const getPosition = (num: number | undefined) => lookup(position, num);
+export const getPosition = (num: number | undefined) => num !== undefined ? position[num] : "";
 export const getRank = (num: number | undefined) => lookup(rank, num);
 export const getGrowEval = (num: number | undefined) => lookupDirect(growEval, num);
 
@@ -40,7 +40,7 @@ export const sortedStyle = Object.entries(style).sort((a, b) => a[0].localeCompa
 export const sortedToneType = Object.entries(tone).sort((a, b) => a[0].localeCompare(b[0]));
 export const sortedCooperationType = Object.entries(cooperation).sort((a, b) => a[0].localeCompare(b[0]));
 export const sortedGrowType = Object.entries(grow).sort((a, b) => a[0].localeCompare(b[0]));
-export const sortedPosition = Object.entries(position).sort((a, b) => a[0].localeCompare(b[0]));
+export const sortedPosition = position;
 export const sortedRank = Object.entries(rank).sort((a, b) => a[0].localeCompare(b[0]));
 export const sortedAbilities = ability;
 

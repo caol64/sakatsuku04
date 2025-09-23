@@ -304,17 +304,20 @@ class MainApp:
             "data": results,
         }
 
-    def get_bplayer(self, id: int, year: int = 1, age = 0) -> dict:
+    def get_bplayer(self, id: int, year: int = 1, age = 0, pos = None) -> dict:
         bplayer = get_player(id)
         player = Player(id)
         bplayer.name = player.name
         if age:
             bplayer.age = age
+        if pos is not None and pos > -1:
+            bplayer.pos = pos
         if is_jmodifiable(id):
             up_level = modify_jabil(bplayer.wave_type, year)
             if up_level > 0:
                 for i in range(64):
                     bplayer.abilities[i] = min(bplayer.abilities[i] + up_level, 95)
+        abilities_base = bplayer.abilities.copy()
         next_seed = id * (year - 1)
         abils = []
         for i in range(64):
@@ -329,9 +332,11 @@ class MainApp:
             if abil_exp == 0:
                 abil_exp = 1
             abils.append(abil_exp)
+            abilities_base[i] = min(abilities_base[i] + abil_level, 100)
         bplayer.abilities = abils
         dto = bplayer.to_dto()
         dto.id = id
+        dto.abilities_base = abilities_base
         return dto.model_dump(by_alias=True)
 
     def fetch_bscouts(self, page: int, search_params: dict = None) -> dict:

@@ -195,6 +195,7 @@ export interface BPlayer {
     unlockYear?: number;
     signingDifficulty?: number;
     growEval?: number;
+    gp?: number;
 }
 
 export interface Coach {

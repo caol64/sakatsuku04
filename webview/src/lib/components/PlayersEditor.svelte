@@ -11,7 +11,7 @@
 
     let { player, team, onSave }: Props = $props();
     let selectedBorn = $state(toHex(player.born));
-    let selectedPos = $state(toHex(player.pos));
+    let selectedPos = $state(player.pos);
     let selectedStyle = $state(toHex(player.style));
     let selectedCooperationType = $state(toHex(player.cooperationType));
     let selectedToneType = $state(toHex(player.toneType));
@@ -99,7 +99,7 @@
             newPlayer.offerYearsPassed = selectedOfferYearsPassed;
             newPlayer.offerYearsTotal = selectedOfferYearsTotal;
             newPlayer.born = fromHex(selectedBorn);
-            newPlayer.pos = fromHex(selectedPos);
+            newPlayer.pos = selectedPos;
             newPlayer.style = fromHex(selectedStyle);
             newPlayer.cooperationType = fromHex(selectedCooperationType);
             newPlayer.toneType = fromHex(selectedToneType);
@@ -164,8 +164,8 @@
         <div class="label">位置</div>
         <div class="input">
             <select bind:value={selectedPos} class="select">
-                {#each sortedPosition as [key, value]}
-                    <option value={key}>{value}</option>
+                {#each sortedPosition as value, index}
+                    <option value={index}>{value}</option>
                 {/each}
             </select>
             <DropDown />

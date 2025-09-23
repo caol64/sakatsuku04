@@ -3,7 +3,7 @@ from pydantic import BaseModel, ConfigDict, computed_field
 from pydantic.alias_generators import to_camel
 
 from .objs import Coach, Player, Scout
-from .utils import calc_abil_eval, calc_apos_eval, calc_def, calc_gk, calc_grow_eval, calc_mhex_sys, calc_off, calc_phy, calc_sta, calc_sys, calc_tac, find_badden_match, get_rank_to_number, handle_cond, is_album_player, lv_to_dot, sabil_2_apt, mcoach_eval
+from .utils import calc_abil_eval, calc_apos_eval, calc_def, calc_gk, calc_gp, calc_grow_eval, calc_mhex_sys, calc_off, calc_phy, calc_sta, calc_sys, calc_tac, find_badden_match, get_rank_to_number, handle_cond, is_album_player, lv_to_dot, sabil_2_apt, mcoach_eval
 from . import constants
 
 
@@ -307,6 +307,7 @@ class BPlayerDto(BaseDto):
     grow_type_tec: int
     grow_type_sys: int
     abilities: list[int]
+    abilities_base: Optional[list[int]] = None
     height: int
     style: int
     super_sub: int
@@ -393,6 +394,11 @@ class BPlayerDto(BaseDto):
         if Player(self.id).sp_comment:
             return 0
         return calc_grow_eval(self.grow_type_tec, self.age)
+
+    @computed_field
+    @property
+    def gp(self) -> float:
+        return calc_gp([r for r in self.abilities_base][0: 36], self.pos)
 
 class SimpleBPlayerDto(BaseDto):
     id: int

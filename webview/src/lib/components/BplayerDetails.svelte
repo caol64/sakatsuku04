@@ -6,14 +6,15 @@
     import StatusBars from "./StatusBars.svelte";
     import VStack from "./Stack/VStack.svelte";
     import Tooltip from "./Tooltip.svelte";
-    import { getCooperationType, getGrowType, getPosition, getRank, getRegion, getStyle, getToneType, getFoot, sortedAbilities, getGrowEval } from "$lib/utils";
+    import { sortedPosition, getCooperationType, getGrowType, getRank, getRegion, getStyle, getToneType, getFoot, sortedAbilities, getGrowEval } from "$lib/utils";
     import AbilityBar from "./AbilityBar.svelte";
     import abilEval from "$locales/abil_eval_zh.json";
     import Skull from "$lib/icons/Skull.svelte";
     import Waveform from "./Waveform.svelte";
     import PositionGrid from "./PositionGrid.svelte";
+    import DropDown from "$lib/icons/DropDown.svelte";
 
-    let { selectedPlayer = 0, selectedYear = 0, age = 0 } = $props();
+    let { selectedPlayer = -1, selectedYear = 0, age = 0 } = $props();
 
     let bPlayer: BPlayer = $state({hexagon: [], odc: [], abilities: []});
     let stats = $state(Array(6).fill(0));
@@ -26,25 +27,31 @@
         }))
     );
 
-    async function fetchBPlayer() {
+    async function fetchBPlayer(selectedPos: number = -1) {
         if (window.pywebview?.api?.get_bplayer) {
-            bPlayer = await window.pywebview.api.get_bplayer(selectedPlayer, selectedYear, age);
-            stats = bPlayer.hexagon;
-            bars = [bPlayer.odc[0], bPlayer.odc[1], 0];
+            if (selectedPlayer > -1) {
+                bPlayer = await window.pywebview.api.get_bplayer(selectedPlayer, selectedYear, age, selectedPos);
+                stats = bPlayer.hexagon;
+                bars = [bPlayer.odc[0], bPlayer.odc[1], 0];
+            }
         } else {
             alert('API 未加载');
         }
     }
 
     onMount(async () => {
-        fetchBPlayer();
+        await fetchBPlayer();
 	});
 
     $effect(() => {
-        if(selectedPlayer || selectedYear) {
+        if (selectedPlayer || selectedYear) {
             fetchBPlayer();
         }
     });
+
+    async function onSelectChange() {
+        fetchBPlayer(bPlayer.pos);
+    }
 
 </script>
 
@@ -54,9 +61,20 @@
             姓名
             <span class="flex-1 pl-8 text-sm">{bPlayer?.name}</span>
         </p>
+        <div class="form">
+            <div class="label">位置</div>
+            <div class="input">
+                <select bind:value={bPlayer.pos} onchange={onSelectChange} class="thin-select">
+                    {#each sortedPosition as value, index}
+                        <option value={index}>{value}</option>
+                    {/each}
+                </select>
+                <DropDown className="h-5 w-5 ml-1 absolute top-1.25 right-2.5" />
+            </div>
+        </div>
         <p>
-            位置
-            <span class="pl-8 text-sm">{getPosition(bPlayer?.pos)}</span>
+            GP
+            <span class="pl-8 text-sm">{bPlayer?.gp}</span>
         </p>
         <p>
             年龄
@@ -88,7 +106,7 @@
         </p>
         <p>
             签约所需声望
-            <span class="pl-8 text-sm">{bPlayer?.signingDifficulty}</span>
+            <span class="pl-5 text-sm">{bPlayer?.signingDifficulty}</span>
         </p>
         <p class="flex items-center justify-between">
             连携
@@ -121,11 +139,11 @@
             <div><span>野心</span><span class="pl-3">{bPlayer?.ambition}</span></div>
             <div><span>毅力</span><span class="pl-3">{bPlayer?.persistence}</span></div>
             <div><span>耐心</span><span class="pl-3">{bPlayer?.patient}</span></div>
-            <div><span>超级替补</span><span class="pl-3">{bPlayer?.superSub}</span></div>
-            <div><span>公平竞赛</span><span class="pl-3">{bPlayer?.wildType}</span></div>
-            <div><span>受伤耐性</span><span class="pl-3">{bPlayer?.weakType}</span></div>
-            <div><span>疲劳耐性</span><span class="pl-3">{bPlayer?.tiredType}</span></div>
-            <div><span>波动指数</span><span class="pl-3">{bPlayer?.waveType}</span></div>
+            <div><span>超级替补</span><span class="pl-2">{bPlayer?.superSub}</span></div>
+            <div><span>公平竞赛</span><span class="pl-2">{bPlayer?.wildType}</span></div>
+            <div><span>受伤耐性</span><span class="pl-2">{bPlayer?.weakType}</span></div>
+            <div><span>疲劳耐性</span><span class="pl-2">{bPlayer?.tiredType}</span></div>
+            <div><span>波动指数</span><span class="pl-2">{bPlayer?.waveType}</span></div>
         </div>
     </div>
 </VStack>
@@ -163,3 +181,19 @@
         </HStack>
     {/each}
 </VStack>
+
+<style lang="postcss">
+    @reference "tailwindcss";
+    .thin-select {
+        @apply w-22 bg-transparent placeholder:text-slate-400 text-slate-700 dark:text-gray-300 text-sm border border-slate-200 rounded pl-3 pr-6 py-1 transition duration-300 focus:outline-none focus:border-slate-400 hover:border-slate-400 shadow-sm focus:shadow-md appearance-none cursor-pointer;
+    }
+    .form {
+        @apply grid grid-cols-[1fr_2fr] my-2 items-center;
+    }
+    .label {
+        @apply w-fit;
+    }
+    .input {
+        @apply w-fit relative;
+    }
+</style>

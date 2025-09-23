@@ -545,7 +545,8 @@ class TeamReader(BaseReader):
 
     def read_my_team_data(self) -> list[MyPlayer]:
         # 0x7051c0 size: 0x45dc
-        self.bit_stream.unpack_bits([16, 16, 1], 5)
+        a = self.bit_stream.unpack_bits([16, 16, 1], 5)
+        town_id = a[1] # 0x7051c2 0x2(2)
         a = self.bit_stream.unpack_bits([-6] * 0x19, 0x19) # pos_idx 场上位置
         self.bit_stream.align(2)
         # 0x7051e0 0x20

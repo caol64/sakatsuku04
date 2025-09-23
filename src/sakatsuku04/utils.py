@@ -411,3 +411,13 @@ def mcoach_get_score_to_index(score: int) -> int:
         if score <= val:
             return i
     return 0
+
+def calc_gp(abilities: list[int], pos: int) -> float:
+    total = 0
+    count = 0
+    for i, a in enumerate(abilities):
+        val = constants.status_table_abil[i][pos]
+        if val > 0:
+            total += a * val
+            count += val
+    return round(total / count, 1) if count else 0.0

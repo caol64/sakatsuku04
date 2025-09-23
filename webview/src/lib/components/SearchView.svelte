@@ -212,8 +212,8 @@
                     {#if placeholderPos}
                         <option value="" disabled selected>{placeholderPos}</option>
                     {/if}
-                    {#each sortedPosition as [key, value]}
-                        <option value={key}>{value}</option>
+                    {#each sortedPosition as value, index}
+                        <option value={index}>{value}</option>
                     {/each}
                 </select>
                 <DropDown />

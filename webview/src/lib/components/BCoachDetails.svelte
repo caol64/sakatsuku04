@@ -72,7 +72,7 @@
         </p>
         <p>
             出现所需声望
-            <span class="pl-8 text-sm">{bCoach?.signingDifficulty}</span>
+            <span class="pl-5 text-sm">{bCoach?.signingDifficulty}</span>
         </p>
         <p>隐藏属性</p>
         <div class="pl-4 grid grid-cols-2 gap-x-1 text-sm text-left">

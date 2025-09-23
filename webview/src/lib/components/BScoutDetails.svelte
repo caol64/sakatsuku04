@@ -73,7 +73,7 @@
         </p>
         <p>
             出现所需声望
-            <span class="pl-8 text-sm">{bScout?.signingDifficulty}</span>
+            <span class="pl-5 text-sm">{bScout?.signingDifficulty}</span>
         </p>
         <p>擅长地区</p>
         <div class="pl-4 text-sm text-left">

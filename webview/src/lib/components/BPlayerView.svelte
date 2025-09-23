@@ -16,8 +16,9 @@
     let total = $state(1);
     let bPlayers: MyTeamPlayer[] = $derived([]);
     let keyword = $state("");
+    let inputPage = $derived(page.toString());
 
-    let selectedPlayer = $state(0);
+    let selectedPlayer = $state(-1);
     let selectedYear = $state(1);
     let sliderValue = $state(1);
     let debounceTimer: ReturnType<typeof setTimeout>;
@@ -34,7 +35,7 @@
                 if (bPlayers && bPlayers.length > 0) {
                     selectedPlayer = bPlayers[0].id;
                 } else {
-                    selectedPlayer = 0;
+                    selectedPlayer = -1;
                     bPlayers = [];
                 }
             } else {
@@ -92,6 +93,16 @@
         debounceTimer = window.setTimeout(() => {
             selectedYear = Number(sliderValue);
         }, 300);
+    }
+
+    function onJumpPage() {
+        let targetPage = parseInt(inputPage);
+        if (!isNaN(targetPage) && targetPage >= 1 && targetPage <= total) {
+            page = targetPage;
+            fetchBPlayers();
+        } else {
+            inputPage = page.toString();
+        }
     }
 
 </script>
@@ -191,9 +202,13 @@
                         <span class="sr-only">Previous</span>
                     </button>
                     <div class="flex items-center gap-x-1">
-                        <span class="min-h-8 min-w-8 flex justify-center items-center border border-gray-200 text-gray-800 py-1 px-3 text-sm rounded-lg focus:outline-hidden focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:border-neutral-700 dark:text-white dark:focus:bg-neutral-800">
-                            {page}
-                        </span>
+                        <input type="text" bind:value={inputPage}
+                            onkeydown={(e) => {
+                                if (e.key === 'Enter') {
+                                    onJumpPage();
+                                }
+                            }}
+                            class="min-h-8 w-14 flex justify-center items-center border border-gray-200 text-gray-800 py-1 px-3 text-sm rounded-lg focus:outline-hidden focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:border-neutral-700 dark:text-white dark:focus:bg-neutral-800" />
                         <span class="min-h-8 flex justify-center items-center text-gray-500 py-1.5 px-1.5 text-sm dark:text-neutral-500">
                             of
                         </span>
