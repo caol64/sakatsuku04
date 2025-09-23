@@ -59,7 +59,7 @@ jobs:
       run: |
         mkdir -p out
         cp assets/README.txt out/
-        cp -r "${{ matrix.build_path }}" out/
+        cp -r "dist/Saka04Editor.app" out/
         cd out
         zip -r "${{ env.ASSET_NAME }}" *
         mv "${{ env.ASSET_NAME }}" ..
