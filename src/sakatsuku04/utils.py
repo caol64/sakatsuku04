@@ -156,7 +156,7 @@ def player_hexagon_convert(input_value: int) -> int:
 
 
 def lv_to_dot(level_value: float) -> int:
-    return (min((level_value * 95) // 90 + 5, 100) * 32) // 100
+    return int(min(level_value * 95 / 90 + 5, 100) * 32 / 100)
 
 
 def ability_to_lv(exp: int) -> int:
@@ -336,7 +336,7 @@ def modify_jabil(wave_type: int, year: int) -> int:
     return (wave_type + 8) * year // 0x50
 
 
-def _calc_avg(abilities: list[int], indices: tuple[int]) -> int:
+def _calc_avg(abilities: list[int], indices: tuple[int, ...]) -> int:
     total = 0
     count = 0
     for i in indices:

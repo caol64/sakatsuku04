@@ -74,6 +74,11 @@ class InputBitStream:
         value = 0  # The value being unpacked.
         remaining_bits = bits_to_read
 
+        if bits_to_read <= 0:
+            return 0
+
+        mask_for_sign_extend = (1 << bits_to_read) - 1
+
         while remaining_bits > 0:
             # Calculate the current byte index and bit position within the byte.
             byte_index = self.bit_offset // 8
@@ -95,7 +100,7 @@ class InputBitStream:
         if sign_extend:
             # 检查最高位是否为 1
             if value & (1 << (bits_to_read - 1)):
-                value |= ~mask
+                value |= ~mask_for_sign_extend
                 value &= ((1 << ((bits_to_read + 7) // 8 * 8)) - 1)
         return value
 
@@ -203,7 +208,7 @@ class OutputBitStream:
             remaining_bits -= bits_in_current_byte
         self.input_data = bytes(output_data)
 
-    def pack_bits(self, bit_field: IntBitField | StrBitField) -> bytes:
+    def pack_bits(self, bit_field: IntBitField | StrBitField):
         if isinstance(bit_field, IntBitField):
             self.write_bits(bit_field.bit_length, bit_field.value, bit_field.bit_offset)
         else:

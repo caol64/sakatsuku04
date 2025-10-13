@@ -7,9 +7,9 @@ from .utils import get_resource_path, reset_char_dict
 
 
 class Player:
-    _player_dict: Optional[dict] = None
-    _player_comments_dict: Optional[dict] = None
-    _player_eval_list: Optional[list] = None
+    _player_dict: Optional[dict[int, list[str]]] = None
+    _player_comments_dict: Optional[dict[int, str]] = None
+    _player_eval_list: Optional[list[str]] = None
 
     def __init__(self, id: int):
         self.id = id
