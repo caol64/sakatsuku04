@@ -1,6 +1,6 @@
 # Sakatsuku04 Editor
 
-[![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Fcaol64%2Fsakatsuku04%2Fmain%2Fpyproject.toml)](https://github.com/caol64/sakatsuku04)
+[![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Fcaol64%2Fsakatsuku04%2Fmain%2Fpyproject.toml&logo=python)](https://github.com/caol64/sakatsuku04)
 [![License](https://img.shields.io/github/license/caol64/sakatsuku04)](LICENSE)
 [![Release](https://img.shields.io/github/v/release/caol64/sakatsuku04)](https://github.com/caol64/sakatsuku04/releases)
 [![Stars](https://img.shields.io/github/stars/caol64/sakatsuku04?style=social)](https://github.com/caol64/sakatsuku04)
