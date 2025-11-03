@@ -1,15 +1,14 @@
 import csv
 import json
-from typing import Optional
 
 from .io import CnVer
 from .utils import get_resource_path, reset_char_dict
 
 
 class Player:
-    _player_dict: Optional[dict[int, list[str]]] = None
-    _player_comments_dict: Optional[dict[int, str]] = None
-    _player_eval_list: Optional[list[str]] = None
+    _player_dict: dict[int, list[str]] | None = None
+    _player_comments_dict: dict[int, str] | None = None
+    _player_eval_list: list[str] | None = None
 
     def __init__(self, id: int):
         self.id = id
@@ -91,13 +90,13 @@ class Player:
         return self._player_properties[9] if self._player_properties else 0
 
     @property
-    def sp_comment(self) -> Optional[str]:
+    def sp_comment(self) -> str | None:
         return Player.player_comments_dict().get(str(self.id), None)
 
 
 class Scout:
-    _scout_dict: Optional[dict] = None
-    _scout_comments_list: Optional[list] = None
+    _scout_dict: dict | None = None
+    _scout_comments_list: list | None = None
 
     @classmethod
     def scout_dict(cls) -> dict[int, list[str]]:
@@ -132,8 +131,8 @@ class Scout:
 
 
 class Coach:
-    _coach_dict: Optional[dict] = None
-    _mcoach_comments_list: Optional[list] = None
+    _coach_dict: dict | None = None
+    _mcoach_comments_list: list | None = None
 
     @classmethod
     def coach_dict(cls) -> dict[int, list[str]]:

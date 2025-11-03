@@ -156,6 +156,10 @@
                 <span class="pl-8 text-sm">{getPosition(myPlayer?.pos)}</span>
             </p>
             <p>
+                GP
+                <span class="pl-8 text-sm">{myPlayer?.gp}</span>
+            </p>
+            <p>
                 年龄
                 <span class="pl-8 text-sm">{myPlayer?.age}</span>
             </p>
@@ -184,7 +188,7 @@
                 <span class="pl-8 text-sm">{getStyle(myPlayer?.style)}</span>
             </p>
             <p>
-                对战评价
+                球员等级
                 <span class="pl-8 text-sm">{getRank(myPlayer?.rank)}</span>
             </p>
             <p class="flex items-center justify-between">

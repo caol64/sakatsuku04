@@ -1,9 +1,8 @@
-from typing import Optional
 from pydantic import BaseModel, ConfigDict, computed_field
 from pydantic.alias_generators import to_camel
 
 from .objs import Coach, Player, Scout
-from .utils import calc_abil_eval, calc_apos_eval, calc_def, calc_gk, calc_gp, calc_grow_eval, calc_mhex_sys, calc_off, calc_phy, calc_sta, calc_sys, calc_tac, find_badden_match, get_rank_to_number, handle_cond, is_album_player, lv_to_dot, sabil_2_apt, mcoach_eval
+from .utils import ability_to_lv, calc_abil_eval, calc_apos_eval, calc_def, calc_gk, calc_gp, calc_grow_eval, calc_mhex_sys, calc_off, calc_phy, calc_sta, calc_sys, calc_tac, find_badden_match, get_rank_to_number, handle_cond, is_album_player, lv_to_dot, sabil_2_apt, mcoach_eval
 from . import constants
 
 
@@ -74,7 +73,7 @@ class MyPlayerDto(BaseDto):
     patient: int
     persistence: int
     wave_type: int
-    sp_comment: Optional[str]
+    sp_comment: str | None
     salary_high: int
     salary_low: int
     offer_years_passed: int
@@ -160,7 +159,7 @@ class MyPlayerDto(BaseDto):
 
     @computed_field
     @property
-    def badden_players(self) -> Optional[list[str]]:
+    def badden_players(self) -> list[str] | None:
         badden_ids = find_badden_match(self.id)
         return [Player(p).name for p in badden_ids] if badden_ids else None
 
@@ -182,6 +181,11 @@ class MyPlayerDto(BaseDto):
     def sys_grows(self) -> list[int]:
         return list(constants.tbl_sys_grow_type[self.grow_type_sys])
 
+    @computed_field
+    @property
+    def gp(self) -> float:
+        return calc_gp([ability_to_lv(r.max) + 1 for r in self.abilities[0: 36]], self.pos)
+
 
 class TeamDto(BaseDto):
     index: int
@@ -192,7 +196,7 @@ class TeamDto(BaseDto):
 class OtherTeamPlayerDto(BaseDto):
     id: int
     age: int
-    ability_graph: Optional[int] = None
+    ability_graph: int | None = None
     number: int
     name: str
     rank: int
@@ -204,7 +208,7 @@ class OtherTeamPlayerDto(BaseDto):
     grow_type_phy: int
     grow_type_tec: int
     grow_type_sys: int
-    team_index: Optional[int] = None
+    team_index: int | None = None
 
     @computed_field
     @property
@@ -213,7 +217,7 @@ class OtherTeamPlayerDto(BaseDto):
 
     @computed_field
     @property
-    def scouts(self) -> Optional[list[str]]:
+    def scouts(self) -> list[str] | None:
         scouts_ids = constants.scout_excl_reversed.get(self.id)
         if scouts_ids:
             return [Scout.name(f) for f in scouts_ids]
@@ -221,16 +225,16 @@ class OtherTeamPlayerDto(BaseDto):
 
 
 class SearchDto(BaseDto):
-    name: Optional[str] = None
-    pos: Optional[int] = None
-    age: Optional[int] = None
-    country: Optional[int] = None
-    rank: Optional[int] = None
-    tone: Optional[int] = None
-    cooperation: Optional[int] = None
-    team_id: Optional[int] = None
-    style: Optional[int] = None
-    scout_action: Optional[int] = None
+    name: str | None = None
+    pos: int | None = None
+    age: int | None = None
+    country: int | None = None
+    rank: int | None = None
+    tone: int | None = None
+    cooperation: int | None = None
+    team_id: int | None = None
+    style: int | None = None
+    scout_action: int | None = None
 
 class TownDto(BaseDto):
     living: int
@@ -248,21 +252,27 @@ class TownDto(BaseDto):
 class ScoutDto(BaseDto):
     id: int
     name: str
-    abilities: Optional[list[int]] = None
-    exclusive_players: Optional[list[SearchDto]] = None
-    simi_exclusive_players: Optional[list[SearchDto]] = None
+    abilities: list[int] | None = None
+    exclusive_players: list[SearchDto] | None = None
+    simi_exclusive_players: list[SearchDto] | None = None
 
+
+class CoachDto(BaseDto):
+    id: int
+    name: str
+    age: int | None = None
+    offer_years: int | None = None
 
 class AbroadCond(BaseDto):
     id: int
-    cond: Optional[list[str | int]]
+    cond: list[str | int] | None
 
 class AbroadDto(BaseDto):
     id: int
-    is_enabled: Optional[bool] = None
-    cond: Optional[AbroadCond] = None
-    abr_up: Optional[list[int]] = None
-    abr_uprate: Optional[list[int]] = None
+    is_enabled: bool | None = None
+    cond: AbroadCond | None = None
+    abr_up: list[int] | None = None
+    abr_uprate: list[int] | None = None
     abr_days: int = 0
 
     @classmethod
@@ -307,7 +317,7 @@ class BPlayerDto(BaseDto):
     grow_type_tec: int
     grow_type_sys: int
     abilities: list[int]
-    abilities_base: Optional[list[int]] = None
+    abilities_base: list[int] | None = None
     height: int
     style: int
     super_sub: int
@@ -356,7 +366,7 @@ class BPlayerDto(BaseDto):
 
     @computed_field
     @property
-    def badden_players(self) -> Optional[list[str]]:
+    def badden_players(self) -> list[str] | None:
         badden_ids = find_badden_match(self.id)
         return [Player(p).name for p in badden_ids] if badden_ids else None
 
@@ -398,7 +408,7 @@ class BPlayerDto(BaseDto):
     @computed_field
     @property
     def gp(self) -> float:
-        return calc_gp([r for r in self.abilities_base][0: 36], self.pos)
+        return calc_gp([r for r in self.abilities_base[0: 36]], self.pos) if self.abilities_base else 0
 
 class SimpleBPlayerDto(BaseDto):
     id: int
@@ -412,7 +422,7 @@ class SimpleBPlayerDto(BaseDto):
 
     @computed_field
     @property
-    def scouts(self) -> Optional[list[str]]:
+    def scouts(self) -> list[str]:
         scouts_ids = constants.scout_excl_reversed.get(self.id)
         if scouts_ids:
             return [Scout.name(f) for f in scouts_ids]
@@ -532,10 +542,17 @@ class BCoachDto(BaseDto):
 
     @computed_field
     @property
-    def sp_skill(self) -> Optional[int]:
+    def sp_skill(self) -> int | None:
         return constants.mcoach_skill.get(self.id - 20000)
 
     @computed_field
     @property
     def coach_type_cnv(self) -> int:
         return constants.coach_mapping[self.coach_type]
+
+
+class MySponsorDto(BaseDto):
+    id: int
+    contract_years: int
+    offer_years: int
+    amount: int

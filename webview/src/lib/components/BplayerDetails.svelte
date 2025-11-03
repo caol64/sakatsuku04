@@ -97,7 +97,7 @@
             <span class="pl-8 text-sm">{getStyle(bPlayer?.style)}</span>
         </p>
         <p>
-            对战评价
+            球员等级
             <span class="pl-8 text-sm">{getRank(bPlayer?.rank)}</span>
         </p>
         <p>

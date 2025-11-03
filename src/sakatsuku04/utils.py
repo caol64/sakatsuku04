@@ -3,13 +3,12 @@ import csv
 import importlib.resources
 from pathlib import Path
 import random
-from typing import Optional
 
 from . import constants
 
 
-_cn_char_dict: Optional[dict[str, str]] = None
-_jp_char_dict: Optional[dict[str, str]] = None
+_cn_char_dict: dict[str, str] | None = None
+_jp_char_dict: dict[str, str] | None = None
 
 def _load_char_dict(filename: str) -> dict[str, str]:
     result = {}

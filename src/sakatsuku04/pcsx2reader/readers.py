@@ -5,7 +5,7 @@ from ctypes import c_bool, c_char, c_char_p, c_uint, c_ulong, c_void_p
 import struct
 
 from ..data_reader import DataReader
-from ..dtos import AbroadDto, ClubDto, MyPlayerDto, MyTeamPlayerDto, OtherTeamPlayerDto, ScoutDto, SearchDto, TownDto
+from ..dtos import AbroadDto, ClubDto, CoachDto, MyPlayerDto, MySponsorDto, MyTeamPlayerDto, OtherTeamPlayerDto, ScoutDto, SearchDto, TownDto
 from ..io import CnVer, IntByteField, StrByteField
 from ..objs import Player, Reseter
 from ..utils import find_name_matches, get_album_bit_indices
@@ -428,6 +428,9 @@ class Pcsx2DataReader(DataReader):
 
         return scouts
 
+    def read_coaches(self, type: int) -> list[CoachDto]:
+        ...
+
     def read_my_abroads(self, type: int) -> list[AbroadDto]:
         dtos = AbroadDto.get_abr_camp_teams(type)
         sche = self._read_my_abroads()
@@ -623,6 +626,9 @@ class Pcsx2DataReader(DataReader):
         bits_fields.append(town.soccer_level)
         self._save(bits_fields)
         return True
+
+    def read_sponsors(self, type: int) -> list[MySponsorDto]:
+        ...
 
     def reset(self):
         self.libipc.pine_pcsx2_delete(self.ipc)

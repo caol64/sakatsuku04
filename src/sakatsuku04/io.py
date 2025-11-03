@@ -1,3 +1,4 @@
+from typing import overload
 from .utils import decode_bytes_to_str, encode_str_to_bytes, zero_pad, zero_terminate
 
 
@@ -103,6 +104,12 @@ class InputBitStream:
                 value |= ~mask_for_sign_extend
                 value &= ((1 << ((bits_to_read + 7) // 8 * 8)) - 1)
         return value
+
+    @overload
+    def unpack_bits(self, bit_lengths: int, total_bytes: int = 0) -> IntBitField: ...
+
+    @overload
+    def unpack_bits(self, bit_lengths: list[int], total_bytes: int = 0) -> list[IntBitField]: ...
 
     def unpack_bits(self, bit_lengths: int | list[int], total_bytes: int = 0) -> IntBitField | list[IntBitField]:
         result_is_int = False

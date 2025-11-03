@@ -175,8 +175,8 @@ class MyPlayer:
 class OtherPlayer:
     id: IntByteField
     age: IntByteField
-    ability_graph: IntByteField = None
-    number: IntByteField = None
+    ability_graph: IntByteField | None = None
+    number: IntByteField | None = None
 
     def to_dto(self):
         player = Player(self.id.value)
@@ -239,17 +239,17 @@ class Town:
 @dataclass
 class MyScout:
     id: IntByteField
-    age: IntByteField = None
-    saved_name: StrByteField = None
-    abilities: list[IntByteField] = None
-    offer_years: IntByteField = None
-    area1: IntByteField = None
-    area2: IntByteField = None
+    age: IntByteField | None = None
+    saved_name: StrByteField | None = None
+    abilities: list[IntByteField] | None = None
+    offer_years: IntByteField | None = None
+    area1: IntByteField | None = None
+    area2: IntByteField | None = None
 
     def to_dto(self):
         return ScoutDto(
             id=self.id.value,
-            name=self.saved_name.value,
+            name=self.saved_name.value if self.saved_name else "",
         )
 
     def to_dto_with_name(self, id: int):

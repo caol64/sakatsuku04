@@ -1,6 +1,6 @@
 import struct
 from ..data_reader import DataReader
-from ..dtos import AbroadDto, ClubDto, MyPlayerDto, MyTeamPlayerDto, OtherTeamPlayerDto, ScoutDto, SearchDto, TownDto
+from ..dtos import AbroadDto, ClubDto, CoachDto, MyPlayerDto, MySponsorDto, MyTeamPlayerDto, OtherTeamPlayerDto, ScoutDto, SearchDto, TownDto
 from ..io import CnVer, InputBitStream, IntBitField, OutputBitStream, StrBitField
 from ..objs import Player, Reseter
 from ..savereader.memcard_reader import MemcardReader
@@ -9,9 +9,11 @@ from ..constants import scout_excl_tbl, scout_simi_excl_tbl, team_ids
 from .entry_reader import EntryReader, HeadEntryReader
 from .models import (
     Club,
+    MyCoach,
     MyPlayer,
     MyPlayerAbility,
     MyScout,
+    MySponsor,
     MyTeam,
     OtherPlayer,
     OtherTeam,
@@ -117,9 +119,9 @@ class TeamReader(BaseReader):
         self.bit_stream.unpack_bits([8] * 15)
         self.bit_stream.unpack_bits([16, 16, 8, 8])  # 7051BF
         # 0x7051c0 0xbc
-        team.players = self.read_my_team_data()
+        team.players, team.master_coach = self.read_my_team_data()
         # 0x4698
-        players = self.read_my_team_data() # 国家队
+        self.read_my_team_data() # 国家队
         # 0070DD78 0x8c74
         for _ in range(20):  # edit player, but not useful
             a = self.bit_stream.unpack_bits(0x10)
@@ -188,9 +190,12 @@ class TeamReader(BaseReader):
             self.bit_stream.unpack_bits([7] * 6, 6)
         # 0x71273a d636
         self.bit_stream.align(2)
+        team.coach_candidates = list()
         # 0x71273c d638 監督候補list
         for _ in range(0x12):
-            self.bit_stream.unpack_bits([0x10, 3, 8], 4)
+            coach_id, offer_years, age = self.bit_stream.unpack_bits([0x10, 3, 8], 4)
+            if coach_id and coach_id.value != 0xFFFF:
+                team.coach_candidates.append(MyCoach(id=coach_id, age=age, offer_years=offer_years))
         # 0x712784 d680 監督候補n人目のコーチlist
         for _ in range(0x16 * 3):
             self.bit_stream.unpack_bits([0x10, 3, 8], 4)
@@ -249,17 +254,27 @@ class TeamReader(BaseReader):
                 scout = MyScout(scout_id, age)
                 team.scout_candidates.append(scout)
         # 0x712a88 0xd984
+        team.my_coaches = list()
+        team.my_coaches.append(team.master_coach)
         for _ in range(4):  # coach
-            self.bit_stream.unpack_bits(3, 2)
-            un = self.bit_stream.unpack_str(0xD)
-            self.bit_stream.unpack_bits([8, 4, 3, 8, 7, 0x10, 4, 4, 4, 4], 11)
-            self.bit_stream.unpack_bits(
+            self.bit_stream.unpack_bits(3, 2)  # index
+            coach_name = self.bit_stream.unpack_str(0xD) # 0x712a8a 0xd986
+            # 0x712a97 0xd993
+            a = self.bit_stream.unpack_bits([8, 4, 3, 8, 7, 0x10, 4, 4, 4, 4], 11)
+            coach_age = a[1]  # 0x712a98 0xd994
+            # 0x712aa2 0xd99e
+            a = self.bit_stream.unpack_bits(
                 [7, 7, 7, 1, 0x10, 3, 3, 3, 3, 2, 3, 4, 8, 4, 4, 3, 2], 18
             )
             self.bit_stream.unpack_bits([7] * 0x35, 0x35)
-            self.bit_stream.unpack_bits([8, 8, 5, 5, 5, 5, 5, 5, 3, 0x10, 3, 3, 3], 14)
+            # 0x712ae9 0xd9e5
+            a = self.bit_stream.unpack_bits([8, 8, 5, 5, 5, 5, 5, 5, 3, 0x10, 3, 3, 3], 14)
+            coach_id = a[9]  # 0xd9ee(2)
             self.bit_stream.unpack_bits([0x10] * 9, 20)
             self.bit_stream.unpack_bits(1, 1)
+            # 0x712b0c 0xda08
+            if coach_id and coach_id.value != 0xFFFF:
+                team.my_coaches.append(MyCoach(id=coach_id, age=coach_age, saved_name=coach_name))
         # 0x712c98 0xdb94
         for _ in range(50):
             self.bit_stream.unpack_bits([9, 6, 6, 9, 3], 8)
@@ -282,9 +297,15 @@ class TeamReader(BaseReader):
         self.bit_stream.unpack_bits([0x10, 8, 8, 8, 1, 1, 1, 1, 1], 12)
         # 0x715030
         self.bit_stream.unpack_bits([0x20] * 0x10)
+        team.my_sponsors = list()
         # 0x715070 0xff6c 赞助商
         for _ in range(7):
-            self.bit_stream.unpack_bits([8, 3, 3, 8, 8, 3, 0x10, 1, 1], 10)
+            a = self.bit_stream.unpack_bits([8, 3, 3, 8, 8, 3, 0x10, 1, 1], 10)
+            id = a[0]
+            contract_years = a[1]
+            offer_years = a[2]
+            amount = a[6]
+            team.my_sponsors.append(MySponsor(id=id, contract_years=contract_years, offer_years=offer_years, amount=amount))
         # 0x7150b6
         self.bit_stream.unpack_bits([8] * 32)
         # 0xffd2
@@ -543,7 +564,7 @@ class TeamReader(BaseReader):
             # 705420
         return players
 
-    def read_my_team_data(self) -> list[MyPlayer]:
+    def read_my_team_data(self) -> tuple[list[MyPlayer], MyCoach]:
         # 0x7051c0 size: 0x45dc
         a = self.bit_stream.unpack_bits([16, 16, 1], 5)
         town_id = a[1] # 0x7051c2 0x2(2)
@@ -575,11 +596,17 @@ class TeamReader(BaseReader):
         self.bit_stream.unpack_bits(3, 2)
         # 0x3dd0
         coach_name = self.bit_stream.unpack_str(0xD)  # coach name
-        self.bit_stream.unpack_bits([8, 4, 3, 8, 7, 0x10, 4, 4, 4, 4, 7, 7, 7, 1], 15)
-        self.bit_stream.unpack_bits([-0x10, 3, 3, 3, 3, 2, 3, 4, 8, 4, 4, 3, 2], 14)
-        # 708FBA
+        # 0x3dd0
+        a = self.bit_stream.unpack_bits([8, 4, 3, 8, 7, 0x10, 4, 4, 4, 4, 7, 7, 7, 1], 15)
+        coach_born = a[0]  # 0x3dd0
+        coach_age = a[3]  # 0x3dd3
+        # 0x3dec
+        a = self.bit_stream.unpack_bits([-0x10, 3, 3, 3, 3, 2, 3, 4, 8, 4, 4, 3, 2], 14)
+        # 708FBA 0x3dfa
         a = self.bit_stream.unpack_bits([7] * 0x35, 0x35)
-        self.bit_stream.unpack_bits([8, 8, 5, 5, 5, 5, 5, 5, 3, 0x10, 3, 3, 3], 15)
+        # 0x3e2f
+        a = self.bit_stream.unpack_bits([8, 8, 5, 5, 5, 5, 5, 5, 3, 0x10, 3, 3, 3], 15)
+        coach_id = a[9]  # 0x3e38(2)
         self.bit_stream.unpack_bits([0x10] * 9)
         self.bit_stream.unpack_bits(1, 2)
         # 0x3e52
@@ -597,7 +624,8 @@ class TeamReader(BaseReader):
                 self.bit_stream.unpack_bits([-6, 8], 2)
                 self.bit_stream.unpack_bits([8] * 0xA)
         self.bit_stream.unpack_bits(8)
-        return players
+        master_coach = MyCoach(id=coach_id, age=coach_age, saved_name=coach_name)
+        return players, master_coach
 
 
 class OtherTeamReader(BaseReader):
@@ -688,6 +716,7 @@ class TownReader(BaseReader):
             self.bit_stream.unpack_bits([4, 5, 3, 8], 6)
         # 0x73552c 0x3c
         a = self.bit_stream.unpack_bits([3, 4, 8], 3)
+        weather = a[0] # 0x3c
         town.town_type = a[1] # 0x3d
         # 0x3f
         self.bit_stream.unpack_bits([1] * 13, 13)
@@ -1013,7 +1042,7 @@ class SaveDataReader(DataReader):
         )
 
         if not scouts:
-            return scouts
+            return []
 
         def resolve_players(player_ids: list[int]) -> list[SearchDto]:
             result = []
@@ -1033,6 +1062,18 @@ class SaveDataReader(DataReader):
             scout.simi_exclusive_players = resolve_players(scout_simi_excl_tbl.get(scout.id, []))
 
         return scouts
+
+    def read_coaches(self, type: int) -> list[CoachDto]:
+        coaches = (
+            [f.to_dto() for f in self.my_team.my_coaches]
+            if type == 0
+            else [f.to_dto_with_name(f.id.value) for f in self.my_team.coach_candidates]
+        )
+
+        if not coaches:
+            return []
+
+        return coaches
 
     def read_my_abroads(self, type: int) -> list[AbroadDto]:
         dtos = AbroadDto.get_abr_camp_teams(type)
@@ -1160,6 +1201,16 @@ class SaveDataReader(DataReader):
         bits_fields.append(self.town.soccer_level)
         self._save(bits_fields)
         return True
+
+    def read_sponsors(self, type: int) -> list[MySponsorDto]:
+        sponsors = (
+            [f.to_dto() for f in self.my_team.my_sponsors]
+        )
+
+        if not sponsors:
+            return []
+
+        return sponsors
 
     def reset(self): ...
 

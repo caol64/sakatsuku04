@@ -10,6 +10,8 @@
     import ScoutsView from "./ScoutsView.svelte";
     import AlbumView from "./AlbumView.svelte";
     import AbroadView from "./AbroadView.svelte";
+    import CoachesView from "./CoachesView.svelte";
+    import SponsorsView from "./SponsorsView.svelte";
 </script>
 
 <VStack className="px-2 flex-1 h-screen">
@@ -24,8 +26,12 @@
         <SearchView />
     {:else if getSelectedTab() === "Scouts"}
         <ScoutsView />
+    {:else if getSelectedTab() === "Coaches"}
+        <CoachesView />
     {:else if getSelectedTab() === "Town"}
         <TownEditor />
+    {:else if getSelectedTab() === "Sponsors"}
+        <SponsorsView />
     {:else if getSelectedTab() === "Album"}
         <AlbumView />
     {:else if getSelectedTab() === "Abroad"}

@@ -1,9 +1,8 @@
 from dataclasses import dataclass
-from typing import Optional
 
-from ..dtos import ClubDto, MyPlayerDto, OtherTeamPlayerDto, PlayerAbilityDto, ScoutDto, TownDto
+from ..dtos import ClubDto, CoachDto, MyPlayerDto, MySponsorDto, OtherTeamPlayerDto, PlayerAbilityDto, ScoutDto, TownDto
 from ..io import IntBitField, IntByteField, StrBitField, StrByteField
-from ..objs import Player, Scout
+from ..objs import Coach, Player, Scout
 
 
 @dataclass
@@ -201,20 +200,24 @@ class MyTeam:
     players: list[MyPlayer]
     youth_players: list[MyPlayer]
     my_scouts: list["MyScout"]
+    master_coach: "MyCoach"
+    my_coaches: list["MyCoach"]
     scout_candidates: list["MyScout"]
+    coach_candidates: list["MyCoach"]
     album_players: list[IntBitField]
     transfer_players: list["OtherPlayer"]
     free_players: list["OtherPlayer"]
     rookie_players: list["OtherPlayer"]
     team_status: IntBitField
+    my_sponsors: list["MySponsor"]
 
 
 @dataclass
 class OtherPlayer:
     id: IntBitField
     age: IntBitField
-    ability_graph: IntBitField = None
-    number: IntBitField = None
+    ability_graph: IntBitField | None = None
+    number: IntBitField | None = None
 
     def to_dto(self):
         player = Player(self.id.value)
@@ -250,23 +253,63 @@ class OtherTeam:
 @dataclass
 class MyScout:
     id: IntBitField
-    age: IntBitField = None
-    saved_name: StrBitField = None
-    abilities: list[IntBitField] = None
-    offer_years: IntBitField = None
-    area1: IntBitField = None
-    area2: IntBitField = None
+    age: IntBitField | None = None
+    saved_name: StrBitField | None = None
+    abilities: list[IntBitField] | None = None
+    offer_years: IntBitField | None = None
+    area1: IntBitField | None = None
+    area2: IntBitField | None = None
 
-    def to_dto(self):
+    def to_dto(self) -> ScoutDto:
         return ScoutDto(
             id=self.id.value,
-            name=self.saved_name.value,
+            name=self.saved_name.value if self.saved_name else "",
         )
 
-    def to_dto_with_name(self, id: int):
+    def to_dto_with_name(self, id: int) -> ScoutDto:
         return ScoutDto(
             id=self.id.value,
             name=Scout.name(id),
+        )
+
+
+@dataclass
+class MyCoach:
+    id: IntBitField
+    age: IntBitField | None = None
+    saved_name: StrBitField | None = None
+    offer_years: IntBitField | None = None
+
+    def to_dto(self) -> CoachDto:
+        return CoachDto(
+            id=self.id.value,
+            name=self.saved_name.value if self.saved_name else "",
+            age=self.age.value if self.age else None,
+            offer_years=self.offer_years.value if self.offer_years else None,
+        )
+
+    def to_dto_with_name(self, id: int) -> CoachDto:
+        return CoachDto(
+            id=self.id.value,
+            name=Coach.name(id),
+            age=self.age.value if self.age else None,
+            offer_years=self.offer_years.value if self.offer_years else None,
+        )
+
+
+@dataclass
+class MySponsor:
+    id: IntBitField
+    contract_years: IntBitField
+    offer_years: IntBitField
+    amount: IntBitField
+
+    def to_dto(self) -> MySponsorDto:
+        return MySponsorDto(
+            id=self.id.value,
+            contract_years=self.contract_years.value,
+            offer_years=self.offer_years.value,
+            amount=self.amount.value,
         )
 
 

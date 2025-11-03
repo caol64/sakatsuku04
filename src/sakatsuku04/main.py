@@ -28,7 +28,6 @@ class MainApp:
     def __init__(self, web_root: str = "./webview/build", dev_port: int = 1420):
         self.web_root = web_root
         self.dev_port = dev_port
-        self.bottle_app: bottle.Bottle = None
         if platform.system() == "Darwin":
             self.window_size = (1024, 768)
         else:
@@ -79,10 +78,10 @@ class MainApp:
         self._run_prod(True)
 
     def _run_prod(self, is_release: bool):
-        self.bottle_app = self._create_bottle_app(is_release)
+        bottle_app = self._create_bottle_app(is_release)
         window = webview.create_window(
             self.app_name,
-            url=self.bottle_app,
+            url=bottle_app,
             width=self.window_size[0],
             height=self.window_size[1],
             min_size=self.window_size,
@@ -103,7 +102,7 @@ class MainApp:
             f"Port {port} on {host} not available after {timeout} seconds"
         )
 
-    def _start_vite(self):
+    def _start_vite(self) -> subprocess.Popen:
         """Start Vite development server"""
         return subprocess.Popen(
             ["pnpm", "--filter", "webview", "dev"],
@@ -161,6 +160,8 @@ class MainApp:
             self.fetch_bcoachs,
             self.get_bscout,
             self.get_bcoach,
+            self.fetch_my_coaches,
+            self.fetch_my_sponsors,
         )
 
     def get_version(self) -> str:
@@ -214,6 +215,9 @@ class MainApp:
     def fetch_my_scouts(self, type: int) -> list:
         return [f.model_dump(by_alias=True) for f in self.data_raader.read_scouts(type)]
 
+    def fetch_my_coaches(self, type: int) -> list:
+        return [f.model_dump(by_alias=True) for f in self.data_raader.read_coaches(type)]
+
     def fetch_my_town(self) -> dict:
         return self.data_raader.read_town().model_dump(by_alias=True)
 
@@ -252,7 +256,7 @@ class MainApp:
         self.data_raader.save_town(town_data)
         return {"message": "success"}
 
-    def fetch_bplayers(self, page: int, search_params: dict = None) -> dict:
+    def fetch_bplayers(self, page: int, search_params: dict | None = None) -> dict:
         CnVer.set_ver(1)
         results = []
         if not page:
@@ -339,7 +343,7 @@ class MainApp:
         dto.abilities_base = abilities_base
         return dto.model_dump(by_alias=True)
 
-    def fetch_bscouts(self, page: int, search_params: dict = None) -> dict:
+    def fetch_bscouts(self, page: int, search_params: dict | None = None) -> dict:
         CnVer.set_ver(1)
         results = []
         if not page:
@@ -399,7 +403,7 @@ class MainApp:
         else:
             return {}
 
-    def fetch_bcoachs(self, page: int, search_params: dict = None) -> dict:
+    def fetch_bcoachs(self, page: int, search_params: dict | None = None) -> dict:
         CnVer.set_ver(1)
         results = []
         if not page:
@@ -458,6 +462,10 @@ class MainApp:
             return dto.model_dump(by_alias=True)
         else:
             return {}
+
+    def fetch_my_sponsors(self, type: int) -> list:
+        return [f.model_dump(by_alias=True) for f in self.data_raader.read_sponsors(type)]
+
 
 def main():
     app = MainApp()

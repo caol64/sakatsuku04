@@ -101,6 +101,7 @@ export interface MyPlayer {
     tired?: number;
     status?: number;
     condition?: number;
+    gp?: number;
 }
 
 export interface MyPlayerAbility {
@@ -201,6 +202,8 @@ export interface BPlayer {
 export interface Coach {
     id: number;
     name: string;
+    age?: number;
+    offerYears?: number;
 }
 
 export interface BScout {
@@ -246,4 +249,12 @@ export interface BCoach {
     acSpPractice2?: number;
     spSkill?: number;
     coachTypeCnv?: number;
+}
+
+
+export interface Sponsors {
+    id: number;
+    contractYears: string;
+    offerYears: number;
+    amount: number;
 }

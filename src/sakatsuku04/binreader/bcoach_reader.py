@@ -18,7 +18,7 @@ class BCoach:
     salary: int
     signing_difficulty: int
     styles = [0] * 6
-    coach_type = int
+    coach_type: int
     x11: int
     x14: int
     x15: int
