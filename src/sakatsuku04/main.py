@@ -1,4 +1,5 @@
 import atexit
+from pathlib import Path
 import platform
 import socket
 import subprocess
@@ -36,7 +37,7 @@ class MainApp:
         self.app_version = ""
         self.data_raader: DataReader = None
 
-    def get_project_info(self, pyproject_path="pyproject.toml") -> tuple:
+    def get_project_info(self, pyproject_path: str | Path="pyproject.toml") -> tuple:
         import tomllib
 
         with open(pyproject_path, "rb") as f:
@@ -175,7 +176,7 @@ class MainApp:
             self.data_raader = SaveDataReader(file_paths[0])
             return self.data_raader.games()
         else:
-            return None
+            return []
 
     def connect_pcsx2(self) -> bool:
         self.data_raader = Pcsx2DataReader()
@@ -186,8 +187,8 @@ class MainApp:
             self.data_raader.reset()
         Reseter.reset()
 
-    def select_game(self, game: str):
-        self.data_raader.select_game(game)
+    def select_game(self, game: str) -> int:
+        return self.data_raader.select_game(game)
 
     def fetch_club_data(self) -> dict:
         return self.data_raader.read_club().model_dump(by_alias=True)

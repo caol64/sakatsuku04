@@ -1,4 +1,5 @@
 import struct
+from typing import override
 from ..data_reader import DataReader
 from ..dtos import AbroadDto, ClubDto, CoachDto, MyPlayerDto, MySponsorDto, MyTeamPlayerDto, OtherTeamPlayerDto, ScoutDto, SearchDto, TownDto
 from ..io import CnVer, InputBitStream, IntBitField, OutputBitStream, StrBitField
@@ -874,7 +875,8 @@ class SaveDataReader(DataReader):
     def games(self) -> list[str]:
         return list(self.save_entries.keys())
 
-    def select_game(self, game: str):
+    @override
+    def select_game(self, game: str) -> int:
         self.selected_game = game
         save_entry = self.save_entries.get(game)
         self.entry_reader = EntryReader(save_entry.main_save_entry)
@@ -897,8 +899,10 @@ class SaveDataReader(DataReader):
         record_reader.read()
         sche_reader = ScheReader(in_bit_stream)
         self.sche = sche_reader.read()
-        CnVer.set_ver(self.game_ver())
+        game_ver = self.game_ver()
+        CnVer.set_ver(game_ver)
         Reseter.reset()
+        return game_ver
 
     def read_club(self) -> ClubDto:
         if not self.selected_game:

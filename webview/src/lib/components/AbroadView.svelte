@@ -184,9 +184,6 @@
             selected = [...selected, item];
         }
     }
-
-
-
 </script>
 
 <HStack className="flex-1 overflow-hidden m-2.5">

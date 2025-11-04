@@ -3,11 +3,10 @@
     import HStack from "$lib/components/Stack/HStack.svelte";
     import VStack from "$lib/components/Stack/VStack.svelte";
     import { onMount } from "svelte";
-    import teamsData from "$locales/teams_zh.json";
     import teamGroupsData from "$locales/team_groups_zh.json";
-    import { getRefreshFlag, getSelectedTab, setRefreshFlag, getClubData } from "$lib/globalState.svelte";
+    import { gameVersion, getGameYear, getRefreshFlag, getSelectedTab, setRefreshFlag } from "$lib/globalState.svelte";
     import Football from "$lib/icons/Football.svelte";
-    import { getCooperationType, getGrowType, getPlayerColor, getPosition, getRank, getStyle, getToneType } from "$lib/utils";
+    import { getCooperationType, getGrowType, getPlayerColor, getPosition, getRank, getStyle, getTeamData, getToneType } from "$lib/utils";
     import Tooltip from "./Tooltip.svelte";
     import Avatar from "$lib/icons/Avatar.svelte";
     import BPlayerDetails from "./BPlayerDetails.svelte";
@@ -56,12 +55,12 @@
         for (let i = 0; i < teamGroupsData.length; i++) {
             const item = teamGroupsData[i];
             const regionName = item[0] as string;
-            const max = i + 1 < teamGroupsData.length ? teamGroupsData[i + 1][1] as number : teamsData.length;
+            const max = i + 1 < teamGroupsData.length ? teamGroupsData[i + 1][1] as number : getTeamData(gameVersion).length;
             const teams: Team[] = [];
             for (let i = index; i < max; i++) {
                 teams.push({
                     index,
-                    name: teamsData[index]
+                    name: getTeamData(gameVersion)[index]
                 });
                 index++;
             }
@@ -213,7 +212,7 @@
                     <Close />
                 </button>
             </VStack>
-            <BPlayerDetails selectedPlayer={playerId} selectedYear={getClubData().year} age={age} />
+            <BPlayerDetails selectedPlayer={playerId} selectedYear={getGameYear()} age={age} />
         </HStack>
     </div>
 

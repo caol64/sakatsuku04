@@ -1,16 +1,18 @@
 export interface Club {
-    year?: number;
-    month?: number;
-    date?: number;
-    day?: number;
-    fundsHigh?: number;
-    fundsLow?: number;
-    managerName?: string;
-    clubName?: string;
-    difficulty?: number;
-    seed?: number;
-    teamStatus?: number;
+    year: number;
+    month: number;
+    date: number;
+    day: number;
+    fundsHigh: number;
+    fundsLow: number;
+    managerName: string;
+    clubName: string;
+    difficulty: number;
+    seed: number;
+    teamStatus: number;
 }
+
+export type EmptyClub = Partial<Club>;
 
 export interface Team {
     index: number;

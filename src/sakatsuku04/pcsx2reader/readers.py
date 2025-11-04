@@ -3,6 +3,7 @@ import importlib.resources
 import platform
 from ctypes import c_bool, c_char, c_char_p, c_uint, c_ulong, c_void_p
 import struct
+from typing import override
 
 from ..data_reader import DataReader
 from ..dtos import AbroadDto, ClubDto, CoachDto, MyPlayerDto, MySponsorDto, MyTeamPlayerDto, OtherTeamPlayerDto, ScoutDto, SearchDto, TownDto
@@ -354,7 +355,8 @@ class Pcsx2DataReader(DataReader):
     def games(self) -> list[str]:
         return []
 
-    def select_game(self, game: str): ...
+    @override
+    def select_game(self, game: str) -> int: ...
 
     def read_club(self) -> ClubDto:
         club = self._read_club()

@@ -1,14 +1,46 @@
 <script lang="ts">
-    import { getClubData } from "$lib/globalState.svelte";
+    import { getSelectedGame, getRefreshFlag, getSelectedTab, setIsLoading, setGameYear, setRefreshFlag, getIsLoading } from "$lib/globalState.svelte";
     import HStack from "$lib/components/Stack/HStack.svelte";
-    import type { Club } from "$lib/models";
+    import type { Club, EmptyClub } from "$lib/models";
+    import { onMount } from "svelte";
 
     const pattern = "^([1-9][0-9]{0,3}|0)$";
-    let clubData: Club = $state({});
+    let clubData: EmptyClub = $state({});
+
+    async function selectGame() {
+        try {
+            setIsLoading(true);
+            if (window.pywebview?.api?.fetch_club_data) {
+                const pageData: Club = await window.pywebview.api.fetch_club_data();
+                if (pageData) {
+                    clubData = pageData;
+                    setGameYear(pageData.year);
+                }
+            } else {
+                alert('API 未加载');
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    }
 
     $effect(() => {
-        clubData = getClubData();
+        if(getRefreshFlag() && getSelectedGame()) {
+            if (getSelectedTab() === "Game") {
+                try {
+                    selectGame();
+                } finally {
+                    setRefreshFlag(false);
+                }
+            }
+        }
     });
+
+    onMount(async () => {
+        if (!getIsLoading()) {
+            selectGame();
+        }
+	});
 
     async function handleSave() {
         if (window.pywebview?.api?.save_club_data) {

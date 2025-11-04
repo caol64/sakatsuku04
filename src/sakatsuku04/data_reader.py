@@ -8,7 +8,7 @@ class DataReader(Protocol):
     def games(self) -> list[str]:
         ...
 
-    def select_game(self, game: str):
+    def select_game(self, game: str) -> int:
         ...
 
     def read_club(self) -> ClubDto:

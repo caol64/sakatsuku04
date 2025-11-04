@@ -34,7 +34,7 @@ class Club:
     club_name: StrBitField
     difficulty: IntBitField
     seed: IntBitField
-    version_magic = bytes
+    version_magic: bytes
 
     def to_dto(self):
         return ClubDto(

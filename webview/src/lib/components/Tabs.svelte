@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { allTabs, setIsLoading, getSelectedTab, setSelectedTab, setDefaultTab, type Tab, getSaveList, setClubData, setModeState, setSaveList, getClubData, getModeState, setRefreshFlag } from "$lib/globalState.svelte";
+    import { allTabs, setIsLoading, setSelectedGame, getSelectedTab, setSelectedTab, setDefaultTab, type Tab, getSaveList, setGameYear, setModeState, setSaveList, getModeState, setRefreshFlag, setGameVersion } from "$lib/globalState.svelte";
     import HStack from "$lib/components/Stack/HStack.svelte";
     import Back from "$lib/icons/Back.svelte";
     import { onMount } from "svelte";
@@ -20,41 +20,37 @@
             setIsLoading(true);
             setDefaultTab();
             if (window.pywebview?.api?.select_game) {
-                await window.pywebview.api.select_game(selectedGame);
-                const pageData = await window.pywebview.api.fetch_club_data();
-                if (pageData) {
-                    setClubData(pageData);
-                }
+                const gameVersion: number = await window.pywebview.api.select_game(selectedGame);
+                setGameVersion(gameVersion);
             } else {
                 alert('API 未加载');
             }
+            setSelectedGame(selectedGame);
+            refresh();
         } finally {
             setIsLoading(false);
         }
-
     }
 
     async function reset() {
         setModeState("");
         setSaveList([]);
-        setClubData({});
+        setGameYear(1);
         setDefaultTab();
         selectedGame = "";
+        setSelectedGame(selectedGame);
     }
 
-    async function refresh() {
-        if (getSelectedTab() === "Game") {
-            selectGame();
-        } else {
-            setRefreshFlag(true);
-        }
+    function refresh() {
+        setRefreshFlag(true);
     }
 
-    onMount(() => {
+    onMount(async() => {
         if (getSaveList()) {
             selectedGame = getSaveList()[0];
+            setSelectedGame(selectedGame);
+            await selectGame();
         }
-        selectGame();
     });
 </script>
 

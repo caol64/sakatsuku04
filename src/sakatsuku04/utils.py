@@ -302,7 +302,7 @@ def update_seed(current_seed: int) -> int:
 def get_random_int32() -> int:
     return random.randint(0, 0xFFFFFFFF)
 
-def random_get_0toi(seed: int, max: int = 0xffff) -> tuple[float, int]:
+def random_get_0toi(seed: int, max: int = 0xffff) -> tuple[int, int]:
     next_seed = update_seed(seed)
     max_val_16bit = max & 0xFFFF
     result = 0

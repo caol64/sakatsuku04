@@ -1,9 +1,16 @@
+from enum import Enum
 from pydantic import BaseModel, ConfigDict, computed_field
 from pydantic.alias_generators import to_camel
 
 from .objs import Coach, Player, Scout
 from .utils import ability_to_lv, calc_abil_eval, calc_apos_eval, calc_def, calc_gk, calc_gp, calc_grow_eval, calc_mhex_sys, calc_off, calc_phy, calc_sta, calc_sys, calc_tac, find_badden_match, get_rank_to_number, handle_cond, is_album_player, lv_to_dot, sabil_2_apt, mcoach_eval
 from . import constants
+
+
+class GameVersion(str, Enum):
+    JP = "jp"
+    ZH = "zh"
+    ZH18 = "zh18"
 
 
 class BaseDto(BaseModel):

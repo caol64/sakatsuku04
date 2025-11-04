@@ -5,7 +5,7 @@
     import VStack from "./Stack/VStack.svelte";
     import teamsData from "$locales/teams_zh.json";
     import DropDown from "$lib/icons/DropDown.svelte";
-    import { setIsLoading, getClubData } from "$lib/globalState.svelte";
+    import { setIsLoading, getGameYear } from "$lib/globalState.svelte";
     import HStack from "./Stack/HStack.svelte";
     import Tooltip from "./Tooltip.svelte";
     import Avatar from "$lib/icons/Avatar.svelte";
@@ -330,7 +330,7 @@
                     <Close />
                 </button>
             </VStack>
-            <BPlayerDetails selectedPlayer={playerId} selectedYear={getClubData().year} age={age} />
+            <BPlayerDetails selectedPlayer={playerId} selectedYear={getGameYear()} age={age} />
         </HStack>
     </div>
 </VStack>
