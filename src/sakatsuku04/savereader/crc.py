@@ -4,7 +4,6 @@ from ..utils import get_resource_path
 
 
 class CrcCaculator:
-
     _mask1 = 0x9255AE41
     _mask2 = 0xEFCFBFEA
     _crc_table = None
@@ -13,7 +12,7 @@ class CrcCaculator:
     def crc_table(cls) -> tuple[int]:
         if cls._crc_table is None:
             with open(get_resource_path("crc_table.bin"), "rb") as f:
-                cls._crc_table = struct.unpack('<256H', f.read())
+                cls._crc_table = struct.unpack("<256H", f.read())
         return cls._crc_table
 
     def calc(self, data: bytes) -> tuple[int, int]:

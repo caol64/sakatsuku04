@@ -41,6 +41,7 @@ export interface TeamPlayer {
     isAlbum: boolean;
     teamIndex: number;
     scouts?: string[];
+    bringAbroads: number[];
 }
 
 export interface MyTeamPlayer {
@@ -161,6 +162,7 @@ export interface Abroad {
 }
 
 export interface BPlayer {
+    id?: number;
     name?: string;
     born?: number;
     pos?: number;
@@ -206,6 +208,7 @@ export interface Coach {
     name: string;
     age?: number;
     offerYears?: number;
+    bringAbroads: number[];
 }
 
 export interface BScout {
@@ -254,9 +257,18 @@ export interface BCoach {
 }
 
 
+export interface SponsorsAbr {
+    id: number;
+    type: number;
+    isEnabled: boolean;
+}
+
+
 export interface Sponsors {
     id: number;
     contractYears: string;
     offerYears: number;
-    amount: number;
+    amountHigh: number;
+    amountLow: number;
+    bringAbroads: SponsorsAbr[];
 }

@@ -11,6 +11,7 @@
     import Avatar from "$lib/icons/Avatar.svelte";
     import BPlayerDetails from "./BPlayerDetails.svelte";
     import Close from "$lib/icons/Close.svelte";
+    import Airplane from "$lib/icons/Airplane.svelte";
 
 
     let treeData: TeamsWithRegion[] = $state([]);
@@ -176,9 +177,24 @@
                                     </button>
                                     {#if item.scouts && item.scouts.length > 0}
                                         {@const tooltipText = `${item.scouts.join("<br>")}`}
-                                        <div class="ml-4">
-                                            <Tooltip text={tooltipText} width="80px">
+                                        <div class="mx-2">
+                                            <Tooltip text={tooltipText} width="100px">
                                                 <Avatar />
+                                            </Tooltip>
+                                        </div>
+                                    {/if}
+                                    {#if item.bringAbroads && item.bringAbroads.length > 0}
+                                        {@const tooltipText = item.bringAbroads
+                                            .map(i => {
+                                                const isOver = i > 1000;
+                                                const index = isOver ? i - 1000 : i;
+                                                const name = getTeamData(gameVersion)[index - 255];
+                                                return isOver ? `${name}(C)` : name;
+                                            })
+                                            .join("<br>")}
+                                        <div class="mx-2">
+                                            <Tooltip text={tooltipText} width="100px">
+                                                <Airplane />
                                             </Tooltip>
                                         </div>
                                     {/if}

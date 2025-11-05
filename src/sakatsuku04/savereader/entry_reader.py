@@ -13,7 +13,7 @@ class EntryReader:
     DATA_SIZE = 0x0005EA10
 
     def __init__(self, byte_array: bytes):
-        assert EntryReader.FILE_SIZE == len(byte_array)
+        assert len(byte_array) == EntryReader.FILE_SIZE
         header, buffer1, crc, buffer2 = EntryReader.DATA_STRUCT.unpack(byte_array)
         self.data_buffer = bytearray()
         self.data_buffer += buffer1
@@ -96,10 +96,8 @@ class HeadEntryReader:
     HALF_SIZE = 210
 
     def __init__(self, byte_array: bytes):
-        assert HeadEntryReader.FILE_SIZE == len(byte_array)
-        head_block, buffer1, crc, buffer2 = HeadEntryReader.DATA_STRUCT.unpack(
-            byte_array
-        )
+        assert len(byte_array) == HeadEntryReader.FILE_SIZE
+        head_block, buffer1, crc, buffer2 = HeadEntryReader.DATA_STRUCT.unpack(byte_array)
         self.data_buffer = bytearray()
         self.data_buffer += buffer1
         self.data_buffer += buffer2
@@ -123,8 +121,8 @@ class HeadEntryReader:
         return header
 
     def write(self, field: IntByteField):
-        self.data_buffer[field.byte_offset : field.byte_offset + field.byte_length] = (
-            field.value.to_bytes(field.byte_length, "little")
+        self.data_buffer[field.byte_offset : field.byte_offset + field.byte_length] = field.value.to_bytes(
+            field.byte_length, "little"
         )
 
     def to_int_byte_field(self, offset: int, length: int):

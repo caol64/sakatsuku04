@@ -11,8 +11,8 @@ import growEval from "$locales/grow_eval_zh.json";
 import teamZh from "$locales/teams_zh.json";
 import teamJp from "$locales/teams_jp.json";
 
-export function toHex(num: number | undefined): string {
-    return num !== undefined ? num.toString(16).padStart(2, '0').toUpperCase() : "";
+export function toHex(num: number | undefined, range: number = 2): string {
+    return num !== undefined ? num.toString(16).padStart(range, '0').toUpperCase() : "";
 }
 
 export function fromHex(hexString: string): number {

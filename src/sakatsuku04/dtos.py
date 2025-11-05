@@ -1,10 +1,32 @@
 from enum import Enum
+
 from pydantic import BaseModel, ConfigDict, computed_field
 from pydantic.alias_generators import to_camel
 
-from .objs import Coach, Player, Scout
-from .utils import ability_to_lv, calc_abil_eval, calc_apos_eval, calc_def, calc_gk, calc_gp, calc_grow_eval, calc_mhex_sys, calc_off, calc_phy, calc_sta, calc_sys, calc_tac, find_badden_match, get_rank_to_number, handle_cond, is_album_player, lv_to_dot, sabil_2_apt, mcoach_eval
 from . import constants
+from .objs import Coach, Player, Scout
+from .utils import (
+    ability_to_lv,
+    calc_abil_eval,
+    calc_apos_eval,
+    calc_def,
+    calc_gk,
+    calc_gp,
+    calc_grow_eval,
+    calc_mhex_sys,
+    calc_off,
+    calc_phy,
+    calc_sta,
+    calc_sys,
+    calc_tac,
+    find_badden_match,
+    get_rank_to_number,
+    handle_cond,
+    is_album_player,
+    lv_to_dot,
+    mcoach_eval,
+    sabil_2_apt,
+)
 
 
 class GameVersion(str, Enum):
@@ -141,13 +163,13 @@ class MyPlayerDto(BaseDto):
         current_abils = [f.current for f in self.abilities]
         return [
             lv_to_dot(calc_off(current_abils)),
-            lv_to_dot(calc_gk(current_abils) if self.pos == 0 else calc_def(current_abils))
+            lv_to_dot(calc_gk(current_abils) if self.pos == 0 else calc_def(current_abils)),
         ]
 
     @computed_field
     @property
     def abil_eval(self) -> int:
-        return calc_abil_eval([r.current for r in self.abilities][0: 36], self.pos)
+        return calc_abil_eval([r.current for r in self.abilities][0:36], self.pos)
 
     @computed_field
     @property
@@ -157,7 +179,7 @@ class MyPlayerDto(BaseDto):
     @computed_field
     @property
     def max_abil_eval(self) -> int:
-        return calc_abil_eval([r.max for r in self.abilities][0: 36], self.pos)
+        return calc_abil_eval([r.max for r in self.abilities][0:36], self.pos)
 
     @computed_field
     @property
@@ -191,7 +213,7 @@ class MyPlayerDto(BaseDto):
     @computed_field
     @property
     def gp(self) -> float:
-        return calc_gp([ability_to_lv(r.max) + 1 for r in self.abilities[0: 36]], self.pos)
+        return calc_gp([ability_to_lv(r.max) + 1 for r in self.abilities[0:36]], self.pos)
 
 
 class TeamDto(BaseDto):
@@ -224,11 +246,23 @@ class OtherTeamPlayerDto(BaseDto):
 
     @computed_field
     @property
-    def scouts(self) -> list[str] | None:
+    def scouts(self) -> list[str]:
         scouts_ids = constants.scout_excl_reversed.get(self.id)
         if scouts_ids:
             return [Scout.name(f) for f in scouts_ids]
         return []
+
+    @computed_field
+    @property
+    def bring_abroads(self) -> list[int]:
+        abr_dict = abroad_player_dict()
+        camp_dict = camp_player_dict()
+        abroad_ids = []
+        if self.id in abr_dict:
+            abroad_ids.append(abr_dict[self.id])
+        if self.id in camp_dict:
+            abroad_ids.append(camp_dict[self.id] + 1000)
+        return abroad_ids
 
 
 class SearchDto(BaseDto):
@@ -242,6 +276,7 @@ class SearchDto(BaseDto):
     team_id: int | None = None
     style: int | None = None
     scout_action: int | None = None
+
 
 class TownDto(BaseDto):
     living: int
@@ -270,9 +305,23 @@ class CoachDto(BaseDto):
     age: int | None = None
     offer_years: int | None = None
 
+    @computed_field
+    @property
+    def bring_abroads(self) -> list[int]:
+        abr_dict = abroad_coach_dict()
+        camp_dict = camp_coach_dict()
+        abroad_ids = []
+        if self.id in abr_dict:
+            abroad_ids.append(abr_dict[self.id - 20000])
+        if self.id in camp_dict:
+            abroad_ids.append(camp_dict[self.id - 20000] + 1000)
+        return abroad_ids
+
+
 class AbroadCond(BaseDto):
     id: int
     cond: list[str | int] | None
+
 
 class AbroadDto(BaseDto):
     id: int
@@ -283,7 +332,7 @@ class AbroadDto(BaseDto):
     abr_days: int = 0
 
     @classmethod
-    def get_abr_camp_teams(cls, type: int) -> list['AbroadDto']:
+    def get_abr_camp_teams(cls, type: int) -> list["AbroadDto"]:
         results = []
         for item in constants.abr_camp_base[type]:
             dto = AbroadDto(id=item[0])
@@ -291,24 +340,42 @@ class AbroadDto(BaseDto):
         return results
 
     @classmethod
-    def get_abr_camp_dto(cls, index: int, type: int) -> list['AbroadDto']:
+    def get_abr_teams(cls) -> list["AbroadDto"]:
+        results = []
+        for item in constants.abr_base:
+            dto = AbroadDto(id=item[0])
+            results.append(dto)
+        return results
+
+    @classmethod
+    def get_camp_teams(cls) -> list["AbroadDto"]:
+        results = []
+        for item in constants.camp_base:
+            dto = AbroadDto(id=item[0])
+            results.append(dto)
+        return results
+
+    @classmethod
+    def get_abr_camp_dto(cls, index: int, type: int) -> "AbroadDto":
         item = constants.abr_camp_base[type][index]
         dto = AbroadDto(id=item[0])
         dto.abr_up = list(constants.abr_camp_up[type][index])
         dto.abr_uprate = list(constants.abr_camp_uprate[type][index])
         dto.abr_days = item[3]
         cond_id = item[1] >> 4
-        cond_val = handle_cond(item[4: 14])
+        cond_val = handle_cond(list(item[4:14]))
 
-        if cond_id == 1 or cond_id == 4:
-            dto.cond = AbroadCond(id=cond_id, cond=[])
-        elif cond_id == 5:
-            dto.cond = AbroadCond(id=cond_id, cond=[Player(f).name for f in cond_val])
-        elif cond_id == 6:
-            dto.cond = AbroadCond(id=cond_id, cond=[Coach.name(f + 20000) for f in cond_val])
-        elif cond_id == 7 or  cond_id == 3 or cond_id == 2:
-            dto.cond = AbroadCond(id=cond_id, cond=cond_val)
+        match cond_id:
+            case 1 | 4:
+                dto.cond = AbroadCond(id=cond_id, cond=[])
+            case 5:
+                dto.cond = AbroadCond(id=cond_id, cond=[Player(f).name for f in cond_val])
+            case 6:
+                dto.cond = AbroadCond(id=cond_id, cond=[Coach.name(f + 20000) for f in cond_val])
+            case 7 | 3 | 2:
+                dto.cond = AbroadCond(id=cond_id, cond=cond_val)
         return dto
+
 
 class BPlayerDto(BaseDto):
     id: int = 0
@@ -344,7 +411,7 @@ class BPlayerDto(BaseDto):
     @computed_field
     @property
     def abil_eval(self) -> int:
-        return calc_abil_eval([r for r in self.abilities][0: 36], self.pos)
+        return calc_abil_eval(list(self.abilities)[0:36], self.pos)
 
     @computed_field
     @property
@@ -363,7 +430,7 @@ class BPlayerDto(BaseDto):
     def odc(self) -> list[int]:
         return [
             lv_to_dot(calc_off(self.abilities)),
-            lv_to_dot(calc_gk(self.abilities) if self.pos == 0 else calc_def(self.abilities))
+            lv_to_dot(calc_gk(self.abilities) if self.pos == 0 else calc_def(self.abilities)),
         ]
 
     @computed_field
@@ -402,8 +469,7 @@ class BPlayerDto(BaseDto):
         index = self.rank // 2 * 8 if self.rank < 10 else 32
         if self.age < constants.bplayer_eval_age_threshold[self.grow_type_tec]:
             return Player.player_eval_list()[index]
-        else:
-            return Player.player_eval_list()[index + 40]
+        return Player.player_eval_list()[index + 40]
 
     @computed_field
     @property
@@ -415,7 +481,8 @@ class BPlayerDto(BaseDto):
     @computed_field
     @property
     def gp(self) -> float:
-        return calc_gp([r for r in self.abilities_base[0: 36]], self.pos) if self.abilities_base else 0
+        return calc_gp(list(self.abilities_base[0:36]), self.pos) if self.abilities_base else 0
+
 
 class SimpleBPlayerDto(BaseDto):
     id: int
@@ -474,10 +541,7 @@ class BScoutDto(BaseDto):
     @computed_field
     @property
     def apos_eval(self) -> list[int]:
-        return [
-            sabil_2_apt(self.abilities[constants.epos_to_pos[constants.apos_to_epos[i]] + 0x11])
-            for i in range(11)
-        ]
+        return [sabil_2_apt(self.abilities[constants.epos_to_pos[constants.apos_to_epos[i]] + 0x11]) for i in range(11)]
 
     @computed_field
     @property
@@ -497,6 +561,7 @@ class BScoutDto(BaseDto):
             plus = 0
         comment = Scout.scout_comments_list()[get_rank_to_number(self.rank) * 8 + plus]
         return comment
+
 
 class BCoachDto(BaseDto):
     id: int = 0
@@ -558,8 +623,77 @@ class BCoachDto(BaseDto):
         return constants.coach_mapping[self.coach_type]
 
 
-class MySponsorDto(BaseDto):
+class SponsorAbrDto(BaseDto):
+    id: int
+    type: int
+    is_enabled: bool = False
+
+class SponsorDto(BaseDto):
     id: int
     contract_years: int
     offer_years: int
-    amount: int
+    amount_high: int
+    amount_low: int
+    enabled_abr_ids: list[int] = []
+    enabled_camp_ids: list[int] = []
+
+    @computed_field
+    @property
+    def bring_abroads(self) -> list[SponsorAbrDto]:
+        abr_dict = abroad_sponsor_dict()
+        camp_dict = camp_sponsor_dict()
+        abroad_ids = []
+        if self.id in abr_dict:
+            abroad_ids.append(SponsorAbrDto(id=abr_dict[self.id], type=0, is_enabled=abr_dict[self.id] in self.enabled_abr_ids))
+        if self.id in camp_dict:
+            abroad_ids.append(SponsorAbrDto(id=camp_dict[self.id], type=1, is_enabled=camp_dict[self.id] in self.enabled_camp_ids))
+        return abroad_ids
+
+
+_abroad_sponsor_dict: dict | None = None
+_abroad_coach_dict: dict | None = None
+_abroad_player_dict: dict | None = None
+_camp_sponsor_dict: dict | None = None
+_camp_coach_dict: dict | None = None
+_camp_player_dict: dict | None = None
+
+def _build_abroad_dict(cache: dict | None, base_data: list[tuple], cond_type: int) -> dict[int, int]:
+    if cache is None:
+        cache = {}
+        for item in base_data:
+            id = item[0]
+            cond_id = item[1] >> 4
+            if cond_id == cond_type:
+                cond_val = handle_cond(list(item[4:14]))
+                for cv in cond_val:
+                    cache[cv] = id
+    return cache
+
+def abroad_coach_dict() -> dict[int, int]:
+    global _abroad_coach_dict
+    return _build_abroad_dict(_abroad_coach_dict, constants.abr_base, 6)
+
+
+def camp_coach_dict() -> dict[int, int]:
+    global _camp_coach_dict
+    return _build_abroad_dict(_camp_coach_dict, constants.camp_base, 6)
+
+
+def abroad_sponsor_dict() -> dict[int, int]:
+    global _abroad_sponsor_dict
+    return _build_abroad_dict(_abroad_sponsor_dict, constants.abr_base, 2)
+
+
+def camp_sponsor_dict() -> dict[int, int]:
+    global _camp_sponsor_dict
+    return _build_abroad_dict(_camp_sponsor_dict, constants.camp_base, 2)
+
+
+def abroad_player_dict() -> dict[int, int]:
+    global _abroad_player_dict
+    return _build_abroad_dict(_abroad_player_dict, constants.abr_base, 5)
+
+
+def camp_player_dict() -> dict[int, int]:
+    global _camp_player_dict
+    return _build_abroad_dict(_camp_player_dict, constants.camp_base, 5)

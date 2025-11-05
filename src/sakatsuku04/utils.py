@@ -1,18 +1,18 @@
 import codecs
 import csv
 import importlib.resources
-from pathlib import Path
 import random
+from pathlib import Path
 
 from . import constants
-
 
 _cn_char_dict: dict[str, str] | None = None
 _jp_char_dict: dict[str, str] | None = None
 
+
 def _load_char_dict(filename: str) -> dict[str, str]:
     result = {}
-    with open(get_resource_path(filename), 'r', encoding='utf-8', newline='') as csvfile:
+    with open(get_resource_path(filename), encoding="utf-8", newline="") as csvfile:
         reader = csv.reader(csvfile)
         for row in reader:
             if len(row) == 2:
@@ -20,28 +20,33 @@ def _load_char_dict(filename: str) -> dict[str, str]:
                 result[key] = value
     return result
 
+
 def get_jp_char_dict() -> dict[str, str]:
     global _jp_char_dict
     if _jp_char_dict is None:
-        _jp_char_dict = _load_char_dict('jp.csv')
+        _jp_char_dict = _load_char_dict("jp.csv")
     return _jp_char_dict
+
 
 def get_cn_char_dict(is_18: bool) -> dict[str, str]:
     global _cn_char_dict
     if _cn_char_dict is None:
         _cn_char_dict = get_jp_char_dict().copy()
-        path = 'cn18.csv' if is_18 else 'cn.csv'
+        path = "cn18.csv" if is_18 else "cn.csv"
         _cn_char_dict.update(_load_char_dict(path))
     return _cn_char_dict
+
 
 def reset_char_dict():
     global _cn_char_dict
     _cn_char_dict = None
 
-def decode_bytes_to_str(byte_array: bytes, is_cn = False, is_18 = False) -> str:
+
+def decode_bytes_to_str(byte_array: bytes, is_cn=False, is_18=False) -> str:
     return decode(byte_array, get_cn_char_dict(is_18)) if is_cn else decode(byte_array, get_jp_char_dict())
 
-def encode_str_to_bytes(string: str, is_cn = False, is_18 = False) -> bytes:
+
+def encode_str_to_bytes(string: str, is_cn=False, is_18=False) -> bytes:
     return encode(string, get_cn_char_dict(is_18)) if is_cn else encode(string, get_jp_char_dict())
 
 
@@ -49,20 +54,21 @@ def zero_terminate(data: str) -> str:
     """
     Truncate a string at the first NUL ('\0') character, if any.
     """
-    i = data.find('\0')
+    i = data.find("\0")
     if i == -1:
         return data
     return data[:i]
 
+
 def zero_pad(data: bytes, target_length: int) -> bytes:
     padding_length = target_length - len(data)
     if padding_length > 0:
-        padding = b'\x00' * padding_length
+        padding = b"\x00" * padding_length
         return data + padding
-    elif padding_length == 0:
+    if padding_length == 0:
         return data
-    else:
-        return data[:target_length]
+    return data[:target_length]
+
 
 def decode_name(byte_array: bytes) -> str:
     """Decode bytes to a string."""
@@ -76,6 +82,7 @@ def decode_sjis(s: bytes) -> str:
     except UnicodeDecodeError as ex:
         print(ex)
         return "?"
+
 
 def encode_sjis(s: str) -> bytes:
     """Encode a string to bytes using the Shift-JIS encoding."""
@@ -102,34 +109,35 @@ def decode(s: bytes, char_dict: dict[str, str]) -> str:
     while i < length:
         # Check if there are at least 2 bytes remaining for a valid chunk
         if i + 1 < length:
-            chunk = s[i:i + 2].hex().upper()
+            chunk = s[i : i + 2].hex().upper()
             if chunk in char_dict:
                 decoded_str.append(char_dict[chunk])
                 i += 2
                 continue
 
-        chunk = s[i:i + 1].hex().upper()
+        chunk = s[i : i + 1].hex().upper()
         if chunk in char_dict:
             decoded_str.append(char_dict[chunk])
             i += 1
             continue
         # Default: treat as an ASCII character
-        decoded_str.append(decode_sjis(s[i:i+1]))
+        decoded_str.append(decode_sjis(s[i : i + 1]))
         i += 1
 
-    return ''.join(decoded_str)
+    return "".join(decoded_str)
+
 
 def encode(s: str, char_dict: dict[str, str]) -> bytes:
     encoded_bytes = bytearray()
-    code_map_reversed = {v: k for k, v in char_dict.items()} # 反转字典，方便查找
+    code_map_reversed = {v: k for k, v in char_dict.items()}  # 反转字典，方便查找
     for char in s:
         if char in code_map_reversed:
             encoded_bytes.extend(bytes.fromhex(code_map_reversed[char]))
-        elif ord(char) < 128: # 只处理ASCII字符，其他字符忽略或者抛出异常
+        elif ord(char) < 128:  # 只处理ASCII字符，其他字符忽略或者抛出异常
             encoded_bytes.append(ord(char))
         else:
             print(f"Character {char} not in code map, ignored.")
-            #raise ValueError(f"Character {char} not in code map") # 也可以抛出异常
+            # raise ValueError(f"Character {char} not in code map") # 也可以抛出异常
     return bytes(encoded_bytes)
 
 
@@ -203,12 +211,9 @@ def calc_apos_eval(abilities: list[int]) -> list[int]:
             rating_level_to_check = 4 - i
             current_standard = constants.apos_exp_eval[i]
             # 条件1：硬实力达标
-            hard_skill_ok = (level >= current_standard[0])
+            hard_skill_ok = level >= current_standard[0]
             # 条件2：相对实力达标
-            relative_skill_ok = (
-                level >= highest_level * current_standard[2] or
-                level >= current_standard[1]
-            )
+            relative_skill_ok = level >= highest_level * current_standard[2] or level >= current_standard[1]
             if hard_skill_ok and relative_skill_ok:
                 results.append(rating_level_to_check)
                 break
@@ -226,12 +231,14 @@ def find_badden_match(id: int) -> list[int]:
             result.append(a)
     return result
 
+
 def find_golden_match(id: int) -> list[int]:
     result = []
     for tup in constants.tbl_golden:
         if id in tup:
             result.extend([x for x in tup if x != id])
     return result
+
 
 def team_to_nati(team_id: int) -> int:
     nati_id = 50
@@ -260,6 +267,7 @@ def get_album_bit_indices(data: bytearray) -> list[int]:
             start += 1
     return indices
 
+
 def calc_abbr_years_and_times_factor(years: int, abr_times: int, abr_team_index: int) -> float:
     if abr_times > 2:
         abr_times = 2
@@ -276,6 +284,7 @@ def calc_grow_factor_by_grow_type_and_age(grow_type: int, psm_type: int, age: in
     factor = tbl_list[psm_type][grow_type][age]
     return factor
 
+
 def update_seed(current_seed: int) -> int:
     """
     精确模拟C语言的32位线性同余生成器 (LCG) 算法。
@@ -287,7 +296,7 @@ def update_seed(current_seed: int) -> int:
         下一个32位的种子值。
     """
     # 乘数和增量
-    multiplier = 0x41c64e6d
+    multiplier = 0x41C64E6D
     increment = 0x3039
 
     # 模数 (2^32)，通过位运算 & 0xFFFFFFFF 来高效实现
@@ -302,18 +311,19 @@ def update_seed(current_seed: int) -> int:
 def get_random_int32() -> int:
     return random.randint(0, 0xFFFFFFFF)
 
-def random_get_0toi(seed: int, max: int = 0xffff) -> tuple[int, int]:
+
+def random_get_0toi(seed: int, max: int = 0xFFFF) -> tuple[int, int]:
     next_seed = update_seed(seed)
     max_val_16bit = max & 0xFFFF
     result = 0
-    if 1 < max_val_16bit:
+    if max_val_16bit > 1:
         high_16_bits = next_seed >> 16
         result = (high_16_bits * max_val_16bit) >> 16
     return result, next_seed
 
 
 def random_get_0to1(seed: int) -> tuple[float, int]:
-    result_int, next_seed = random_get_0toi(seed, 0xffff)
+    result_int, next_seed = random_get_0toi(seed, 0xFFFF)
     return result_int / 65535.0, next_seed
 
 
@@ -328,7 +338,7 @@ def get_probability_tbl_index(wave_type: int, random_val: float) -> int:
 
 
 def is_jmodifiable(id: int) -> bool:
-    return id < 0x33c or id in constants.oversea_players
+    return id < 0x33C or id in constants.oversea_players
 
 
 def modify_jabil(wave_type: int, year: int) -> int:
@@ -349,38 +359,46 @@ def _calc_avg(abilities: list[int], indices: tuple[int, ...]) -> int:
 def calc_off(abilities: list[int]) -> int:
     return _calc_avg(abilities, constants.abi_off)
 
+
 def calc_def(abilities: list[int]) -> int:
     return _calc_avg(abilities, constants.abi_def)
+
 
 def calc_gk(abilities: list[int]) -> int:
     return _calc_avg(abilities, constants.abi_gk)
 
+
 def calc_phy(abilities: list[int]) -> int:
     return _calc_avg(abilities, constants.abi_phy)
+
 
 def calc_sys(abilities: list[int]) -> int:
     return _calc_avg(abilities, constants.abi_sys)
 
+
 def calc_tac(abilities: list[int]) -> int:
     return _calc_avg(abilities, constants.abi_tac)
+
 
 def calc_sta(abilities: list[int]) -> int:
     return _calc_avg(abilities, constants.abi_sta)
 
-def handle_cond(cond_value: tuple[int]) -> list[int]:
-    return [f for f in cond_value if f != 0xffff and f != 0]
+
+def handle_cond(cond_value: list[int]) -> list[int]:
+    return [f for f in cond_value if f != 0xFFFF and f != 0]
+
 
 def sabil_2_apt(param: int) -> int:
-    if param <= 0x28:   # 40
+    if param <= 0x28:  # 40
         return 0
-    elif param <= 0x37: # 55
+    if param <= 0x37:  # 55
         return 1
-    elif param <= 0x46: # 70
+    if param <= 0x46:  # 70
         return 2
-    elif param <= 0x55: # 85
+    if param <= 0x55:  # 85
         return 3
-    else:
-        return 4
+    return 4
+
 
 def get_rank_to_number(scout_rank: int) -> int:
     for i, val in enumerate(constants.common_rank_tbl):
@@ -388,16 +406,18 @@ def get_rank_to_number(scout_rank: int) -> int:
             return i
     return 4
 
+
 def calc_mhex_sys(abilities: list[int]) -> int:
     total = 0
-    for coef, start, count, weightA, weightB in constants.syslist:
-        values = abilities[start: start + count]
+    for coef, start, count, weight_a, weight_b in constants.syslist:
+        values = abilities[start : start + count]
         vmax = max(values)
         vsum = sum(values)
         vavg = vsum // count
-        total += coef * (vmax * weightA + vavg * weightB)
+        total += coef * (vmax * weight_a + vavg * weight_b)
 
     return total // 100
+
 
 def mcoach_eval(abilities: list[int]) -> tuple:
     indices = constants.mcoach_eval_abil
@@ -405,11 +425,13 @@ def mcoach_eval(abilities: list[int]) -> tuple:
     result = max(candidates, key=lambda x: x[0])
     return (mcoach_get_score_to_index(result[0]), constants.mcoach_eval_abil.index(result[1]))
 
+
 def mcoach_get_score_to_index(score: int) -> int:
     for i, val in enumerate(constants.mcoach_eval_score):
         if score <= val:
             return i
     return 0
+
 
 def calc_gp(abilities: list[int], pos: int) -> float:
     total = 0

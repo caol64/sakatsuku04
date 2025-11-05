@@ -114,6 +114,7 @@
         <HStack className="space-x-4 mb-2 mx-2">
             <button onclick={() => onTeamTabClick(0)} class="badges">一线队</button>
             <button onclick={() => onTeamTabClick(1)} class="badges">青年队</button>
+            <!-- <button onclick={() => onTeamTabClick(2)} class="badges">国家队</button> -->
         </HStack>
         {#if myPlayers && myPlayers.length > 0}
             <div class="sidebar">
@@ -139,145 +140,147 @@
         {/if}
     </VStack>
 
-    <VStack className="w-1/5 mx-1">
-        <div class="border border-gray-200 dark:border-gray-600 rounded-md p-4 space-y-2 bg-gray-50 dark:bg-gray-700">
-            <p class="flex items-center justify-between">
-                姓名
-                <span class="flex-1 pl-8 text-sm select-text">{myPlayer?.name}</span>
-                {#if myPlayer?.spComment}
-                    {@const tooltipText = `${myPlayer.spComment}`}
-                    <Tooltip text={tooltipText} width="250px">
-                        <Comment />
-                    </Tooltip>
-                {/if}
-            </p>
-            <p>
-                位置
-                <span class="pl-8 text-sm">{getPosition(myPlayer?.pos)}</span>
-            </p>
-            <p>
-                GP
-                <span class="pl-8 text-sm">{myPlayer?.gp}</span>
-            </p>
-            <p>
-                年龄
-                <span class="pl-8 text-sm">{myPlayer?.age}</span>
-            </p>
-            <p>
-                号码
-                <span class="pl-8 text-sm">{myPlayer?.number}</span>
-            </p>
-            <p>
-                留学次数
-                <span class="pl-8 text-sm">{myPlayer?.abroadTimes}</span>
-            </p>
-            <p>
-                出生地
-                <span class="pl-8 text-sm">{getRegion(myPlayer?.born)}</span>
-            </p>
-            <p>
-                惯用脚
-                <span class="pl-8 text-sm">{getFoot(myPlayer?.foot)}</span>
-            </p>
-            <p>
-                身高
-                <span class="pl-8 text-sm">{myPlayer?.height}</span>
-            </p>
-            <p>
-                风格
-                <span class="pl-8 text-sm">{getStyle(myPlayer?.style)}</span>
-            </p>
-            <p>
-                球员等级
-                <span class="pl-8 text-sm">{getRank(myPlayer?.rank)}</span>
-            </p>
-            <p class="flex items-center justify-between">
-                连携
-                <span  class="flex-1 pl-8 text-sm">{getCooperationType(myPlayer?.cooperationType)}</span>
-                {#if myPlayer?.baddenPlayers}
-                    {@const tooltipText = `连携崩坏：<br>${myPlayer.baddenPlayers.join("<br>")}`}
-                    <Tooltip text={tooltipText} width="100px">
-                        <Skull />
-                    </Tooltip>
-                {/if}
-            </p>
-            <p>
-                性格
-                <span class="pl-8 text-sm">{getToneType(myPlayer?.toneType)}</span>
-            </p>
-            <p>
-                年薪
-                {#if myPlayer?.salaryHigh}
-                    <span class="pl-8 text-sm">
-                        {myPlayer?.salaryHigh} 亿
-                    </span>
-                {/if}
-                <span class="pl-{myPlayer?.salaryHigh ? '2' : '8'} text-sm">{myPlayer?.salaryLow} 万</span>
-            </p>
-            <p>
-                合同
-                <span class="pl-8 text-sm">{myPlayer?.offerYearsPassed} / {myPlayer?.offerYearsTotal}</span>
-            </p>
-            <p>成长类型</p>
-            <div class="pl-4 grid grid-cols-3 gap-x-2 text-sm text-left">
-                <div>身体</div>
-                <div>技术</div>
-                <div>头脑</div>
-                <div>{getGrowType(myPlayer?.growTypePhy)}</div>
-                <div>{getGrowType(myPlayer?.growTypeTec)}</div>
-                <div>{getGrowType(myPlayer?.growTypeSys)}</div>
+    {#if myPlayers && myPlayers.length > 0}
+        <VStack className="w-1/5 mx-1">
+            <div class="border border-gray-200 dark:border-gray-600 rounded-md p-4 space-y-2 bg-gray-50 dark:bg-gray-700">
+                <p class="flex items-center justify-between">
+                    姓名
+                    <span class="flex-1 pl-8 text-sm select-text">{myPlayer?.name}</span>
+                    {#if myPlayer?.spComment}
+                        {@const tooltipText = `${myPlayer.spComment}`}
+                        <Tooltip text={tooltipText} width="250px">
+                            <Comment />
+                        </Tooltip>
+                    {/if}
+                </p>
+                <p>
+                    位置
+                    <span class="pl-8 text-sm">{getPosition(myPlayer?.pos)}</span>
+                </p>
+                <p>
+                    GP
+                    <span class="pl-8 text-sm">{myPlayer?.gp}</span>
+                </p>
+                <p>
+                    年龄
+                    <span class="pl-8 text-sm">{myPlayer?.age}</span>
+                </p>
+                <p>
+                    号码
+                    <span class="pl-8 text-sm">{myPlayer?.number}</span>
+                </p>
+                <p>
+                    留学次数
+                    <span class="pl-8 text-sm">{myPlayer?.abroadTimes}</span>
+                </p>
+                <p>
+                    出生地
+                    <span class="pl-8 text-sm">{getRegion(myPlayer?.born)}</span>
+                </p>
+                <p>
+                    惯用脚
+                    <span class="pl-8 text-sm">{getFoot(myPlayer?.foot)}</span>
+                </p>
+                <p>
+                    身高
+                    <span class="pl-8 text-sm">{myPlayer?.height}</span>
+                </p>
+                <p>
+                    风格
+                    <span class="pl-8 text-sm">{getStyle(myPlayer?.style)}</span>
+                </p>
+                <p>
+                    球员等级
+                    <span class="pl-8 text-sm">{getRank(myPlayer?.rank)}</span>
+                </p>
+                <p class="flex items-center justify-between">
+                    连携
+                    <span  class="flex-1 pl-8 text-sm">{getCooperationType(myPlayer?.cooperationType)}</span>
+                    {#if myPlayer?.baddenPlayers}
+                        {@const tooltipText = `连携崩坏：<br>${myPlayer.baddenPlayers.join("<br>")}`}
+                        <Tooltip text={tooltipText} width="100px">
+                            <Skull />
+                        </Tooltip>
+                    {/if}
+                </p>
+                <p>
+                    性格
+                    <span class="pl-8 text-sm">{getToneType(myPlayer?.toneType)}</span>
+                </p>
+                <p>
+                    年薪
+                    {#if myPlayer?.salaryHigh}
+                        <span class="pl-8 text-sm">
+                            {myPlayer?.salaryHigh} 亿
+                        </span>
+                    {/if}
+                    <span class="pl-{myPlayer?.salaryHigh ? '2' : '8'} text-sm">{myPlayer?.salaryLow} 万</span>
+                </p>
+                <p>
+                    合同
+                    <span class="pl-8 text-sm">{myPlayer?.offerYearsPassed} / {myPlayer?.offerYearsTotal}</span>
+                </p>
+                <p>成长类型</p>
+                <div class="pl-4 grid grid-cols-3 gap-x-2 text-sm text-left">
+                    <div>身体</div>
+                    <div>技术</div>
+                    <div>头脑</div>
+                    <div>{getGrowType(myPlayer?.growTypePhy)}</div>
+                    <div>{getGrowType(myPlayer?.growTypeTec)}</div>
+                    <div>{getGrowType(myPlayer?.growTypeSys)}</div>
+                </div>
+                <p>隐藏属性</p>
+                <div class="pl-4 text-sm text-left">
+                    <div><span>人气</span><span class="pl-3">{myPlayer?.pop}</span></div>
+                    <div><span>不满</span><span class="pl-3">{myPlayer?.comp && myPlayer.comp.length > 0 ? Math.max(...myPlayer.comp) : '' }</span></div>
+                    <div><span>疲劳</span><span class="pl-3">{myPlayer?.tired}</span></div>
+                    <div><span>状态</span><span class="pl-3">{myPlayer?.condition}</span></div>
+                    <div><span>积极性</span><span class="pl-3">{myPlayer?.moti}</span></div>
+                    <div><span>比赛感觉</span><span class="pl-3">{myPlayer?.kan}</span></div>
+                </div>
             </div>
-            <p>隐藏属性</p>
-            <div class="pl-4 text-sm text-left">
-                <div><span>人气</span><span class="pl-3">{myPlayer?.pop}</span></div>
-                <div><span>不满</span><span class="pl-3">{myPlayer?.comp && myPlayer.comp.length > 0 ? Math.max(...myPlayer.comp) : '' }</span></div>
-                <div><span>疲劳</span><span class="pl-3">{myPlayer?.tired}</span></div>
-                <div><span>状态</span><span class="pl-3">{myPlayer?.condition}</span></div>
-                <div><span>积极性</span><span class="pl-3">{myPlayer?.moti}</span></div>
-                <div><span>比赛感觉</span><span class="pl-3">{myPlayer?.kan}</span></div>
-            </div>
-        </div>
-        {#if selectedTeam === 0}
-            <div class="flex justify-end pt-2">
-                <button onclick={openModal} class="w-20 h-8 rounded-md cursor-pointer text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium text-sm text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-                    编辑
-                </button>
-            </div>
-        {/if}
-    </VStack>
+            {#if selectedTeam === 0}
+                <div class="flex justify-end pt-2">
+                    <button onclick={openModal} class="w-20 h-8 rounded-md cursor-pointer text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium text-sm text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                        编辑
+                    </button>
+                </div>
+            {/if}
+        </VStack>
 
-    <VStack className="w-3/10 mx-1">
-        {#if myPlayer?.maxAbilEval}
-            <Tooltip text={abilEval[myPlayer.maxAbilEval]} width="220px">
-                <RadarChart abilities={stats} />
-            </Tooltip>
-        {/if}
-        <HStack className="w-full grid grid-cols-2">
-            <StatusBars values={bars} pos={myPlayer.pos} />
-            <PositionGrid aposEval={myPlayer.aposEval} />
-        </HStack>
-        <Waveform phyGrows={myPlayer?.phyGrows} tecGrows={myPlayer?.tecGrows} sysGrows={myPlayer?.sysGrows} currentAge={myPlayer?.age} />
-        {#if myPlayer?.abilEval}
-            <div class="border border-gray-200 dark:border-gray-600 rounded-md py-2 px-3 space-y-2 bg-gray-50 dark:bg-gray-700 my-2">
-                <p>{abilEval[myPlayer.abilEval]}</p>
-                <p>{getGrowEval(myPlayer.growEval)}</p>
-            </div>
-        {/if}
-    </VStack>
-
-    <VStack className="grow h-full overflow-auto ml-1 pl-1 pb-12">
-        {#each abilityPairs as { label, value }}
-            <HStack className="items-center">
-                <span class="w-24 text-sm">{label}</span>
-                {#if value}
-                    {@const tooltipText = `当前: ${value.current}<br>潜力: ${value.currentMax}<br>上限: ${value.max}`}
-                    <Tooltip text={tooltipText} className="w-full">
-                        <AbilityBar abilities={[value.current, value.currentMax, value.max]} />
-                    </Tooltip>
-                {/if}
+        <VStack className="w-3/10 mx-1">
+            {#if myPlayer?.maxAbilEval}
+                <Tooltip text={abilEval[myPlayer.maxAbilEval]} width="220px">
+                    <RadarChart abilities={stats} />
+                </Tooltip>
+            {/if}
+            <HStack className="w-full grid grid-cols-2">
+                <StatusBars values={bars} pos={myPlayer.pos} />
+                <PositionGrid aposEval={myPlayer.aposEval} />
             </HStack>
-        {/each}
-    </VStack>
+            <Waveform phyGrows={myPlayer?.phyGrows} tecGrows={myPlayer?.tecGrows} sysGrows={myPlayer?.sysGrows} currentAge={myPlayer?.age} />
+            {#if myPlayer?.abilEval}
+                <div class="border border-gray-200 dark:border-gray-600 rounded-md py-2 px-3 space-y-2 bg-gray-50 dark:bg-gray-700 my-2">
+                    <p>{abilEval[myPlayer.abilEval]}</p>
+                    <p>{getGrowEval(myPlayer.growEval)}</p>
+                </div>
+            {/if}
+        </VStack>
+
+        <VStack className="grow h-full overflow-auto ml-1 pl-1 pb-12">
+            {#each abilityPairs as { label, value }}
+                <HStack className="items-center">
+                    <span class="w-24 text-sm">{label}</span>
+                    {#if value}
+                        {@const tooltipText = `当前: ${value.current}<br>潜力: ${value.currentMax}<br>上限: ${value.max}`}
+                        <Tooltip text={tooltipText} className="w-full">
+                            <AbilityBar abilities={[value.current, value.currentMax, value.max]} />
+                        </Tooltip>
+                    {/if}
+                </HStack>
+            {/each}
+        </VStack>
+    {/if}
 </HStack>
 
 <Modal open={isModalOpen} close={closeModal}>

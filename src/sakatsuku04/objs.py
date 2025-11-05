@@ -20,9 +20,9 @@ class Player:
     @classmethod
     def player_dict(cls) -> dict[int, list[str]]:
         if cls._player_dict is None:
-            cls._player_dict = dict()
+            cls._player_dict = {}
             file = ("bplayers_zh18.csv" if CnVer.is_i8 else "bplayers_zh.csv") if CnVer.is_cn else "bplayers_jp.csv"
-            with open(get_resource_path(file), 'r', encoding='utf8', newline='') as csvfile:
+            with open(get_resource_path(file), encoding="utf8", newline="") as csvfile:
                 reader = csv.reader(csvfile)
                 for i, row in enumerate(reader):
                     cls._player_dict[i] = row
@@ -31,16 +31,22 @@ class Player:
     @classmethod
     def player_comments_dict(cls) -> dict[int, str]:
         if cls._player_comments_dict is None:
-            file = ("sp_comments_zh18.json" if CnVer.is_i8 else "sp_comments_zh.json") if CnVer.is_cn else "sp_comments_jp.json"
-            with open(get_resource_path(file), 'r', encoding='utf8', newline='') as f:
+            file = (
+                ("sp_comments_zh18.json" if CnVer.is_i8 else "sp_comments_zh.json")
+                if CnVer.is_cn
+                else "sp_comments_jp.json"
+            )
+            with open(get_resource_path(file), encoding="utf8", newline="") as f:
                 cls._player_comments_dict = json.load(f)
+        assert cls._player_comments_dict is not None
         return cls._player_comments_dict
 
     @classmethod
     def player_eval_list(cls) -> list[str]:
         if cls._player_eval_list is None:
-            with open(get_resource_path("player_eval_zh.json"), 'r', encoding='utf8', newline='') as f:
+            with open(get_resource_path("player_eval_zh.json"), encoding="utf8", newline="") as f:
                 cls._player_eval_list = json.load(f)
+        assert cls._player_eval_list is not None
         return cls._player_eval_list
 
     @classmethod
@@ -51,47 +57,47 @@ class Player:
 
     @property
     def name(self) -> str:
-        return self._player_properties[0] if self._player_properties else ''
+        return self._player_properties[0] if self._player_properties else ""
 
     @property
     def pos(self) -> int:
-        return self._player_properties[1] if self._player_properties else 0
+        return int(self._player_properties[1]) if self._player_properties else 0
 
     @property
     def rank(self) -> int:
-        return self._player_properties[2] if self._player_properties else 0
+        return int(self._player_properties[2]) if self._player_properties else 0
 
     @property
     def cooperation_type(self) -> int:
-        return self._player_properties[3] if self._player_properties else 0
+        return int(self._player_properties[3]) if self._player_properties else 0
 
     @property
     def tone_type(self) -> int:
-        return self._player_properties[4] if self._player_properties else 0
+        return int(self._player_properties[4]) if self._player_properties else 0
 
     @property
     def grow_type_phy(self) -> int:
-        return self._player_properties[5] if self._player_properties else 0
+        return int(self._player_properties[5]) if self._player_properties else 0
 
     @property
     def grow_type_tec(self) -> int:
-        return self._player_properties[6] if self._player_properties else 0
+        return int(self._player_properties[6]) if self._player_properties else 0
 
     @property
     def grow_type_sys(self) -> int:
-        return self._player_properties[7] if self._player_properties else 0
+        return int(self._player_properties[7]) if self._player_properties else 0
 
     @property
     def born(self) -> int:
-        return self._player_properties[8] if self._player_properties else 0
+        return int(self._player_properties[8]) if self._player_properties else 0
 
     @property
     def style(self) -> int:
-        return self._player_properties[9] if self._player_properties else 0
+        return int(self._player_properties[9]) if self._player_properties else 0
 
     @property
     def sp_comment(self) -> str | None:
-        return Player.player_comments_dict().get(str(self.id), None)
+        return Player.player_comments_dict().get(self.id)
 
 
 class Scout:
@@ -101,9 +107,9 @@ class Scout:
     @classmethod
     def scout_dict(cls) -> dict[int, list[str]]:
         if cls._scout_dict is None:
-            cls._scout_dict = dict()
+            cls._scout_dict = {}
             file = "bscouts_zh.csv" if CnVer.is_cn else "bscouts_jp.csv"
-            with open(get_resource_path(file), 'r', encoding='utf8', newline='') as csvfile:
+            with open(get_resource_path(file), encoding="utf8", newline="") as csvfile:
                 reader = csv.reader(csvfile)
                 for i, row in enumerate(reader):
                     cls._scout_dict[i + 30000] = row
@@ -116,17 +122,19 @@ class Scout:
 
     @classmethod
     def exsists(cls, id: int) -> bool:
-        return cls.scout_dict().get(id) is not None
+        return id in cls.scout_dict()
 
     @classmethod
     def name(cls, id: int) -> str:
-        return cls.scout_dict().get(id)[0]
+        entry = cls.scout_dict().get(id)
+        return entry[0] if entry is not None else ""
 
     @classmethod
     def scout_comments_list(cls) -> list[str]:
         if cls._scout_comments_list is None:
-            with open(get_resource_path("scout_eval_zh.json"), 'r', encoding='utf8', newline='') as f:
+            with open(get_resource_path("scout_eval_zh.json"), encoding="utf8", newline="") as f:
                 cls._scout_comments_list = json.load(f)
+        assert cls._scout_comments_list is not None
         return cls._scout_comments_list
 
 
@@ -137,9 +145,9 @@ class Coach:
     @classmethod
     def coach_dict(cls) -> dict[int, list[str]]:
         if cls._coach_dict is None:
-            cls._coach_dict = dict()
+            cls._coach_dict = {}
             file = "bcoachs_zh.csv" if CnVer.is_cn else "bcoachs_jp.csv"
-            with open(get_resource_path(file), 'r', encoding='utf8', newline='') as csvfile:
+            with open(get_resource_path(file), encoding="utf8", newline="") as csvfile:
                 reader = csv.reader(csvfile)
                 for i, row in enumerate(reader):
                     cls._coach_dict[i + 20000] = row
@@ -152,22 +160,23 @@ class Coach:
 
     @classmethod
     def exsists(cls, id: int) -> bool:
-        return cls.coach_dict().get(id) is not None
+        return id in cls.coach_dict()
 
     @classmethod
     def name(cls, id: int) -> str:
-        return cls.coach_dict().get(id)[0]
+        entry = cls.coach_dict().get(id)
+        return entry[0] if entry is not None else ""
 
     @classmethod
     def mcoach_comments_list(cls) -> list[str]:
         if cls._mcoach_comments_list is None:
-            with open(get_resource_path("mcoach_eval_zh.json"), 'r', encoding='utf8', newline='') as f:
+            with open(get_resource_path("mcoach_eval_zh.json"), encoding="utf8", newline="") as f:
                 cls._mcoach_comments_list = json.load(f)
+        assert cls._mcoach_comments_list is not None
         return cls._mcoach_comments_list
 
 
 class Reseter:
-
     @classmethod
     def reset(cls):
         Player.reset_player_dict()

@@ -1,4 +1,5 @@
 from typing import overload
+
 from .utils import decode_bytes_to_str, encode_str_to_bytes, zero_pad, zero_terminate
 
 
@@ -17,6 +18,7 @@ class CnVer:
         elif ver == 2:
             CnVer.is_cn = True
             CnVer.is_i8 = True
+
 
 class IntBitField:
     def __init__(self, bit_length: int, value: int, bit_offset: int):
@@ -98,11 +100,10 @@ class InputBitStream:
             self.bit_offset += bits_in_current_byte
             remaining_bits -= bits_in_current_byte
 
-        if sign_extend:
+        if sign_extend and value & (1 << (bits_to_read - 1)):
             # 检查最高位是否为 1
-            if value & (1 << (bits_to_read - 1)):
-                value |= ~mask_for_sign_extend
-                value &= ((1 << ((bits_to_read + 7) // 8 * 8)) - 1)
+            value |= ~mask_for_sign_extend
+            value &= (1 << ((bits_to_read + 7) // 8 * 8)) - 1
         return value
 
     @overload
@@ -119,7 +120,7 @@ class InputBitStream:
         if total_bytes == 0:
             total_bytes = (sum(bit_lengths) + 7) // 8
 
-        result = list()
+        result = []
         sum_bytes = 0
 
         for bits_to_read in bit_lengths:
@@ -133,14 +134,14 @@ class InputBitStream:
             unpacked_int = self.read_bits(bits_to_read, sign_extend)
             result.append(IntBitField(bits_to_read, unpacked_int, bit_offset))
             if self.debug_mode:
-                self.unpacked_bytes.extend(unpacked_int.to_bytes(byte_length, 'little'))
+                self.unpacked_bytes.extend(unpacked_int.to_bytes(byte_length, "little"))
                 sum_bytes += byte_length
 
         if self.debug_mode:
             if sum_bytes < total_bytes:
                 self.unpacked_bytes.extend([0] * (total_bytes - sum_bytes))
             if total_bytes > 0 and sum_bytes > total_bytes:
-                self.unpacked_bytes = self.unpacked_bytes[:total_bytes - sum_bytes]
+                self.unpacked_bytes = self.unpacked_bytes[: total_bytes - sum_bytes]
         self.unpacked_bytes_length += total_bytes
 
         return result if not result_is_int else result[0]
@@ -150,7 +151,7 @@ class InputBitStream:
         bit_offset = self.bit_offset
         for _ in range(total_bytes):
             unpacked_int = self.read_bits(8)
-            unpacked_bytes = unpacked_int.to_bytes(1, 'little')
+            unpacked_bytes = unpacked_int.to_bytes(1, "little")
             result.extend(unpacked_bytes)
         if self.debug_mode:
             self.unpacked_bytes.extend(result)
@@ -181,6 +182,7 @@ class InputBitStream:
         if self.debug_mode:
             self.unpacked_bytes.extend(data)
         self.unpacked_bytes_length += len(data)
+
 
 class OutputBitStream:
     def __init__(self, input_data: bytes):

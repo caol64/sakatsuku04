@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { getSelectedGame, getRefreshFlag, getSelectedTab, setIsLoading, setGameYear, setRefreshFlag, getIsLoading } from "$lib/globalState.svelte";
+    import { getRefreshFlag, getSelectedTab, setIsLoading, setGameYear, setRefreshFlag, getIsLoading } from "$lib/globalState.svelte";
     import HStack from "$lib/components/Stack/HStack.svelte";
     import type { Club, EmptyClub } from "$lib/models";
     import { onMount } from "svelte";
@@ -25,13 +25,11 @@
     }
 
     $effect(() => {
-        if(getRefreshFlag() && getSelectedGame()) {
-            if (getSelectedTab() === "Game") {
-                try {
-                    selectGame();
-                } finally {
-                    setRefreshFlag(false);
-                }
+        if(getRefreshFlag() && getSelectedTab() === "Game") {
+            try {
+                selectGame();
+            } finally {
+                setRefreshFlag(false);
             }
         }
     });

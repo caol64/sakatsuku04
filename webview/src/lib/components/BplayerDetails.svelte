@@ -6,7 +6,7 @@
     import StatusBars from "./StatusBars.svelte";
     import VStack from "./Stack/VStack.svelte";
     import Tooltip from "./Tooltip.svelte";
-    import { sortedPosition, getCooperationType, getGrowType, getRank, getRegion, getStyle, getToneType, getFoot, sortedAbilities, getGrowEval } from "$lib/utils";
+    import { sortedPosition, getCooperationType, getGrowType, getRank, getRegion, getStyle, getToneType, getFoot, sortedAbilities, getGrowEval, toHex } from "$lib/utils";
     import AbilityBar from "./AbilityBar.svelte";
     import abilEval from "$locales/abil_eval_zh.json";
     import Skull from "$lib/icons/Skull.svelte";
@@ -60,6 +60,10 @@
         <p class="flex items-center justify-between select-text">
             姓名
             <span class="flex-1 pl-8 text-sm">{bPlayer?.name}</span>
+        </p>
+        <p>
+            ID
+            <span class="pl-8 text-sm">{toHex(bPlayer?.id, 4)}</span>
         </p>
         <div class="form">
             <div class="label">位置</div>
@@ -157,7 +161,7 @@
         <StatusBars values={bars} pos={bPlayer.pos} />
         <PositionGrid aposEval={bPlayer.aposEval} />
     </HStack>
-    <Waveform phyGrows={bPlayer?.phyGrows} tecGrows={bPlayer?.tecGrows} sysGrows={bPlayer?.sysGrows} />
+    <Waveform phyGrows={bPlayer?.phyGrows} tecGrows={bPlayer?.tecGrows} sysGrows={bPlayer?.sysGrows} currentAge={bPlayer?.age} />
     {#if bPlayer?.spComment}
         <div class="border border-gray-200 dark:border-gray-600 rounded-md py-2 px-3 space-y-2 bg-gray-50 dark:bg-gray-700 my-2">
             <p>{bPlayer.spComment}</p>

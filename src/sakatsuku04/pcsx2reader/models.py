@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 
-from ..dtos import ClubDto, MyPlayerDto, OtherTeamPlayerDto, PlayerAbilityDto, ScoutDto, TownDto
+from ..dtos import ClubDto, CoachDto, MyPlayerDto, OtherTeamPlayerDto, PlayerAbilityDto, ScoutDto, TownDto
 from ..io import IntByteField, StrByteField
-from ..objs import Player, Scout
+from ..objs import Coach, Player, Scout
 
 
 class Club:
@@ -246,19 +246,38 @@ class MyScout:
     area1: IntByteField | None = None
     area2: IntByteField | None = None
 
-    def to_dto(self):
+    def to_dto(self) -> ScoutDto:
         return ScoutDto(
             id=self.id.value,
             name=self.saved_name.value if self.saved_name else "",
         )
 
-    def to_dto_with_name(self, id: int):
+    def to_dto_with_name(self, id: int) -> ScoutDto:
         return ScoutDto(
             id=self.id.value,
             name=Scout.name(id),
         )
 
 
-class Sche:
-    abroad_list: list[IntByteField]
-    camp_list: list[IntByteField]
+@dataclass
+class MyCoach:
+    id: IntByteField
+    age: IntByteField | None = None
+    saved_name: StrByteField | None = None
+    offer_years: IntByteField | None = None
+
+    def to_dto(self) -> CoachDto:
+        return CoachDto(
+            id=self.id.value,
+            name=self.saved_name.value if self.saved_name else "",
+            age=self.age.value if self.age else None,
+            offer_years=self.offer_years.value if self.offer_years else None,
+        )
+
+    def to_dto_with_name(self, id: int) -> CoachDto:
+        return CoachDto(
+            id=self.id.value,
+            name=Coach.name(id),
+            age=self.age.value if self.age else None,
+            offer_years=self.offer_years.value if self.offer_years else None,
+        )

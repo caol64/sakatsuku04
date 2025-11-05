@@ -1,26 +1,34 @@
 import atexit
-from pathlib import Path
 import platform
 import socket
 import subprocess
 import sys
 import time
+from pathlib import Path
 
 import bottle
+
 import webview
 
-from .io import CnVer
-from .objs import Player, Reseter, Scout, Coach
-from .data_reader import DataReader
-from .dtos import ClubDto, MyPlayerDto, SearchDto, SimpleBCoachDto, SimpleBScoutDto, TownDto, SimpleBPlayerDto
-from .savereader.readers import SaveDataReader
-from .pcsx2reader.readers import Pcsx2DataReader
+from .binreader.bcoach_reader import get_coach
 from .binreader.bplayer_reader import get_player
 from .binreader.bscout_reader import get_scout
-from .binreader.bcoach_reader import get_coach
 from .constants import exp_to_lv
-from .utils import find_name_matches, get_probability_tbl_index, get_resource_path, is_jmodifiable, modify_jabil, random_get_0to1, random_get_0toi
-
+from .data_reader import DataReader
+from .dtos import ClubDto, MyPlayerDto, SearchDto, SimpleBCoachDto, SimpleBPlayerDto, SimpleBScoutDto, TownDto
+from .io import CnVer
+from .objs import Coach, Player, Reseter, Scout
+from .pcsx2reader.readers import Pcsx2DataReader
+from .savereader.readers import SaveDataReader
+from .utils import (
+    find_name_matches,
+    get_probability_tbl_index,
+    get_resource_path,
+    is_jmodifiable,
+    modify_jabil,
+    random_get_0to1,
+    random_get_0toi,
+)
 
 APP_NAME = "球会04修改器"
 
@@ -175,8 +183,7 @@ class MainApp:
         if file_paths:
             self.data_raader = SaveDataReader(file_paths[0])
             return self.data_raader.games()
-        else:
-            return []
+        return []
 
     def connect_pcsx2(self) -> bool:
         self.data_raader = Pcsx2DataReader()
@@ -201,8 +208,9 @@ class MainApp:
     def fetch_my_team(self, team: int) -> list:
         if team == 0:
             return [f.model_dump(by_alias=True) for f in self.data_raader.read_myteam()]
-        else:
+        if team == 1:
             return [f.model_dump(by_alias=True) for f in self.data_raader.read_youth_team()]
+        return [f.model_dump(by_alias=True) for f in self.data_raader.read_national_team()]
 
     def fetch_team_player(self, team_index: int) -> list:
         return [f.model_dump(by_alias=True) for f in self.data_raader.read_other_team_players(team_index)]
@@ -311,6 +319,7 @@ class MainApp:
 
     def get_bplayer(self, id: int, year: int = 1, age = 0, pos = None) -> dict:
         bplayer = get_player(id)
+        bplayer.id = id
         player = Player(id)
         bplayer.name = player.name
         if age:
@@ -401,8 +410,7 @@ class MainApp:
             dto = bscout.to_dto()
             dto.id = id
             return dto.model_dump(by_alias=True)
-        else:
-            return {}
+        return {}
 
     def fetch_bcoachs(self, page: int, search_params: dict | None = None) -> dict:
         CnVer.set_ver(1)
@@ -461,8 +469,7 @@ class MainApp:
             dto = bcoach.to_dto()
             dto.id = id
             return dto.model_dump(by_alias=True)
-        else:
-            return {}
+        return {}
 
     def fetch_my_sponsors(self, type: int) -> list:
         return [f.model_dump(by_alias=True) for f in self.data_raader.read_sponsors(type)]

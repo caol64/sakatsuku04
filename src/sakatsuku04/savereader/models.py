@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from ..dtos import ClubDto, CoachDto, MyPlayerDto, MySponsorDto, OtherTeamPlayerDto, PlayerAbilityDto, ScoutDto, TownDto
+from ..dtos import ClubDto, CoachDto, MyPlayerDto, OtherTeamPlayerDto, PlayerAbilityDto, ScoutDto, SponsorDto, TownDto
 from ..io import IntBitField, IntByteField, StrBitField, StrByteField
 from ..objs import Coach, Player, Scout
 
@@ -124,8 +124,8 @@ class MyPlayer:
 
     def __init__(self, index: int):
         self.index = index
-        self.abilities = list()
-        self.un = list()
+        self.abilities = []
+        self.un = []
 
     def set_style(self, style_index: int):
         new_int = (self.style_learned2.value << 32) | self.style_learned1.value
@@ -182,7 +182,15 @@ class MyPlayer:
             weak_type=self.weak_type.value,
             tired_type=self.tired_type.value,
             pop=self.pop.value,
-            comp=[self.comp_money.value, self.comp_discord.value, self.comp_staff.value, self.comp_usage.value, self.comp_result.value, self.comp_status.value, self.comp_euipment.value],
+            comp=[
+                self.comp_money.value,
+                self.comp_discord.value,
+                self.comp_staff.value,
+                self.comp_usage.value,
+                self.comp_result.value,
+                self.comp_status.value,
+                self.comp_euipment.value,
+            ],
             tired=self.tired.value,
             status=self.status.value,
             condition=self.condition.value,
@@ -210,6 +218,8 @@ class MyTeam:
     rookie_players: list["OtherPlayer"]
     team_status: IntBitField
     my_sponsors: list["MySponsor"]
+    national_team_players: list[MyPlayer]
+    national_team_coach: "MyCoach"
 
 
 @dataclass
@@ -304,12 +314,13 @@ class MySponsor:
     offer_years: IntBitField
     amount: IntBitField
 
-    def to_dto(self) -> MySponsorDto:
-        return MySponsorDto(
+    def to_dto(self) -> SponsorDto:
+        return SponsorDto(
             id=self.id.value,
             contract_years=self.contract_years.value,
             offer_years=self.offer_years.value,
-            amount=self.amount.value,
+            amount_high=self.amount.value * 100 // 10000,
+            amount_low=self.amount.value * 100 % 10000,
         )
 
 
@@ -338,6 +349,7 @@ class Town:
             soccer_level=self.soccer_level.value,
             town_type=self.town_type.value,
         )
+
 
 class Sche:
     abroad_list: list[IntBitField]

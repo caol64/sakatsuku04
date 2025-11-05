@@ -3,9 +3,12 @@
     import { onMount } from "svelte";
     import HStack from "./Stack/HStack.svelte";
     import VStack from "./Stack/VStack.svelte";
-    import { getRefreshFlag, getSelectedTab, setIsLoading, setRefreshFlag } from "$lib/globalState.svelte";
+    import { gameVersion, getRefreshFlag, getSelectedTab, setIsLoading, setRefreshFlag } from "$lib/globalState.svelte";
     import Close from "$lib/icons/Close.svelte";
     import BCoachDetails from "./BCoachDetails.svelte";
+    import Airplane from "$lib/icons/Airplane.svelte";
+    import { getTeamData } from "$lib/utils";
+    import Tooltip from "./Tooltip.svelte";
 
     let myCoaches: Coach[] = $state([]);
     let selectedId = $state(0);
@@ -83,6 +86,21 @@
                     >
                         <span class="flex items-center justify-between w-full">
                             {item.name}
+                            {#if item.bringAbroads && item.bringAbroads.length > 0}
+                                {@const tooltipText = item.bringAbroads
+                                    .map(i => {
+                                        const isOver = i > 1000;
+                                        const index = isOver ? i - 1000 : i;
+                                        const name = getTeamData(gameVersion)[index - 255];
+                                        return isOver ? `${name}(C)` : name;
+                                    })
+                                    .join("<br>")}
+                                <div class="mx-2">
+                                    <Tooltip text={tooltipText} width="100px">
+                                        <Airplane />
+                                    </Tooltip>
+                                </div>
+                            {/if}
                         </span>
                     </button>
                 {/each}

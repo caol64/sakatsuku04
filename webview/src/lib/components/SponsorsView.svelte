@@ -4,7 +4,10 @@
     import HStack from "./Stack/HStack.svelte";
     import VStack from "./Stack/VStack.svelte";
     import sponsors from "$locales/sponsor_zh.json";
-    import { getRefreshFlag, getSelectedTab, setIsLoading, setRefreshFlag } from "$lib/globalState.svelte";
+    import { gameVersion, getRefreshFlag, getSelectedTab, setIsLoading, setRefreshFlag } from "$lib/globalState.svelte";
+    import Airplane from "$lib/icons/Airplane.svelte";
+    import Tooltip from "./Tooltip.svelte";
+    import { getTeamData } from "$lib/utils";
 
     let mySponsors: Sponsors[] = $state([]);
     let selectedId = $state(0);
@@ -73,6 +76,19 @@
                     >
                         <span class="flex items-center justify-between w-full">
                             {sponsors[item.id]}
+                            {#if item.bringAbroads && item.bringAbroads.length > 0}
+                                {@const tooltipText = item.bringAbroads
+                                    .map(i => {
+                                        const name = getTeamData(gameVersion)[i.id - 255];
+                                        return i.type === 1 ? `${name}(C)` : name;
+                                    })
+                                    .join("<br>")}
+                                <div class="mx-2">
+                                    <Tooltip text={tooltipText} width="200px">
+                                        <Airplane />
+                                    </Tooltip>
+                                </div>
+                            {/if}
                         </span>
                     </button>
                 {/each}
@@ -83,12 +99,33 @@
             </div>
         {/if}
     </VStack>
-    <VStack className="grow ml-8 space-y-2">
-        <div class="h-fit bg-gray-50 dark:bg-gray-700 rounded-2xl shadow p-6 flex flex-col space-y-4 text-sm">
-            <p class="font-medium">金额: {selectedSponsor?.amount}</p>
-            <p class="font-medium">合约: {selectedSponsor?.contractYears} / {selectedSponsor?.offerYears}</p>
-        </div>
-    </VStack>
+    {#if mySponsors && mySponsors.length > 0}
+        <VStack className="grow ml-8 space-y-2">
+            <div class="h-fit bg-gray-50 dark:bg-gray-700 rounded-2xl shadow p-6 flex flex-col space-y-4 text-sm">
+                <p class="font-medium">
+                    金额
+                    {#if selectedSponsor?.amountHigh}
+                        <span class="pl-8 text-sm">
+                            {selectedSponsor?.amountHigh} 亿
+                        </span>
+                    {/if}
+                    <span class="pl-{selectedSponsor?.amountHigh ? '2' : '8'} text-sm">{selectedSponsor?.amountLow} 万</span>
+                </p>
+                <p class="font-medium">
+                    合约
+                    <span class="pl-8 text-sm">
+                        {selectedSponsor?.contractYears} / {selectedSponsor?.offerYears} 年
+                    </span>
+                </p>
+                {#if selectedSponsor?.bringAbroads && selectedSponsor?.bringAbroads.length > 0}
+                    <p class="font-medium">留学/集训地</p>
+                    {#each selectedSponsor.bringAbroads as abr}
+                        <p class="font-medium pl-8">{`${getTeamData(gameVersion)[abr.id - 255]}${abr.type === 1 ? "(C)" : ""}${abr.isEnabled ? " 已获得" : ""}`}</p>
+                    {/each}
+                {/if}
+            </div>
+        </VStack>
+    {/if}
 </HStack>
 
 
