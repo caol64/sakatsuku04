@@ -4,13 +4,14 @@
     import HStack from "./Stack/HStack.svelte";
     import VStack from "./Stack/VStack.svelte";
     import Tooltip from "./Tooltip.svelte";
-    import { getPlayerColor } from "$lib/utils";
+    import { getPlayerColor, getTeamData } from "$lib/utils";
     import { setIsLoading, setModeState } from "$lib/globalState.svelte";
     import Football from "$lib/icons/Football.svelte";
     import About from "./About.svelte";
     import Back from "$lib/icons/Back.svelte";
     import Avatar from "$lib/icons/Avatar.svelte";
     import BPlayerDetails from "./BPlayerDetails.svelte";
+    import Airplane from "$lib/icons/Airplane.svelte";
 
     let page = $state(1);
     let total = $state(1);
@@ -175,20 +176,38 @@
                             style={`background-image: linear-gradient(to right, transparent 66%, ${getPlayerColor(item.pos)} 100%)`}
                         >
                             <span class="flex items-center justify-between w-full">
+                                <span>{item.name}</span>
                                 <HStack className="items-center">
-                                    <span>{item.name}</span>
-                                    {#if item.scouts && item.scouts.length > 0}
-                                        {@const tooltipText = `${item.scouts.join("<br>")}`}
-                                        <div class="ml-4">
-                                            <Tooltip text={tooltipText} width="80px">
+                                    <div class="mr-2 w-3.5 h-3.5 flex items-center justify-center">
+                                        {#if item.bringAbroads && item.bringAbroads.length > 0}
+                                            {@const tooltipText = item.bringAbroads
+                                                .map(i => {
+                                                    const isOver = i > 1000;
+                                                    const index = isOver ? i - 1000 : i;
+                                                    const name = getTeamData()[index - 255];
+                                                    return isOver ? `${name}(C)` : name;
+                                                })
+                                                .join("<br>")}
+                                            <Tooltip text={tooltipText} width="150px">
+                                                <Airplane />
+                                            </Tooltip>
+                                        {/if}
+                                    </div>
+                                    <div class="mr-2 w-3.5 h-3.5 flex items-center justify-center">
+                                        {#if item.scouts && item.scouts.length > 0}
+                                            {@const tooltipText = `${item.scouts.join("<br>")}`}
+                                            <Tooltip text={tooltipText} width="100px">
                                                 <Avatar />
                                             </Tooltip>
-                                        </div>
-                                    {/if}
+                                        {/if}
+                                    </div>
+
+                                    <div class="mr-2 w-3.5 h-3.5 flex items-center justify-center">
+                                        {#if item.isAlbum}
+                                            <Football />
+                                        {/if}
+                                    </div>
                                 </HStack>
-                                {#if item.isAlbum}
-                                    <div class="mx-2"><Football /></div>
-                                {/if}
                             </span>
                         </button>
                     {/each}

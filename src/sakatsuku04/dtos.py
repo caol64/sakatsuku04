@@ -545,15 +545,47 @@ class SimpleBPlayerDto(BaseDto):
             return [Scout.name(f) for f in scouts_ids]
         return []
 
+    @computed_field
+    @property
+    def bring_abroads(self) -> list[int]:
+        abr_dict = abroad_player_dict()
+        camp_dict = camp_player_dict()
+        abroad_ids = []
+        if self.id in abr_dict:
+            abroad_ids.append(abr_dict[self.id])
+        if self.id in camp_dict:
+            abroad_ids.append(camp_dict[self.id] + 1000)
+        return abroad_ids
+
 
 class SimpleBScoutDto(BaseDto):
     id: int
     name: str
 
+    @computed_field
+    @property
+    def has_exclusive(self) -> bool:
+        excls = constants.scout_excl_tbl.get(self.id, [])
+        simi_excls = constants.scout_simi_excl_tbl.get(self.id, [])
+        return len(excls) > 0 or len(simi_excls) > 0
+
 
 class SimpleBCoachDto(BaseDto):
     id: int
     name: str
+
+    @computed_field
+    @property
+    def sp_skill(self) -> int | None:
+        return constants.mcoach_skill.get(self.id - 20000)
+
+    @computed_field
+    @property
+    def is_bring_abroad(self) -> bool:
+        abr_dict = abroad_coach_dict()
+        camp_dict = camp_coach_dict()
+        id = self.id - 20000
+        return id in abr_dict or id in camp_dict
 
 
 class BScoutDto(BaseDto):
@@ -663,6 +695,19 @@ class BCoachDto(BaseDto):
     @property
     def coach_type_cnv(self) -> int:
         return constants.coach_mapping[self.coach_type]
+
+    @computed_field
+    @property
+    def bring_abroads(self) -> list["AbrStatusDto"]:
+        abr_dict = abroad_coach_dict()
+        camp_dict = camp_coach_dict()
+        id = self.id - 20000
+        abroad_ids = []
+        if id in abr_dict:
+            abroad_ids.append(AbrStatusDto(id=abr_dict[id], type=0, is_enabled=False))
+        if id in camp_dict:
+            abroad_ids.append(AbrStatusDto(id=camp_dict[id], type=1, is_enabled=False))
+        return abroad_ids
 
 
 class AbrStatusDto(BaseDto):

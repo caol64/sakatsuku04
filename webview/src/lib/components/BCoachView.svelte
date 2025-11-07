@@ -7,6 +7,8 @@
     import About from "./About.svelte";
     import Back from "$lib/icons/Back.svelte";
     import BCoachDetails from "./BCoachDetails.svelte";
+    import Airplane from "$lib/icons/Airplane.svelte";
+    import Component from "$lib/icons/Component.svelte";
 
     let page = $state(1);
     let total = $state(1);
@@ -119,8 +121,18 @@
                             class={selectedCoach === item.id ? "activate" : ""}
                         >
                             <span class="flex items-center justify-between w-full">
-                                <HStack className="items-center">
-                                    <span>{item.name}</span>
+                                {item.name}
+                                <HStack>
+                                    <div class="mr-2 w-3.5 h-3.5 flex items-center justify-center">
+                                        {#if item.spSkill !== undefined && item.spSkill !== null}
+                                            <Component />
+                                        {/if}
+                                    </div>
+                                    <div class="mr-2 w-3.5 h-3.5 flex items-center justify-center">
+                                        {#if item.isBringAbroad}
+                                            <Airplane />
+                                        {/if}
+                                    </div>
                                 </HStack>
                             </span>
                         </button>

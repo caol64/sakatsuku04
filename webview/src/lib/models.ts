@@ -50,6 +50,7 @@ export interface MyTeamPlayer {
     pos: number;
     isAlbum: boolean;
     scouts?: string[];
+    bringAbroads?: number[];
 }
 
 export interface MyPlayer {
@@ -274,6 +275,7 @@ export interface BCoach {
     acSpPractice2?: number;
     spSkill?: number;
     coachTypeCnv?: number;
+    bringAbroads?: AbrStatus[];
 }
 
 

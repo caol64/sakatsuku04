@@ -7,6 +7,7 @@
     import About from "./About.svelte";
     import Back from "$lib/icons/Back.svelte";
     import BScoutDetails from "./BScoutDetails.svelte";
+    import Avatar from "$lib/icons/Avatar.svelte";
 
     let page = $state(1);
     let total = $state(1);
@@ -119,9 +120,12 @@
                             class={selectedScout === item.id ? "activate" : ""}
                         >
                             <span class="flex items-center justify-between w-full">
-                                <HStack className="items-center">
-                                    <span>{item.name}</span>
-                                </HStack>
+                                {item.name}
+                                <div class="mr-2 w-3.5 h-3.5 flex items-center justify-center">
+                                    {#if item.hasExclusive}
+                                        <Avatar />
+                                    {/if}
+                                </div>
                             </span>
                         </button>
                     {/each}

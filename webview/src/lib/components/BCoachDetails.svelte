@@ -3,7 +3,7 @@
     import HStack from "./Stack/HStack.svelte";
     import VStack from "./Stack/VStack.svelte";
     import Tooltip from "./Tooltip.svelte";
-    import { getRank, getRegion, getStyle, toHex } from "$lib/utils";
+    import { getRank, getRegion, getStyle, getTeamData, toHex } from "$lib/utils";
     import ability from "$locales/mcoach_abilities_zh.json";
     import AbilityBar from "./AbilityBar.svelte";
     import RadarChart6 from "./RadarChart6.svelte";
@@ -129,6 +129,14 @@
                 <div>{acPrac[bCoach.acSpPractice2]}</div>
             {/if}
         </div>
+        {#if bCoach.bringAbroads && bCoach.bringAbroads.length > 0}
+            <p>留学/集训地</p>
+            {#each bCoach.bringAbroads as abr}
+                <p class="pl-4 text-sm text-left">
+                    {`${getTeamData()[abr.id - 255]}${abr.type === 1 ? " [集训地]" : " [留学地]"}`}
+                </p>
+            {/each}
+        {/if}
     </div>
 </VStack>
 
