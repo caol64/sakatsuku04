@@ -8,11 +8,10 @@
     import Tooltip from "./Tooltip.svelte";
     import Modal from "./Modal.svelte";
     import PlayersEditor from "./PlayersEditor.svelte";
-    import { getCooperationType, getGrowType, getPlayerColor, getPosition, getRank, getRegion, getStyle, getToneType, getFoot, sortedAbilities, getGrowEval } from "$lib/utils";
+    import { getCooperationType, getGrowType, getPlayerColor, getPosition, getRank, getRegion, getStyle, getToneType, getFoot, sortedAbilities, getGrowEval, getAbilEvalData } from "$lib/utils";
     import { getRefreshFlag, getSelectedTab, setIsLoading, setRefreshFlag } from "$lib/globalState.svelte";
     import AbilityBar from "./AbilityBar.svelte";
     import Football from "$lib/icons/Football.svelte";
-    import abilEval from "$locales/abil_eval_zh.json";
     import Comment from "$lib/icons/Comment.svelte";
     import Skull from "$lib/icons/Skull.svelte";
     import Waveform from "./Waveform.svelte";
@@ -190,7 +189,7 @@
                     <span class="pl-8 text-sm">{getStyle(myPlayer?.style)}</span>
                 </p>
                 <p>
-                    球员等级
+                    等级
                     <span class="pl-8 text-sm">{getRank(myPlayer?.rank)}</span>
                 </p>
                 <p class="flex items-center justify-between">
@@ -250,7 +249,7 @@
 
         <VStack className="w-3/10 mx-1">
             {#if myPlayer?.maxAbilEval}
-                <Tooltip text={abilEval[myPlayer.maxAbilEval]} width="220px">
+                <Tooltip text={getAbilEvalData()[myPlayer.maxAbilEval]} width="220px">
                     <RadarChart abilities={stats} />
                 </Tooltip>
             {/if}
@@ -261,7 +260,7 @@
             <Waveform phyGrows={myPlayer?.phyGrows} tecGrows={myPlayer?.tecGrows} sysGrows={myPlayer?.sysGrows} currentAge={myPlayer?.age} />
             {#if myPlayer?.abilEval}
                 <div class="border border-gray-200 dark:border-gray-600 rounded-md py-2 px-3 space-y-2 bg-gray-50 dark:bg-gray-700 my-2">
-                    <p>{abilEval[myPlayer.abilEval]}</p>
+                    <p>{getAbilEvalData()[myPlayer.abilEval]}</p>
                     <p>{getGrowEval(myPlayer.growEval)}</p>
                 </div>
             {/if}

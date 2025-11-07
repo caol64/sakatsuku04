@@ -38,7 +38,7 @@ export interface TeamPlayer {
     growTypePhy: number;
     growTypeTec: number;
     growTypeSys: number;
-    isAlbum: boolean;
+    albumType: number;
     teamIndex: number;
     scouts?: string[];
     bringAbroads: number[];
@@ -132,8 +132,16 @@ export interface MyTown {
 export interface Scout {
     id: number;
     name: string;
+    age?: number;
+    offerYears?: number;
+    contractYears?: number;
+    salaryHigh?: number;
+    salaryLow?: number;
+    rank?: number;
     exclusivePlayers?: Search[];
     simiExclusivePlayers?: Search[];
+    abilities: number[];
+    hasExclusive: boolean;
 }
 
 export interface Search {
@@ -208,10 +216,21 @@ export interface Coach {
     name: string;
     age?: number;
     offerYears?: number;
-    bringAbroads: number[];
+    contractYears?: number;
+    salaryHigh?: number;
+    salaryLow?: number;
+    rank?: number;
+    spPrac1?: number;
+    spPrac2?: number;
+    bringAbroads: AbrStatus[];
+    abilities: number[];
+    spSkill?: number;
+    isBringAbroad?: boolean;
+    isTopRank?: boolean;
 }
 
 export interface BScout {
+    id?: number;
     name?: string;
     born?: number;
     abilities: number[];
@@ -232,6 +251,7 @@ export interface BScout {
 }
 
 export interface BCoach {
+    id?: number;
     name?: string;
     born?: number;
     abilities: number[];
@@ -257,7 +277,7 @@ export interface BCoach {
 }
 
 
-export interface SponsorsAbr {
+export interface AbrStatus {
     id: number;
     type: number;
     isEnabled: boolean;
@@ -270,5 +290,13 @@ export interface Sponsors {
     offerYears: number;
     amountHigh: number;
     amountLow: number;
-    bringAbroads: SponsorsAbr[];
+    bringAbroads: AbrStatus[];
+    combo?: SponsorCombo[];
+}
+
+
+export interface SponsorCombo {
+    parentId: number;
+    subsidiaryIds: number[];
+    type: number;
 }

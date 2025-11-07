@@ -62,11 +62,13 @@ class Pcsx2DataReader(DataReader):
             1: self._read_8bit,
             2: self._read_16bit,
             4: self._read_32bit,
+            8: self._read_64bit,
         }
         self._write_funcs = {
             1: self._write_8bit,
             2: self._write_16bit,
             4: self._write_32bit,
+            8: self._write_64bit,
         }
 
     def _read_8bit(self, address: int) -> int:
@@ -77,6 +79,9 @@ class Pcsx2DataReader(DataReader):
 
     def _read_32bit(self, address: int) -> int:
         return self.libipc.pine_read(self.ipc, address, c_char(2), False)
+
+    def _read_64bit(self, address: int) -> int:
+        return self.libipc.pine_read(self.ipc, address, c_char(3), False)
 
     def _read_str(self, address: int, length: int) -> bytes:
         result = bytearray()
@@ -93,6 +98,9 @@ class Pcsx2DataReader(DataReader):
 
     def _write_32bit(self, address: int, value: int):
         self.libipc.pine_write(self.ipc, address, c_ulong(value), c_char(6), False)
+
+    def _write_64bit(self, address: int, value: int):
+        self.libipc.pine_write(self.ipc, address, c_ulong(value), c_char(7), False)
 
     def _write_str(self, address: int, value: bytes):
         for i in range(len(value)):
@@ -158,14 +166,10 @@ class Pcsx2DataReader(DataReader):
 
     def _read_other_teams(self) -> list[OtherTeam]:
         other_teams: list[OtherTeam] = []
-        for i in range(0x109):  # loop the teams
-            id = self._read_int_byte(0x72C7F0 + i * 0x6C, 2)
-            unknown1 = self._read_int_byte(0x72C856 + i * 0x6C, 2)
-            unknown2 = self._read_int_byte(0x72C858 + i * 0x6C, 2)
-            friendly = self._read_int_byte(0x72C85A + i * 0x6C, 2)
-            other_team = OtherTeam(i, id, friendly, unknown1, unknown2, [])
-            other_teams.append(other_team)
-        # 7337bc
+        for i, id in enumerate(team_ids):
+            id_field = IntByteField(2, id, 0)
+            friendly_field = IntByteField(2, 0, 0)
+            other_teams.append(OtherTeam(i, id_field, friendly_field))
         return other_teams
 
     def _read_other_team_players(self, team_index: int) -> list[OtherPlayer]:
@@ -173,9 +177,8 @@ class Pcsx2DataReader(DataReader):
         for i in range(0x19):
             pid = self._read_int_byte(0x72C7F2 + team_index * 0x6C + i * 4, 2)
             age = self._read_int_byte(0x72C7F4 + team_index * 0x6C + i * 4)
-            ability_graph = self._read_int_byte(0x72C7F5 + team_index * 0x6C + i * 4)
-            number = self._read_int_byte(0x7337BC + team_index * 0x19 + i)
-            player = OtherPlayer(pid, age, ability_graph, number)
+            # number = self._read_int_byte(0x7337BC + team_index * 0x19 + i)
+            player = OtherPlayer(pid, age)
             players.append(player)
         return players
 
@@ -275,9 +278,26 @@ class Pcsx2DataReader(DataReader):
         for i in range(3):
             name = self._read_str_byte(start + i * 156 + 2, 0xD)
             id = self._read_int_byte(start + i * 156 + 0x36, 2)
-            scout = MyScout(id)
-            scout.saved_name = name
-            scout_list.append(scout)
+            age = self._read_int_byte(start + i * 156 + 0x10, 1)
+            rank = self._read_int_byte(start + i * 156 + 0x11, 1)
+            abilities = []
+            for j in range(21):
+                ability = self._read_int_byte(start + i * 156 + 0x1E + j, 1)
+                abilities.append(ability)
+            # area1 = self._read_int_byte(start + i * 156 + 0x34, 1)
+            # area2 = self._read_int_byte(start + i * 156 + 0x35, 1)
+            salary = self._read_int_byte(start + i * 156 + 0x14, 2)
+            contract_years = self._read_int_byte(start + i * 156 + 0x38, 1)
+            offer_years = self._read_int_byte(start + i * 156 + 0x39, 1)
+            my_scout = MyScout(id, age, offer_years)
+            my_scout.saved_name = name
+            my_scout.abilities = abilities
+            # my_scout.area1 = area1
+            # my_scout.area2 = area2
+            my_scout.rank = rank
+            my_scout.salary = salary
+            my_scout.contract_years = contract_years
+            scout_list.append(my_scout)
         return scout_list
 
     def _read_scout_candidates(self) -> list[MyScout]:
@@ -286,7 +306,9 @@ class Pcsx2DataReader(DataReader):
         for i in range(0xA):
             scout_id = self._read_int_byte(start + i * 4, 2)
             if scout_id and scout_id.value != 0xFFFF:
-                scout = MyScout(scout_id)
+                offer_years = self._read_int_byte(start + i * 4 + 2, 1)
+                age = self._read_int_byte(start + i * 4 + 3, 1)
+                scout = MyScout(scout_id, age, offer_years)
                 scout_candidates.append(scout)
         return scout_candidates
 
@@ -347,30 +369,47 @@ class Pcsx2DataReader(DataReader):
                 players.append(player)
         return players
 
-    def _read_my_master_coach(self) -> MyCoach:
-        start = 0x7051c0
-        coach_id = self._read_int_byte(start + 0x3e38, 2)  # 0x3e38(2)
-        coach_age = self._read_int_byte(start + 0x3dd3, 1)  # 0x3dd3
-        coach_name = self._read_str_byte(start + 0x3dd0, 0xD)  # 0x3dd0
-        master_coach = MyCoach(id=coach_id, age=coach_age, saved_name=coach_name)
-        return master_coach
-
-    def _read_my_coaches(self) -> list[MyCoach]:
-        my_coaches = []
-        my_coaches.append(self._read_my_master_coach())
-        start = 0x712a88
-        for i in range(4):
-            coach_id = self._read_int_byte(start + i * 0x84 + 0x6a, 2)
+    def _read_my_coaches(self, offset: int, size: int) -> list[MyCoach]:
+        result = []
+        for i in range(size):
+            coach_id = self._read_int_byte(offset + i * 0x84 + 0x6a, 2)  # 0x3e38(2)
             if coach_id.value == 0 or coach_id.value == 0xFFFF:
                 continue
-            coach_name = self._read_str_byte(start + i * 0x84 + 2, 0xD)  # 0x712a8a 0xd986
-            coach_age = self._read_int_byte(start + i * 0x84 + 0x10, 1)
-            my_coaches.append(MyCoach(id=coach_id, age=coach_age, saved_name=coach_name))
+            coach_name = self._read_str_byte(offset + i * 0x84 + 2, 0xD)  # 0x3dd0
+            coach_rank = self._read_int_byte(offset + i * 0x84 + 0x10, 1)  # 0x3dd1
+            coach_type = self._read_int_byte(offset + i * 0x84 + 0x11, 1)  # 0x3dd2
+            coach_age = self._read_int_byte(offset + i * 0x84 + 0x12, 1)  # 0x3dd3
+            offer_years = self._read_int_byte(offset + i * 0x84 + 0x6d, 1)  # 0x3e3b
+            abilities = []
+            for j in range(0x35):
+                ability = self._read_int_byte(offset + i * 0x84 + 0x2c + j, 1)  # 0x3dfa
+                abilities.append(ability)
+            contract_years = self._read_int_byte(offset + i * 0x84 + 0x6c, 1)  # 0x3e3a
+            salary = self._read_int_byte(offset + i * 0x84 + 0x1e, 2)  # 0x3dec
+            sp_prac1 = self._read_int_byte(offset + i * 0x84 + 0x61, 1)  # 0x3e2f
+            sp_prac2 = self._read_int_byte(offset + i * 0x84 + 0x62, 1)  # 0x3e30
+            coach = MyCoach(id=coach_id, age=coach_age, offer_years=offer_years)
+            coach.saved_name = coach_name
+            coach.rank = coach_rank
+            coach.abilities = abilities
+            coach.contract_years = contract_years
+            coach.salary = salary
+            coach.sp_prac1 = sp_prac1
+            coach.sp_prac2 = sp_prac2
+            coach.coach_type = coach_type
+            result.append(coach)
+        return result
+
+    def _read_coaches(self) -> list[MyCoach]:
+        my_coaches = []
+        my_coaches.extend(self._read_my_coaches(0x708F8E, 1))  # master coach
+        my_coaches.extend(self._read_my_coaches(0x712a88, 4))  # coaches
         return my_coaches
 
     def _read_coach_candidates(self) -> list[MyCoach]:
         start = 0x71273c
         coach_candidates = []
+        temp_coach_indexes = []
         for i in range(0x12):
             coach_id = self._read_int_byte(start + i * 4, 2)
             if coach_id.value == 0 or coach_id.value == 0xFFFF:
@@ -378,6 +417,15 @@ class Pcsx2DataReader(DataReader):
             offer_years = self._read_int_byte(start + i * 4 + 2, 1)
             age = self._read_int_byte(start + i * 4 + 3, 1)
             coach_candidates.append(MyCoach(id=coach_id, age=age, offer_years=offer_years))
+            temp_coach_indexes.append(i)
+        start = 0x712784
+        for i in range(0x16):
+            for j in range(3):
+                coach_id = self._read_int_byte(start + i * 12 + j * 4, 2)
+                if i in temp_coach_indexes and coach_id and coach_id.value != 0xFFFF:
+                    offer_years = self._read_int_byte(start + i * 12 + j * 4 + 2, 1)
+                    age = self._read_int_byte(start + i * 12 + j * 4 + 3, 1)
+                    coach_candidates.append(MyCoach(id=coach_id, age=age, offer_years=offer_years))
         return coach_candidates
 
     def _read_draft_players(self) -> list[OtherPlayer]:
@@ -495,8 +543,11 @@ class Pcsx2DataReader(DataReader):
     def read_other_team_players(self, team_index: int) -> list[OtherTeamPlayerDto]:
         players = self._read_other_team_players(team_index)
         result = []
+        my_album_players = self.read_my_album_players()
         for player in [player for player in players if player.id.value != 0xFFFF]:
-            result.append(player.to_dto())
+            player_dto = player.to_dto()
+            player_dto.my_album_players = my_album_players
+            result.append(player_dto)
         return sorted(result, key=lambda player: player.pos)
 
     @override
@@ -514,45 +565,54 @@ class Pcsx2DataReader(DataReader):
             if type == 0
             else [f.to_dto_with_name(f.id.value) for f in self._read_scout_candidates()]
         )
+        return scouts
 
-        if not scouts:
-            return []
-
+    @override
+    def read_scout(self, id: int, type: int) -> ScoutDto:
+        scouts = self.read_scouts(type)
+        scout = next((s for s in scouts if s.id == id), None)
+        assert scout is not None, f"Scout with id {id} not found."
+        excls = scout_excl_tbl.get(scout.id, [])
+        simi_excls = scout_simi_excl_tbl.get(scout.id, [])
+        if not excls and not simi_excls:
+            return scout
         other_teams = self._read_other_teams()
         for i, team in enumerate(other_teams):
             team.players = self._read_other_team_players(i)
-
         def resolve_players(player_ids: list[int]) -> list[SearchDto]:
             result = []
             for pid in player_ids:
                 dto = SearchDto(name=Player(pid).name)
                 for team in other_teams:
-                    for player in team.players:
-                        if player.id.value == pid:
-                            dto.age = player.age.value
-                            dto.team_id = team_ids.index(team.id.value)
-                            break
+                    if team.players:
+                        for player in team.players:
+                            if player.id.value == pid:
+                                dto.age = player.age.value
+                                dto.team_id = team_ids.index(team.id.value)
+                                break
                 result.append(dto)
             return result
-
-        for scout in scouts:
-            scout.exclusive_players = resolve_players(scout_excl_tbl.get(scout.id, []))
-            scout.simi_exclusive_players = resolve_players(scout_simi_excl_tbl.get(scout.id, []))
-
-        return scouts
+        scout.exclusive_players = resolve_players(excls)
+        scout.simi_exclusive_players = resolve_players(simi_excls)
+        return scout
 
     @override
     def read_coaches(self, type: int) -> list[CoachDto]:
         coaches = (
-            [f.to_dto() for f in self._read_my_coaches()]
+            [f.to_dto() for f in self._read_coaches()]
             if type == 0
             else [f.to_dto_with_name(f.id.value) for f in self._read_coach_candidates()]
         )
-
-        if not coaches:
-            return []
-
         return coaches
+
+    @override
+    def read_coach(self, id: int, type: int) -> CoachDto:
+        coaches = self.read_coaches(type)
+        coach = next((s for s in coaches if s.id == id), None)
+        assert coach is not None, f"Coach with id {id} not found."
+        coach.enabled_abr_ids = [f.id for f in self.read_my_abroads(0) if f.is_enabled]
+        coach.enabled_camp_ids = [f.id for f in self.read_my_abroads(1) if f.is_enabled]
+        return coach
 
     @override
     def read_my_abroads(self, type: int) -> list[AbroadDto]:
@@ -647,6 +707,9 @@ class Pcsx2DataReader(DataReader):
                 if _match_filters(dto):
                     dto.team_index = -1
                     result.append(dto)
+        my_album_players = self.read_my_album_players()
+        for player in result:
+            player.my_album_players = my_album_players
         return sorted(result, key=lambda player: player.pos)
 
     @override

@@ -3,7 +3,7 @@
     import { onMount } from "svelte";
     import HStack from "./Stack/HStack.svelte";
     import VStack from "./Stack/VStack.svelte";
-    import { getRegion, getRank } from "$lib/utils";
+    import { getRegion, getRank, toHex } from "$lib/utils";
     import ability from "$locales/scout_abilities_zh.json";
     import AbilityBar from "./AbilityBar.svelte";
     import RadarChart4 from "./RadarChart4.svelte";
@@ -46,9 +46,13 @@
 
 <VStack className="w-1/5 mx-1">
     <div class="border border-gray-200 dark:border-gray-600 rounded-md p-4 space-y-2 bg-gray-50 dark:bg-gray-700">
-        <p class="flex items-center justify-between select-text">
+        <p class="flex items-center justify-between">
             姓名
-            <span class="flex-1 pl-8 text-sm">{bScout?.name}</span>
+            <span class="flex-1 pl-8 text-sm select-text">{bScout?.name}</span>
+        </p>
+        <p>
+            ID
+            <span class="pl-8 text-sm select-text">{toHex(bScout?.id, 4)}</span>
         </p>
         <p>
             出生地

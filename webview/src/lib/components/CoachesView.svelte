@@ -3,21 +3,28 @@
     import { onMount } from "svelte";
     import HStack from "./Stack/HStack.svelte";
     import VStack from "./Stack/VStack.svelte";
-    import { gameVersion, getRefreshFlag, getSelectedTab, setIsLoading, setRefreshFlag } from "$lib/globalState.svelte";
+    import { getRefreshFlag, getSelectedTab, setIsLoading, setRefreshFlag } from "$lib/globalState.svelte";
+    import ability from "$locales/mcoach_abilities_zh.json";
     import Close from "$lib/icons/Close.svelte";
     import BCoachDetails from "./BCoachDetails.svelte";
     import Airplane from "$lib/icons/Airplane.svelte";
-    import { getTeamData } from "$lib/utils";
     import Tooltip from "./Tooltip.svelte";
+    import AbilityBar from "./AbilityBar.svelte";
+    import CoachesViewDetails from "./CoachesViewDetails.svelte";
+    import Component from "$lib/icons/Component.svelte";
 
     let myCoaches: Coach[] = $state([]);
     let selectedId = $state(0);
     let selectedType = $state(0);
-    let selectedCoach: Coach | null = $derived.by(() => {
-        if (!myCoaches || myCoaches.length === 0) return null;
-        return myCoaches.find(a => a.id === selectedId) ?? null;
-    });
+    let selectedCoach: Coach = $state({id: 0, name: "", abilities: [], bringAbroads: []});
     let showDrawer = $state(false);
+
+    let abilityPairs = $derived(
+        ability.map((label, i) => ({
+            label,
+            value: [0, 0, selectedCoach.abilities[i]]
+        }))
+    );
 
     async function fetchMyCoaches() {
         try {
@@ -26,7 +33,21 @@
                 myCoaches = await window.pywebview.api.fetch_my_coaches(selectedType);
                 if (myCoaches && myCoaches.length > 0) {
                     selectedId = myCoaches[0].id;
+                    await fetchMyCoach(selectedId);
                 }
+            } else {
+                alert('API 未加载');
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+    async function fetchMyCoach(id: number) {
+        try {
+            setIsLoading(true);
+            if (window.pywebview?.api?.fetch_coach) {
+                selectedCoach = await window.pywebview.api.fetch_coach(id, selectedType);
             } else {
                 alert('API 未加载');
             }
@@ -49,6 +70,7 @@
     async function onCoachClick(id: number) {
         if (selectedId !== id) {
             selectedId = id;
+            await fetchMyCoach(selectedId);
         }
     }
 
@@ -66,9 +88,7 @@
         showDrawer = !showDrawer;
     }
 
-    function showBCoach() {
-        showDrawer = true;
-    }
+
 </script>
 
 <HStack className="flex-1 overflow-hidden m-2.5">
@@ -86,21 +106,18 @@
                     >
                         <span class="flex items-center justify-between w-full">
                             {item.name}
-                            {#if item.bringAbroads && item.bringAbroads.length > 0}
-                                {@const tooltipText = item.bringAbroads
-                                    .map(i => {
-                                        const isOver = i > 1000;
-                                        const index = isOver ? i - 1000 : i;
-                                        const name = getTeamData(gameVersion)[index - 255];
-                                        return isOver ? `${name}(C)` : name;
-                                    })
-                                    .join("<br>")}
-                                <div class="mx-2">
-                                    <Tooltip text={tooltipText} width="100px">
-                                        <Airplane />
-                                    </Tooltip>
+                            <HStack>
+                                <div class="mr-2 w-3.5 h-3.5 flex items-center justify-center">
+                                    {#if item.spSkill !== undefined && item.spSkill !== null}
+                                        <Component />
+                                    {/if}
                                 </div>
-                            {/if}
+                                <div class="mr-2 w-3.5 h-3.5 flex items-center justify-center">
+                                    {#if item.isBringAbroad}
+                                        <Airplane />
+                                    {/if}
+                                </div>
+                            </HStack>
                         </span>
                     </button>
                 {/each}
@@ -111,17 +128,28 @@
             </div>
         {/if}
     </VStack>
-    <VStack className="grow ml-8 space-y-2">
-        <div class="h-fit bg-gray-50 dark:bg-gray-700 rounded-2xl shadow p-6 flex flex-col space-y-4 text-sm">
-            {#if selectedCoach?.id && selectedCoach.id >= 20000}
-                <button onclick={showBCoach} class="cursor-pointer select-text">
-                    查看详情
-                </button>
-            {/if}
-            <p class="font-medium">年龄: {selectedCoach?.age}</p>
-            <p class="font-medium">合约: {selectedCoach?.offerYears}</p>
-        </div>
-    </VStack>
+    {#if selectedType === 0}
+        <VStack className="w-1/2 mx-1">
+            <CoachesViewDetails selectedCoach={selectedCoach} bind:showDrawer={showDrawer} />
+        </VStack>
+        <VStack className="grow h-full overflow-auto ml-1 pl-1 pb-12">
+            {#each abilityPairs as { label, value }}
+                <HStack className="items-center">
+                    <span class="w-24 text-sm">{label}</span>
+                    {#if value}
+                        {@const tooltipText = `${value[2]}`}
+                        <Tooltip text={tooltipText} className="w-full">
+                            <AbilityBar abilities={value} is100={true} />
+                        </Tooltip>
+                    {/if}
+                </HStack>
+            {/each}
+        </VStack>
+    {:else}
+        <VStack className="grow ml-8 space-y-2">
+            <CoachesViewDetails selectedCoach={selectedCoach} bind:showDrawer={showDrawer} />
+        </VStack>
+    {/if}
     {#if selectedCoach?.id && selectedCoach.id >= 20000}
         <div class="fixed top-0 left-0 h-full w-full bg-white dark:bg-gray-800 shadow-lg transition-transform duration-300 z-50"
             class:translate-x-0={showDrawer}
@@ -132,7 +160,7 @@
                         <Close />
                     </button>
                 </VStack>
-                <BCoachDetails selectedCoach={selectedId} />
+                <BCoachDetails selectedCoach={selectedCoach.id} />
             </HStack>
         </div>
     {/if}

@@ -3,11 +3,11 @@
     import { onMount } from "svelte";
     import HStack from "./Stack/HStack.svelte";
     import VStack from "./Stack/VStack.svelte";
-    import sponsors from "$locales/sponsor_zh.json";
-    import { gameVersion, getRefreshFlag, getSelectedTab, setIsLoading, setRefreshFlag } from "$lib/globalState.svelte";
+    import sponsorComboType from "$locales/sponsor_combo_type_zh.json";
+    import { getRefreshFlag, getSelectedTab, setIsLoading, setRefreshFlag } from "$lib/globalState.svelte";
     import Airplane from "$lib/icons/Airplane.svelte";
-    import Tooltip from "./Tooltip.svelte";
-    import { getTeamData } from "$lib/utils";
+    import { getSponsorData, getTeamData } from "$lib/utils";
+    import Branch from "$lib/icons/Branch.svelte";
 
     let mySponsors: Sponsors[] = $state([]);
     let selectedId = $state(0);
@@ -75,20 +75,19 @@
                         class={selectedId === item.id ? "activate" : ""}
                     >
                         <span class="flex items-center justify-between w-full">
-                            {sponsors[item.id]}
-                            {#if item.bringAbroads && item.bringAbroads.length > 0}
-                                {@const tooltipText = item.bringAbroads
-                                    .map(i => {
-                                        const name = getTeamData(gameVersion)[i.id - 255];
-                                        return i.type === 1 ? `${name}(C)` : name;
-                                    })
-                                    .join("<br>")}
-                                <div class="mx-2">
-                                    <Tooltip text={tooltipText} width="200px">
-                                        <Airplane />
-                                    </Tooltip>
+                            {getSponsorData()[item.id]}
+                            <HStack>
+                                <div class="mr-2 w-3.5 h-3.5 flex items-center justify-center">
+                                    {#if item.combo && item.combo.length > 0}
+                                        <Branch />
+                                    {/if}
                                 </div>
-                            {/if}
+                                <div class="mr-2 w-3.5 h-3.5 flex items-center justify-center">
+                                    {#if item.bringAbroads && item.bringAbroads.length > 0}
+                                        <Airplane />
+                                    {/if}
+                                </div>
+                            </HStack>
                         </span>
                     </button>
                 {/each}
@@ -120,7 +119,22 @@
                 {#if selectedSponsor?.bringAbroads && selectedSponsor?.bringAbroads.length > 0}
                     <p class="font-medium">留学/集训地</p>
                     {#each selectedSponsor.bringAbroads as abr}
-                        <p class="font-medium pl-8">{`${getTeamData(gameVersion)[abr.id - 255]}${abr.type === 1 ? "(C)" : ""}${abr.isEnabled ? " 已获得" : ""}`}</p>
+                        <p class="font-medium pl-8">
+                            {`${getTeamData()[abr.id - 255]}${abr.type === 1 ? " [集训地]" : " [留学地]"}${abr.isEnabled ? "  (已获得)" : "  (未获得)"}`}
+                        </p>
+                    {/each}
+                {/if}
+                {#if selectedSponsor?.combo && selectedSponsor.combo.length > 0}
+                    <p class="font-medium">合并/业务扩大</p>
+                    {#each selectedSponsor.combo as combo}
+                        {@const subsidiaries = combo.subsidiaryIds
+                            .map(i => {
+                                return getSponsorData()[i];
+                            })
+                            .join(" + ")}
+                        <p class="font-medium pl-8">
+                            {`(${sponsorComboType[combo.type]}) ${getSponsorData()[combo.parentId]} <= ${subsidiaries}`}
+                        </p>
                     {/each}
                 {/if}
             </div>

@@ -1,5 +1,6 @@
 <script lang="ts">
     import { setSaveList, setModeState } from "$lib/globalState.svelte";
+    import Forward from "$lib/icons/Forward.svelte";
     import Ps2 from "$lib/icons/Ps2.svelte";
 
     async function connectPcsx2() {
@@ -25,15 +26,11 @@
         <div class="flex items-center space-x-2 text-sm">
             <button onclick={connectPcsx2} class="text-blue-600 cursor-pointer flex items-center">
                 连接 PCSX2 模拟器
-                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
+                <Forward />
             </button>
             <a href="https://yuzhi.tech/docs/saka04/pcsx2" target="_blank" class="text-blue-600 cursor-pointer flex items-center">
                 遇到问题？
-                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
+                <Forward />
             </a>
         </div>
     </div>

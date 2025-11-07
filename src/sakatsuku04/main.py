@@ -43,7 +43,13 @@ class MainApp:
             self.window_size = (1080, 830)
         self.app_name = APP_NAME
         self.app_version = ""
-        self.data_raader: DataReader = None
+        self._data_reader: DataReader | None = None
+
+    @property
+    def data_reader(self) -> DataReader:
+        if self._data_reader is None:
+            raise RuntimeError("DataReader is None.")
+        return self._data_reader
 
     def get_project_info(self, pyproject_path: str | Path="pyproject.toml") -> tuple:
         import tomllib
@@ -171,6 +177,8 @@ class MainApp:
             self.get_bcoach,
             self.fetch_my_coaches,
             self.fetch_my_sponsors,
+            self.fetch_scout,
+            self.fetch_coach,
         )
 
     def get_version(self) -> str:
@@ -181,71 +189,77 @@ class MainApp:
             webview.OPEN_DIALOG, allow_multiple=False
         )
         if file_paths:
-            self.data_raader = SaveDataReader(file_paths[0])
-            return self.data_raader.games()
+            self._data_reader = SaveDataReader(file_paths[0])
+            return self._data_reader.games()
         return []
 
     def connect_pcsx2(self) -> bool:
-        self.data_raader = Pcsx2DataReader()
-        return self.data_raader.check_connect()
+        self._data_reader = Pcsx2DataReader()
+        return self._data_reader.check_connect()
 
     def reset(self):
-        if self.data_raader:
-            self.data_raader.reset()
+        if self._data_reader:
+            self._data_reader.reset()
         Reseter.reset()
 
     def select_game(self, game: str) -> int:
-        return self.data_raader.select_game(game)
+        return self.data_reader.select_game(game)
 
     def fetch_club_data(self) -> dict:
-        return self.data_raader.read_club().model_dump(by_alias=True)
+        return self.data_reader.read_club().model_dump(by_alias=True)
 
     def save_club_data(self, data: dict) -> dict:
         club_data = ClubDto.model_validate(data)
-        self.data_raader.save_club(club_data)
+        self.data_reader.save_club(club_data)
         return {"message": "success"}
 
     def fetch_my_team(self, team: int) -> list:
         if team == 0:
-            return [f.model_dump(by_alias=True) for f in self.data_raader.read_myteam()]
+            return [f.model_dump(by_alias=True) for f in self.data_reader.read_myteam()]
         if team == 1:
-            return [f.model_dump(by_alias=True) for f in self.data_raader.read_youth_team()]
-        return [f.model_dump(by_alias=True) for f in self.data_raader.read_national_team()]
+            return [f.model_dump(by_alias=True) for f in self.data_reader.read_youth_team()]
+        return [f.model_dump(by_alias=True) for f in self.data_reader.read_national_team()]
 
     def fetch_team_player(self, team_index: int) -> list:
-        return [f.model_dump(by_alias=True) for f in self.data_raader.read_other_team_players(team_index)]
+        return [f.model_dump(by_alias=True) for f in self.data_reader.read_other_team_players(team_index)]
 
     def fetch_team_friendly(self, team_index: int) -> int:
-        return self.data_raader.read_other_team_friendly(team_index)
+        return self.data_reader.read_other_team_friendly(team_index)
 
     def fetch_my_player(self, id: int, team: int) -> dict:
-        return self.data_raader.read_myplayer(id, team).model_dump(by_alias=True)
+        return self.data_reader.read_myplayer(id, team).model_dump(by_alias=True)
 
     def fetch_my_scouts(self, type: int) -> list:
-        return [f.model_dump(by_alias=True) for f in self.data_raader.read_scouts(type)]
+        return [f.model_dump(by_alias=True) for f in self.data_reader.read_scouts(type)]
+
+    def fetch_scout(self, id: int, type: int) -> dict:
+        return self.data_reader.read_scout(id, type).model_dump(by_alias=True)
 
     def fetch_my_coaches(self, type: int) -> list:
-        return [f.model_dump(by_alias=True) for f in self.data_raader.read_coaches(type)]
+        return [f.model_dump(by_alias=True) for f in self.data_reader.read_coaches(type)]
+
+    def fetch_coach(self, id: int, type: int) -> dict:
+        return self.data_reader.read_coach(id, type).model_dump(by_alias=True)
 
     def fetch_my_town(self) -> dict:
-        return self.data_raader.read_town().model_dump(by_alias=True)
+        return self.data_reader.read_town().model_dump(by_alias=True)
 
     def fetch_my_album_players(self) -> list:
-        return self.data_raader.read_my_album_players()
+        return self.data_reader.read_my_album_players()
 
     def fetch_abroads(self, type: int) -> list:
-        return [f.model_dump(by_alias=True) for f in self.data_raader.read_my_abroads(type)]
+        return [f.model_dump(by_alias=True) for f in self.data_reader.read_my_abroads(type)]
 
     def fetch_one_abroad(self, index: int, type: int) -> dict:
-        return self.data_raader.read_one_abroad(index, type).model_dump(by_alias=True)
+        return self.data_reader.read_one_abroad(index, type).model_dump(by_alias=True)
 
     def save_my_player(self, data: dict, team: int) -> dict:
         player_data = MyPlayerDto.model_validate(data)
-        self.data_raader.save_player(player_data, team)
+        self.data_reader.save_player(player_data, team)
         return {"message": "success"}
 
     def save_team_friendly(self, team_index: int, friendly: int) -> dict:
-        self.data_raader.save_other_team_friendly(team_index, friendly)
+        self.data_reader.save_other_team_friendly(team_index, friendly)
         return {"message": "success"}
 
     def search_player(self, data: dict) -> list:
@@ -258,11 +272,11 @@ class MainApp:
             search_data.cooperation -= 1
         if search_data.tone:
             search_data.tone -= 1
-        return [f.model_dump(by_alias=True) for f in self.data_raader.search_player(search_data)]
+        return [f.model_dump(by_alias=True) for f in self.data_reader.search_player(search_data)]
 
     def save_my_town(self, data: dict) -> dict:
         town_data = TownDto.model_validate(data)
-        self.data_raader.save_town(town_data)
+        self.data_reader.save_town(town_data)
         return {"message": "success"}
 
     def fetch_bplayers(self, page: int, search_params: dict | None = None) -> dict:
@@ -472,7 +486,7 @@ class MainApp:
         return {}
 
     def fetch_my_sponsors(self, type: int) -> list:
-        return [f.model_dump(by_alias=True) for f in self.data_raader.read_sponsors(type)]
+        return [f.model_dump(by_alias=True) for f in self.data_reader.read_sponsors(type)]
 
 
 def main():

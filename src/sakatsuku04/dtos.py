@@ -238,11 +238,15 @@ class OtherTeamPlayerDto(BaseDto):
     grow_type_tec: int
     grow_type_sys: int
     team_index: int | None = None
+    my_album_players: list[int] | None = None
 
     @computed_field
     @property
-    def is_album(self) -> bool:
-        return is_album_player(self.id)
+    def album_type(self) -> int:
+        if not is_album_player(self.id) or not self.my_album_players:
+            return 0
+        convert_ids = [constants.album_players[f] for f in self.my_album_players]
+        return 1 if self.id in convert_ids else 2
 
     @computed_field
     @property
@@ -294,28 +298,67 @@ class TownDto(BaseDto):
 class ScoutDto(BaseDto):
     id: int
     name: str
+    age: int
+    offer_years: int
+    rank: int
+    contract_years: int| None = None
+    salary_high: int| None = None
+    salary_low: int| None = None
     abilities: list[int] | None = None
     exclusive_players: list[SearchDto] | None = None
     simi_exclusive_players: list[SearchDto] | None = None
+
+    @computed_field
+    @property
+    def has_exclusive(self) -> bool:
+        excls = constants.scout_excl_tbl.get(self.id, [])
+        simi_excls = constants.scout_simi_excl_tbl.get(self.id, [])
+        return len(excls) > 0 or len(simi_excls) > 0
 
 
 class CoachDto(BaseDto):
     id: int
     name: str
-    age: int | None = None
-    offer_years: int | None = None
+    age: int
+    offer_years: int
+    rank: int
+    contract_years: int| None = None
+    salary_high: int| None = None
+    salary_low: int| None = None
+    abilities: list[int] | None = None
+    enabled_abr_ids: list[int] = []
+    enabled_camp_ids: list[int] = []
+    sp_prac1: int | None = None
+    sp_prac2: int | None = None
+    coach_type: int | None = None
 
     @computed_field
     @property
-    def bring_abroads(self) -> list[int]:
+    def bring_abroads(self) -> list["AbrStatusDto"]:
+        if self.id < 20000 or (len(self.enabled_abr_ids) == 0 and len(self.enabled_camp_ids) == 0):
+            return []
         abr_dict = abroad_coach_dict()
         camp_dict = camp_coach_dict()
+        id = self.id - 20000
         abroad_ids = []
-        if self.id in abr_dict:
-            abroad_ids.append(abr_dict[self.id - 20000])
-        if self.id in camp_dict:
-            abroad_ids.append(camp_dict[self.id - 20000] + 1000)
+        if id in abr_dict:
+            abroad_ids.append(AbrStatusDto(id=abr_dict[id], type=0, is_enabled=abr_dict[id] in self.enabled_abr_ids))
+        if id in camp_dict:
+            abroad_ids.append(AbrStatusDto(id=camp_dict[id], type=1, is_enabled=camp_dict[id] in self.enabled_camp_ids))
         return abroad_ids
+
+    @computed_field
+    @property
+    def is_bring_abroad(self) -> bool:
+        abr_dict = abroad_coach_dict()
+        camp_dict = camp_coach_dict()
+        id = self.id - 20000
+        return id in abr_dict or id in camp_dict
+
+    @computed_field
+    @property
+    def sp_skill(self) -> int | None:
+        return constants.mcoach_skill.get(self.id - 20000)
 
 
 class AbroadCond(BaseDto):
@@ -602,11 +645,10 @@ class BCoachDto(BaseDto):
     @computed_field
     @property
     def eval(self) -> str:
-        plus = 0
         rank = get_rank_to_number(self.rank)
-        if constants.mcoach_skill.get(self.id - 20000) is not None:
-            plus = constants.mcoach_skill.get(self.id - 20000)
-            return Coach.mcoach_comments_list()[rank * 10 + plus]
+        skill = constants.mcoach_skill.get(self.id - 20000)
+        if skill is not None:
+            return Coach.mcoach_comments_list()[rank * 10 + skill]
         eval_tuple = mcoach_eval(self.abilities)
         index = constants.mcoach_eval_rank_abil_mapping.get(rank)[eval_tuple[1]][eval_tuple[0]]
         comment = Coach.mcoach_comments_list()[index - 700]
@@ -623,10 +665,16 @@ class BCoachDto(BaseDto):
         return constants.coach_mapping[self.coach_type]
 
 
-class SponsorAbrDto(BaseDto):
+class AbrStatusDto(BaseDto):
     id: int
     type: int
     is_enabled: bool = False
+
+
+class SponsorCombo(BaseDto):
+    parent_id: int
+    subsidiary_ids: list[int]
+    type: int
 
 class SponsorDto(BaseDto):
     id: int
@@ -639,15 +687,24 @@ class SponsorDto(BaseDto):
 
     @computed_field
     @property
-    def bring_abroads(self) -> list[SponsorAbrDto]:
+    def bring_abroads(self) -> list[AbrStatusDto]:
         abr_dict = abroad_sponsor_dict()
         camp_dict = camp_sponsor_dict()
         abroad_ids = []
         if self.id in abr_dict:
-            abroad_ids.append(SponsorAbrDto(id=abr_dict[self.id], type=0, is_enabled=abr_dict[self.id] in self.enabled_abr_ids))
+            abroad_ids.append(AbrStatusDto(id=abr_dict[self.id], type=0, is_enabled=abr_dict[self.id] in self.enabled_abr_ids))
         if self.id in camp_dict:
-            abroad_ids.append(SponsorAbrDto(id=camp_dict[self.id], type=1, is_enabled=camp_dict[self.id] in self.enabled_camp_ids))
+            abroad_ids.append(AbrStatusDto(id=camp_dict[self.id], type=1, is_enabled=camp_dict[self.id] in self.enabled_camp_ids))
         return abroad_ids
+
+    @computed_field
+    @property
+    def combo(self) -> list[SponsorCombo]:
+        result = []
+        for k, v in constants.sponsor_combo.items():
+            if self.id == k or self.id in v[1]:
+                result.append(SponsorCombo(parent_id=k, subsidiary_ids=v[1], type=v[0]))
+        return result
 
 
 _abroad_sponsor_dict: dict | None = None

@@ -1,5 +1,6 @@
 <script lang="ts">
     import { setModeState } from "$lib/globalState.svelte";
+    import Forward from "$lib/icons/Forward.svelte";
 
     async function gotoPlayerDB() {
         setModeState("bPlayerView");
@@ -28,25 +29,19 @@
         <div class="flex items-center space-x-2 text-sm">
             <button onclick={ gotoPlayerDB } class="text-blue-600 cursor-pointer flex items-center">
                 球员数据库
-                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
+                <Forward />
             </button>
         </div>
         <div class="flex items-center space-x-2 text-sm">
             <button onclick={ gotoCoachDB } class="text-blue-600 cursor-pointer flex items-center">
                 教练数据库
-                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
+                <Forward />
             </button>
         </div>
         <div class="flex items-center space-x-2 text-sm">
             <button onclick={ gotoScoutDB } class="text-blue-600 cursor-pointer flex items-center">
                 球探数据库
-                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
+                <Forward />
             </button>
         </div>
     </div>

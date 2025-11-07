@@ -204,9 +204,9 @@ class OtherTeam:
     index: int
     id: IntByteField
     friendly: IntByteField
-    unknown1: IntByteField
-    unknown2: IntByteField
-    players: list[OtherPlayer]
+    unknown1: IntByteField | None = None
+    unknown2: IntByteField | None = None
+    players: list[OtherPlayer] | None = None
 
 
 class Town:
@@ -239,45 +239,78 @@ class Town:
 @dataclass
 class MyScout:
     id: IntByteField
-    age: IntByteField | None = None
+    age: IntByteField
+    offer_years: IntByteField
     saved_name: StrByteField | None = None
+    rank: IntByteField | None = None
     abilities: list[IntByteField] | None = None
-    offer_years: IntByteField | None = None
+    contract_years: IntByteField | None = None
+    salary: IntByteField | None = None
     area1: IntByteField | None = None
     area2: IntByteField | None = None
 
     def to_dto(self) -> ScoutDto:
+        abilities = [a.value for a in self.abilities] if self.abilities else []
         return ScoutDto(
             id=self.id.value,
             name=self.saved_name.value if self.saved_name else "",
+            age=self.age.value,
+            contract_years=self.contract_years.value if self.contract_years else 0,
+            offer_years=self.offer_years.value,
+            salary_high=self.salary.value * 100 // 10000 if self.salary else 0,
+            salary_low=self.salary.value * 100 % 10000 if self.salary else 0,
+            rank=self.rank.value if self.rank else -1,
+            abilities=abilities,
         )
 
     def to_dto_with_name(self, id: int) -> ScoutDto:
         return ScoutDto(
             id=self.id.value,
             name=Scout.name(id),
+            age=self.age.value,
+            offer_years=self.offer_years.value,
+            rank=-1,
+            abilities=[],
         )
 
 
 @dataclass
 class MyCoach:
     id: IntByteField
-    age: IntByteField | None = None
+    age: IntByteField
+    offer_years: IntByteField
     saved_name: StrByteField | None = None
-    offer_years: IntByteField | None = None
+    rank: IntByteField | None = None
+    abilities: list[IntByteField] | None = None
+    contract_years: IntByteField | None = None
+    salary: IntByteField | None = None
+    sp_prac1: IntByteField | None = None
+    sp_prac2: IntByteField | None = None
+    coach_type: IntByteField | None = None
 
     def to_dto(self) -> CoachDto:
+        abilities = [a.value for a in self.abilities] if self.abilities else []
         return CoachDto(
             id=self.id.value,
             name=self.saved_name.value if self.saved_name else "",
-            age=self.age.value if self.age else None,
-            offer_years=self.offer_years.value if self.offer_years else None,
+            age=self.age.value,
+            contract_years=self.contract_years.value if self.contract_years else 0,
+            offer_years=self.offer_years.value,
+            salary_high=self.salary.value * 100 // 10000 if self.salary else 0,
+            salary_low=self.salary.value * 100 % 10000 if self.salary else 0,
+            rank=self.rank.value if self.rank else -1,
+            abilities=abilities,
+            sp_prac1=self.sp_prac1.value if self.sp_prac1 else None,
+            sp_prac2=self.sp_prac2.value if self.sp_prac2 else None,
+            coach_type=self.coach_type.value if self.coach_type else None,
         )
 
     def to_dto_with_name(self, id: int) -> CoachDto:
         return CoachDto(
             id=self.id.value,
             name=Coach.name(id),
-            age=self.age.value if self.age else None,
-            offer_years=self.offer_years.value if self.offer_years else None,
+            age=self.age.value,
+            offer_years=self.offer_years.value,
+            rank=-1,
+            abilities=[],
         )

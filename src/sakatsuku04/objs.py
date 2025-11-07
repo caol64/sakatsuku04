@@ -7,7 +7,7 @@ from .utils import get_resource_path, reset_char_dict
 
 class Player:
     _player_dict: dict[int, list[str]] | None = None
-    _player_comments_dict: dict[int, str] | None = None
+    _player_comments_dict: dict[str, str] | None = None
     _player_eval_list: list[str] | None = None
 
     def __init__(self, id: int):
@@ -29,13 +29,13 @@ class Player:
         return cls._player_dict
 
     @classmethod
-    def player_comments_dict(cls) -> dict[int, str]:
+    def player_comments_dict(cls) -> dict[str, str]:
         if cls._player_comments_dict is None:
-            file = (
-                ("sp_comments_zh18.json" if CnVer.is_i8 else "sp_comments_zh.json")
-                if CnVer.is_cn
-                else "sp_comments_jp.json"
-            )
+            file = "sp_comments_jp.json"
+            if CnVer.is_cn and CnVer.is_i8:
+                file = "sp_comments_zh18.json"
+            elif CnVer.is_cn and not CnVer.is_i8:
+                file = "sp_comments_zh.json"
             with open(get_resource_path(file), encoding="utf8", newline="") as f:
                 cls._player_comments_dict = json.load(f)
         assert cls._player_comments_dict is not None
@@ -44,7 +44,10 @@ class Player:
     @classmethod
     def player_eval_list(cls) -> list[str]:
         if cls._player_eval_list is None:
-            with open(get_resource_path("player_eval_zh.json"), encoding="utf8", newline="") as f:
+            file = "player_eval_jp.json"
+            if CnVer.is_cn:
+                file = "player_eval_zh.json"
+            with open(get_resource_path(file), encoding="utf8", newline="") as f:
                 cls._player_eval_list = json.load(f)
         assert cls._player_eval_list is not None
         return cls._player_eval_list
@@ -97,7 +100,7 @@ class Player:
 
     @property
     def sp_comment(self) -> str | None:
-        return Player.player_comments_dict().get(self.id)
+        return Player.player_comments_dict().get(str(self.id))
 
 
 class Scout:
@@ -132,7 +135,8 @@ class Scout:
     @classmethod
     def scout_comments_list(cls) -> list[str]:
         if cls._scout_comments_list is None:
-            with open(get_resource_path("scout_eval_zh.json"), encoding="utf8", newline="") as f:
+            file = "scout_eval_zh.json" if CnVer.is_cn else "scout_eval_jp.json"
+            with open(get_resource_path(file), encoding="utf8", newline="") as f:
                 cls._scout_comments_list = json.load(f)
         assert cls._scout_comments_list is not None
         return cls._scout_comments_list
@@ -170,7 +174,8 @@ class Coach:
     @classmethod
     def mcoach_comments_list(cls) -> list[str]:
         if cls._mcoach_comments_list is None:
-            with open(get_resource_path("mcoach_eval_zh.json"), encoding="utf8", newline="") as f:
+            file = "mcoach_eval_zh.json" if CnVer.is_cn else "mcoach_eval_jp.json"
+            with open(get_resource_path(file), encoding="utf8", newline="") as f:
                 cls._mcoach_comments_list = json.load(f)
         assert cls._mcoach_comments_list is not None
         return cls._mcoach_comments_list

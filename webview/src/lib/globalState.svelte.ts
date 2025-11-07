@@ -79,8 +79,8 @@ export const allTabs = [
     "Search",
     "Scouts",
     "Coaches",
-    "Town",
     "Sponsors",
+    "Town",
     "Album",
     "Abroad"
 ] as const;

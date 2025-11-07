@@ -1,15 +1,24 @@
+import { gameVersion } from "$lib/globalState.svelte";
+
 import region from "$locales/region_zh.json";
 import foot from "$locales/foot_zh.json";
-import style from "$locales/style_zh.json";
-import tone from "$locales/tone_zh.json";
 import cooperation from "$locales/cooperation_zh.json";
 import grow from "$locales/grow_zh.json";
 import position from "$locales/position_zh.json";
 import rank from "$locales/rank_zh.json";
 import ability from "$locales/ability_zh.json";
-import growEval from "$locales/grow_eval_zh.json";
 import teamZh from "$locales/teams_zh.json";
 import teamJp from "$locales/teams_jp.json";
+import sponsorsZh from "$locales/sponsor_zh.json";
+import sponsorsJp from "$locales/sponsor_jp.json";
+import styleZh from "$locales/style_zh.json";
+import styleJp from "$locales/style_jp.json";
+import growEvalZh from "$locales/grow_eval_zh.json";
+import growEvalJp from "$locales/grow_eval_jp.json";
+import abilEvalZh from "$locales/abil_eval_zh.json";
+import abilEvalJp from "$locales/abil_eval_jp.json";
+import toneZh from "$locales/tone_zh.json";
+import toneJp from "$locales/tone_jp.json";
 
 export function toHex(num: number | undefined, range: number = 2): string {
     return num !== undefined ? num.toString(16).padStart(range, '0').toUpperCase() : "";
@@ -29,17 +38,17 @@ function lookupDirect(dict: Record<string, string>, num: number | undefined): st
 
 export const getRegion = (num: number | undefined) => lookup(region, num);
 export const getFoot = (num: number | undefined) => lookup(foot, num);
-export const getStyle = (num: number | undefined) => lookup(style, num);
-export const getToneType = (num: number | undefined) => lookup(tone, num);
+export const getStyle = (num: number | undefined) => lookup(getPlayStyleData(), num);
+export const getToneType = (num: number | undefined) => lookup(getToneTypelData(), num);
 export const getCooperationType = (num: number | undefined) => lookup(cooperation, num);
 export const getGrowType = (num: number | undefined) => lookup(grow, num);
 export const getPosition = (num: number | undefined) => num !== undefined ? position[num] : "";
 export const getRank = (num: number | undefined) => lookup(rank, num);
-export const getGrowEval = (num: number | undefined) => lookupDirect(growEval, num);
+export const getGrowEval = (num: number | undefined) => lookupDirect(getGrowEvalData(), num);
 
 export const sortedRegion = Object.entries(region).sort((a, b) => a[0].localeCompare(b[0]));
-export const sortedStyle = Object.entries(style).sort((a, b) => a[0].localeCompare(b[0]));
-export const sortedToneType = Object.entries(tone).sort((a, b) => a[0].localeCompare(b[0]));
+export const sortedStyle = Object.entries(getPlayStyleData()).sort((a, b) => a[0].localeCompare(b[0]));
+export const sortedToneType = Object.entries(getToneTypelData()).sort((a, b) => a[0].localeCompare(b[0]));
 export const sortedCooperationType = Object.entries(cooperation).sort((a, b) => a[0].localeCompare(b[0]));
 export const sortedGrowType = Object.entries(grow).sort((a, b) => a[0].localeCompare(b[0]));
 export const sortedPosition = position;
@@ -74,6 +83,26 @@ export function debounce(
     };
 }
 
-export function getTeamData(gameVersion: string): string[] {
+export function getTeamData(): string[] {
     return gameVersion === "zh" ? teamZh : teamJp;
+}
+
+export function getSponsorData(): string[] {
+    return gameVersion === "zh" ? sponsorsZh : sponsorsJp;
+}
+
+export function getPlayStyleData(): Record<string, string> {
+    return gameVersion === "zh" ? styleZh : styleJp;
+}
+
+export function getGrowEvalData(): Record<string, string> {
+    return gameVersion === "zh" ? growEvalZh : growEvalJp;
+}
+
+export function getAbilEvalData(): string[] {
+    return gameVersion === "zh" ? abilEvalZh : abilEvalJp;
+}
+
+export function getToneTypelData(): Record<string, string> {
+    return gameVersion === "zh" ? toneZh : toneJp;
 }

@@ -1,17 +1,14 @@
 <script lang="ts">
-    import Football from "$lib/icons/Football.svelte";
     import type { TeamPlayer } from "$lib/models";
-    import { getPlayerColor, sortedPosition, sortedRegion, getCooperationType, getGrowType, getPosition, getRank, getToneType, fromHex, sortedRank, sortedCooperationType, sortedToneType, sortedStyle, getStyle, getTeamData } from "$lib/utils";
+    import { getPlayerColor, sortedPosition, sortedRegion, getCooperationType, getGrowType, getPosition, getRank, getToneType, fromHex, sortedRank, sortedCooperationType, sortedToneType, sortedStyle, getStyle } from "$lib/utils";
     import VStack from "./Stack/VStack.svelte";
     import teamsData from "$locales/teams_zh.json";
     import DropDown from "$lib/icons/DropDown.svelte";
-    import { setIsLoading, getGameYear, gameVersion } from "$lib/globalState.svelte";
+    import { setIsLoading, getGameYear } from "$lib/globalState.svelte";
     import HStack from "./Stack/HStack.svelte";
-    import Tooltip from "./Tooltip.svelte";
-    import Avatar from "$lib/icons/Avatar.svelte";
     import BPlayerDetails from "./BPlayerDetails.svelte";
     import Close from "$lib/icons/Close.svelte";
-    import Airplane from "$lib/icons/Airplane.svelte";
+    import PlayerIcon from "./PlayerIcon.svelte";
 
     let keyword = $state("");
     let teamPlayers: TeamPlayer[] = $state([]);
@@ -36,7 +33,7 @@
     let placeholderStyle = "不指定";
     let placeholderScoutAction = "不指定";
 
-    const scoutActions = ["球探搜索", "自由球员", "优先新秀", "选秀大会", "青训选拔"];
+    const scoutActions = ["球探搜索", "自由球员", "优先新人", "新人轮选", "青训选拔"];
 
     let showDrawer = $state(false);
     let playerId = $state(0);
@@ -142,7 +139,7 @@
         <table class="min-w-full text-sm text-left text-gray-900 dark:text-white">
             <thead class="bg-gray-100 dark:bg-gray-800 text-xs uppercase">
                 <tr>
-                    <th class="px-4 py-3 w-44">球员</th>
+                    <th class="px-4 py-3 w-48">球员</th>
                     <th class="px-4 py-3">年龄</th>
                     <th class="px-4 py-3">位置</th>
                     <th class="px-4 py-3">等级</th>
@@ -158,39 +155,12 @@
             <tbody>
                 {#each teamPlayers as item}
                     <tr class="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600">
-                        <th scope="row" class="px-4 font-medium text-gray-900 whitespace-nowrap dark:text-white" style={`background-image: linear-gradient(to right, transparent 66%, ${getPlayerColor(item.pos)} 100%)`}>
+                        <th scope="row" class="px-2 font-medium text-gray-900 whitespace-nowrap dark:text-white" style={`background-image: linear-gradient(to right, transparent 66%, ${getPlayerColor(item.pos)} 100%)`}>
                             <span class="flex items-center justify-between w-full">
-                                <HStack className="items-center">
-                                    <button onclick={() => { showBPlayer(item.id) }} class="cursor-pointer select-text">
-                                        {item.name}
-                                    </button>
-                                    {#if item.scouts && item.scouts.length > 0}
-                                        {@const tooltipText = `${item.scouts.join("<br>")}`}
-                                        <div class="mx-2">
-                                            <Tooltip text={tooltipText} width="100px">
-                                                <Avatar />
-                                            </Tooltip>
-                                        </div>
-                                    {/if}
-                                    {#if item.bringAbroads && item.bringAbroads.length > 0}
-                                        {@const tooltipText = item.bringAbroads
-                                            .map(i => {
-                                                const isOver = i > 1000;
-                                                const index = isOver ? i - 1000 : i;
-                                                const name = getTeamData(gameVersion)[index - 255];
-                                                return isOver ? `${name}(C)` : name;
-                                            })
-                                            .join("<br>")}
-                                        <div class="mx-2">
-                                            <Tooltip text={tooltipText} width="100px">
-                                                <Airplane />
-                                            </Tooltip>
-                                        </div>
-                                    {/if}
-                                </HStack>
-                                {#if item.isAlbum}
-                                    <div><Football /></div>
-                                {/if}
+                                <button onclick={() => { showBPlayer(item.id) }} class="cursor-pointer select-text">
+                                    {item.name}
+                                </button>
+                                <PlayerIcon teamPlayer={item} />
                             </span>
                         </th>
                         <td class="px-4 py-2">{item.age}</td>

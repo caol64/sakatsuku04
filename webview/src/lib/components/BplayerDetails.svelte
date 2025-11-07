@@ -6,9 +6,8 @@
     import StatusBars from "./StatusBars.svelte";
     import VStack from "./Stack/VStack.svelte";
     import Tooltip from "./Tooltip.svelte";
-    import { sortedPosition, getCooperationType, getGrowType, getRank, getRegion, getStyle, getToneType, getFoot, sortedAbilities, getGrowEval, toHex } from "$lib/utils";
+    import { sortedPosition, getCooperationType, getGrowType, getRank, getRegion, getStyle, getToneType, getFoot, sortedAbilities, getGrowEval, toHex, getAbilEvalData } from "$lib/utils";
     import AbilityBar from "./AbilityBar.svelte";
-    import abilEval from "$locales/abil_eval_zh.json";
     import Skull from "$lib/icons/Skull.svelte";
     import Waveform from "./Waveform.svelte";
     import PositionGrid from "./PositionGrid.svelte";
@@ -57,13 +56,13 @@
 
 <VStack className="w-1/5 mx-1">
     <div class="border border-gray-200 dark:border-gray-600 rounded-md p-4 space-y-2 bg-gray-50 dark:bg-gray-700">
-        <p class="flex items-center justify-between select-text">
+        <p class="flex items-center justify-between">
             姓名
-            <span class="flex-1 pl-8 text-sm">{bPlayer?.name}</span>
+            <span class="flex-1 pl-8 text-sm select-text">{bPlayer?.name}</span>
         </p>
         <p>
             ID
-            <span class="pl-8 text-sm">{toHex(bPlayer?.id, 4)}</span>
+            <span class="pl-8 text-sm select-text">{toHex(bPlayer?.id, 4)}</span>
         </p>
         <div class="form">
             <div class="label">位置</div>
@@ -101,7 +100,7 @@
             <span class="pl-8 text-sm">{getStyle(bPlayer?.style)}</span>
         </p>
         <p>
-            球员等级
+            等级
             <span class="pl-8 text-sm">{getRank(bPlayer?.rank)}</span>
         </p>
         <p>
@@ -153,7 +152,7 @@
 </VStack>
 <VStack className="w-3/10 mx-1">
     {#if bPlayer?.abilEval}
-        <Tooltip text={abilEval[bPlayer.abilEval]} width="220px">
+        <Tooltip text={getAbilEvalData()[bPlayer.abilEval]} width="220px">
             <RadarChart abilities={stats} />
         </Tooltip>
     {/if}

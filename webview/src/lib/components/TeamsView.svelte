@@ -4,14 +4,11 @@
     import VStack from "$lib/components/Stack/VStack.svelte";
     import { onMount } from "svelte";
     import teamGroupsData from "$locales/team_groups_zh.json";
-    import { gameVersion, getGameYear, getRefreshFlag, getSelectedTab, setRefreshFlag } from "$lib/globalState.svelte";
-    import Football from "$lib/icons/Football.svelte";
+    import { getGameYear, getRefreshFlag, getSelectedTab, setRefreshFlag } from "$lib/globalState.svelte";
     import { getCooperationType, getGrowType, getPlayerColor, getPosition, getRank, getStyle, getTeamData, getToneType } from "$lib/utils";
-    import Tooltip from "./Tooltip.svelte";
-    import Avatar from "$lib/icons/Avatar.svelte";
     import BPlayerDetails from "./BPlayerDetails.svelte";
     import Close from "$lib/icons/Close.svelte";
-    import Airplane from "$lib/icons/Airplane.svelte";
+    import PlayerIcon from "./PlayerIcon.svelte";
 
 
     let treeData: TeamsWithRegion[] = $state([]);
@@ -56,12 +53,12 @@
         for (let i = 0; i < teamGroupsData.length; i++) {
             const item = teamGroupsData[i];
             const regionName = item[0] as string;
-            const max = i + 1 < teamGroupsData.length ? teamGroupsData[i + 1][1] as number : getTeamData(gameVersion).length;
+            const max = i + 1 < teamGroupsData.length ? teamGroupsData[i + 1][1] as number : getTeamData().length;
             const teams: Team[] = [];
             for (let i = index; i < max; i++) {
                 teams.push({
                     index,
-                    name: getTeamData(gameVersion)[index]
+                    name: getTeamData()[index]
                 });
                 index++;
             }
@@ -158,7 +155,7 @@
                     <th>年龄</th>
                     <th>位置</th>
                     <th>等级</th>
-                    <th class="w-30">风格</th>
+                    <th class="w-36">风格</th>
                     <th>连携</th>
                     <th class="w-24">性格</th>
                     <th class="w-16">身体</th>
@@ -169,39 +166,12 @@
             <tbody>
                 {#each teamPlayers as item}
                     <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
-                        <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white" style={`background-image: linear-gradient(to right, transparent 66%, ${getPlayerColor(item.pos)} 100%)`}>
+                        <th scope="row" class="px-2 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white" style={`background-image: linear-gradient(to right, transparent 66%, ${getPlayerColor(item.pos)} 100%)`}>
                             <span class="flex items-center justify-between w-full">
-                                <HStack className="items-center">
-                                    <button onclick={() => { showBPlayer(item.id) }} class="cursor-pointer select-text">
-                                        {item.name}
-                                    </button>
-                                    {#if item.scouts && item.scouts.length > 0}
-                                        {@const tooltipText = `${item.scouts.join("<br>")}`}
-                                        <div class="mx-2">
-                                            <Tooltip text={tooltipText} width="100px">
-                                                <Avatar />
-                                            </Tooltip>
-                                        </div>
-                                    {/if}
-                                    {#if item.bringAbroads && item.bringAbroads.length > 0}
-                                        {@const tooltipText = item.bringAbroads
-                                            .map(i => {
-                                                const isOver = i > 1000;
-                                                const index = isOver ? i - 1000 : i;
-                                                const name = getTeamData(gameVersion)[index - 255];
-                                                return isOver ? `${name}(C)` : name;
-                                            })
-                                            .join("<br>")}
-                                        <div class="mx-2">
-                                            <Tooltip text={tooltipText} width="100px">
-                                                <Airplane />
-                                            </Tooltip>
-                                        </div>
-                                    {/if}
-                                </HStack>
-                                {#if item.isAlbum}
-                                    <div class="mx-4"><Football /></div>
-                                {/if}
+                                <button onclick={() => { showBPlayer(item.id) }} class="cursor-pointer select-text">
+                                    {item.name}
+                                </button>
+                                <PlayerIcon teamPlayer={item} />
                             </span>
                         </th>
                         <td>{item.age}</td>
@@ -231,7 +201,6 @@
             <BPlayerDetails selectedPlayer={playerId} selectedYear={getGameYear()} age={age} />
         </HStack>
     </div>
-
 </HStack>
 
 <style lang="postcss">

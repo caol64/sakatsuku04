@@ -3,19 +3,27 @@
     import { onMount } from "svelte";
     import HStack from "./Stack/HStack.svelte";
     import VStack from "./Stack/VStack.svelte";
-    import teamsData from "$locales/teams_zh.json";
     import { getRefreshFlag, getSelectedTab, setIsLoading, setRefreshFlag } from "$lib/globalState.svelte";
+    import ability from "$locales/scout_abilities_zh.json";
     import Close from "$lib/icons/Close.svelte";
     import BScoutDetails from "./BScoutDetails.svelte";
+    import ScoutsViewDetails from "./ScoutsViewDetails.svelte";
+    import Tooltip from "./Tooltip.svelte";
+    import AbilityBar from "./AbilityBar.svelte";
+    import Avatar from "$lib/icons/Avatar.svelte";
 
     let myScouts: Scout[] = $state([]);
     let selectedScoutId = $state(0);
     let selectedType = $state(0);
-    let selectedScout: Scout | null = $derived.by(() => {
-        if (!myScouts || myScouts.length === 0) return null;
-        return myScouts.find(a => a.id === selectedScoutId) ?? null;
-    });
+    let selectedScout: Scout = $state({id: 0, name: "", abilities: [], hasExclusive: false});
     let showDrawer = $state(false);
+
+    let abilityPairs = $derived(
+        ability.map((label, i) => ({
+            label,
+            value: [0, 0, selectedScout.abilities[i]]
+        }))
+    );
 
     async function fetchMyScouts() {
         try {
@@ -24,7 +32,21 @@
                 myScouts = await window.pywebview.api.fetch_my_scouts(selectedType);
                 if (myScouts && myScouts.length > 0) {
                     selectedScoutId = myScouts[0].id;
+                    await fetchMyScout(selectedScoutId);
                 }
+            } else {
+                alert('API 未加载');
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+    async function fetchMyScout(id: number) {
+        try {
+            setIsLoading(true);
+            if (window.pywebview?.api?.fetch_scout) {
+                selectedScout = await window.pywebview.api.fetch_scout(id, selectedType);
             } else {
                 alert('API 未加载');
             }
@@ -47,6 +69,7 @@
     async function onScoutClick(id: number) {
         if (selectedScoutId !== id) {
             selectedScoutId = id;
+            await fetchMyScout(selectedScoutId);
         }
     }
 
@@ -62,10 +85,6 @@
 
     function toggleDrawer() {
         showDrawer = !showDrawer;
-    }
-
-    function showBScout() {
-        showDrawer = true;
     }
 </script>
 
@@ -84,6 +103,11 @@
                     >
                         <span class="flex items-center justify-between w-full">
                             {item.name}
+                            <div class="mr-2 w-3.5 h-3.5 flex items-center justify-center">
+                                {#if item.hasExclusive}
+                                    <Avatar />
+                                {/if}
+                            </div>
                         </span>
                     </button>
                 {/each}
@@ -94,43 +118,28 @@
             </div>
         {/if}
     </VStack>
-    <VStack className="grow ml-8 space-y-2">
-        <div class="h-fit bg-gray-50 dark:bg-gray-700 rounded-2xl shadow p-6 flex flex-col space-y-4 text-sm">
-            {#if selectedScout?.id && selectedScout.id >= 20000}
-                <button onclick={showBScout} class="cursor-pointer select-text">
-                    查看详情
-                </button>
-            {/if}
-            {#if selectedScout?.exclusivePlayers?.length}
-                <p class="font-medium">专有球员</p>
-                <div class="ml-8 space-y-2">
-                    {#each selectedScout.exclusivePlayers as item}
-                        <HStack>
-                            <p class="w-[100px]">{item.name}</p>
-                            {#if item.teamId != null}
-                                <p class="ml-4">{teamsData[item.teamId]}</p>
-                                <p class="ml-4">{item.age}岁</p>
-                            {/if}
-                        </HStack>
-                    {/each}
-                </div>
-            {/if}
-            {#if selectedScout?.simiExclusivePlayers?.length}
-                <p class="font-medium">半专有球员</p>
-                <div class="ml-8 space-y-2">
-                    {#each selectedScout.simiExclusivePlayers as item}
-                        <HStack>
-                            <p class="w-[100px]">{item.name}</p>
-                            {#if item.teamId != null}
-                                <p class="ml-4">{teamsData[item.teamId]}</p>
-                                <p class="ml-4">{item.age}岁</p>
-                            {/if}
-                        </HStack>
-                    {/each}
-                </div>
-            {/if}
-        </div>
-    </VStack>
+    {#if selectedType === 0}
+        <VStack className="w-1/2 mx-1">
+            <ScoutsViewDetails selectedScout={selectedScout} bind:showDrawer={showDrawer} />
+        </VStack>
+        <VStack className="grow h-full overflow-auto ml-1 pl-1 pb-12">
+            {#each abilityPairs as { label, value }}
+                <HStack className="items-center">
+                    <span class="w-24 text-sm">{label}</span>
+                    {#if value}
+                        {@const tooltipText = `${value[2]}`}
+                        <Tooltip text={tooltipText} className="w-full">
+                            <AbilityBar abilities={value} is100={true} />
+                        </Tooltip>
+                    {/if}
+                </HStack>
+            {/each}
+        </VStack>
+    {:else}
+        <VStack className="grow ml-8 space-y-2">
+            <ScoutsViewDetails selectedScout={selectedScout} bind:showDrawer={showDrawer} />
+        </VStack>
+    {/if}
     {#if selectedScout?.id && selectedScout.id >= 20000}
         <div class="fixed top-0 left-0 h-full w-full bg-white dark:bg-gray-800 shadow-lg transition-transform duration-300 z-50"
             class:translate-x-0={showDrawer}

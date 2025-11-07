@@ -47,7 +47,6 @@
     async function fetch() {
         if (window.pywebview?.api?.fetch_my_album_players) {
             rawData = await window.pywebview.api.fetch_my_album_players();
-            console.log(rawData);
         } else {
             alert('API 未加载');
         }
