@@ -128,7 +128,7 @@
 <VStack className="grow h-full overflow-auto ml-1 pl-1 pb-12">
     {#each abilityPairs as { label, value }}
         <HStack className="items-center">
-            <span class="w-46 text-sm">{label}</span>
+            <span class="w-50 text-sm">{label}</span>
             {#if value}
                 {@const tooltipText = `${value[2]}`}
                 <Tooltip text={tooltipText} className="w-full">
