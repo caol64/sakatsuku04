@@ -3,12 +3,10 @@
     import { onMount } from "svelte";
     import HStack from "./Stack/HStack.svelte";
     import VStack from "./Stack/VStack.svelte";
-    import teamsData from "$locales/teams_zh.json";
     import condType from "$locales/cond_type_zh.json";
     import townType from "$locales/town_type_zh.json";
-    import sponsors from "$locales/sponsor_zh.json";
     import { getRefreshFlag, getSelectedTab, setIsLoading, setRefreshFlag } from "$lib/globalState.svelte";
-    import { sortedAbilities } from "$lib/utils";
+    import { getAbilityData, getSponsorData, getTeamData } from "$lib/utils";
     import AbrAbilityBar from "./AbrAbilityBar.svelte";
     import Check from "$lib/icons/Check.svelte";
     import campThemeSame from "$locales/camp_theme_same.json";
@@ -29,7 +27,7 @@
         const cond = selectedAbroad.cond;
         if (cond) {
             if (cond.id === 2) {
-                return cond.cond.map((i) => sponsors[Number(i)]);
+                return cond.cond.map((i) => getSponsorData()[Number(i)]);
             } else if (cond.id === 7) {
                 return cond.cond.map((i) => townType[Number(i)]);
             } else {
@@ -39,7 +37,7 @@
         return [];
     });
     let abilityPairs = $derived.by(() => {
-        return sortedAbilities.map((label, i) => ({
+        return getAbilityData().map((label, i) => ({
             label,
             value: selectedAbroad.abrUp[i]
         }));
@@ -171,7 +169,7 @@
     });
 
     let campThemeAbilityPairs = $derived.by(() => {
-        return sortedAbilities.map((label, i) => ({
+        return getAbilityData().map((label, i) => ({
             label,
             value: stats[i]
         }));
@@ -200,7 +198,7 @@
                         class={selectedIndex === index ? "activate" : ""}
                     >
                         <span class="flex items-center justify-between w-full">
-                            {teamsData[item.id - 255]}
+                            {getTeamData()[item.id - 255]}
                             {#if item.isEnabled}
                                 <div class="mx-2"><Check /></div>
                             {/if}
@@ -218,7 +216,7 @@
     <VStack className="w-1/4 h-full overflow-auto mx-2 pl-1">
         {#each abilityPairs as { label, value }}
             <HStack className="items-center">
-                <span class="w-24 text-sm">{label}</span>
+                <span class="w-46 text-sm">{label}</span>
                 {#if value != null}
                     {#if selectedType === 0}
                         <AbrAbilityBar value={value} />
@@ -236,7 +234,7 @@
             <div class="grid grid-cols-[80px_1fr] text-sm space-y-4 items-start">
 
                 <div class="text-sm font-medium">球队名称</div>
-                <div>{teamsData[selectedAbroad.id - 255]}</div>
+                <div>{getTeamData()[selectedAbroad.id - 255]}</div>
 
                 <div class="text-sm font-medium">获得方法</div>
                 <div>{currentCondType}</div>
@@ -314,7 +312,7 @@
         <VStack className="w-1/4 h-full overflow-auto mx-2 pl-1">
             {#each campThemeAbilityPairs as { label, value }}
                 <HStack className="items-center">
-                    <span class="w-24 text-sm">{label}</span>
+                    <span class="w-46 text-sm">{label}</span>
                     {#if value != null}
                         <AbrAbilityBar value={value} />
                     {/if}

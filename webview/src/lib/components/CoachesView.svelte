@@ -4,12 +4,8 @@
     import HStack from "./Stack/HStack.svelte";
     import VStack from "./Stack/VStack.svelte";
     import { getRefreshFlag, getSelectedTab, setIsLoading, setRefreshFlag } from "$lib/globalState.svelte";
-    import ability from "$locales/mcoach_abilities_zh.json";
-    import Close from "$lib/icons/Close.svelte";
     import BCoachDetails from "./BCoachDetails.svelte";
     import Airplane from "$lib/icons/Airplane.svelte";
-    import Tooltip from "./Tooltip.svelte";
-    import AbilityBar from "./AbilityBar.svelte";
     import CoachesViewDetails from "./CoachesViewDetails.svelte";
     import Component from "$lib/icons/Component.svelte";
 
@@ -17,14 +13,6 @@
     let selectedId = $state(0);
     let selectedType = $state(0);
     let selectedCoach: Coach = $state({id: 0, name: "", abilities: [], bringAbroads: []});
-    let showDrawer = $state(false);
-
-    let abilityPairs = $derived(
-        ability.map((label, i) => ({
-            label,
-            value: [0, 0, selectedCoach.abilities[i]]
-        }))
-    );
 
     async function fetchMyCoaches() {
         try {
@@ -83,12 +71,6 @@
             }
         }
     });
-
-    function toggleDrawer() {
-        showDrawer = !showDrawer;
-    }
-
-
 </script>
 
 <HStack className="flex-1 overflow-hidden m-2.5">
@@ -129,40 +111,9 @@
         {/if}
     </VStack>
     {#if selectedType === 0}
-        <VStack className="w-1/2 mx-1">
-            <CoachesViewDetails selectedCoach={selectedCoach} bind:showDrawer={showDrawer} />
-        </VStack>
-        <VStack className="grow h-full overflow-auto ml-1 pl-1 pb-12">
-            {#each abilityPairs as { label, value }}
-                <HStack className="items-center">
-                    <span class="w-24 text-sm">{label}</span>
-                    {#if value}
-                        {@const tooltipText = `${value[2]}`}
-                        <Tooltip text={tooltipText} className="w-full">
-                            <AbilityBar abilities={value} is100={true} />
-                        </Tooltip>
-                    {/if}
-                </HStack>
-            {/each}
-        </VStack>
+        <CoachesViewDetails selectedCoach={selectedCoach} />
     {:else}
-        <VStack className="grow ml-8 space-y-2">
-            <CoachesViewDetails selectedCoach={selectedCoach} bind:showDrawer={showDrawer} />
-        </VStack>
-    {/if}
-    {#if selectedCoach?.id && selectedCoach.id >= 20000}
-        <div class="fixed top-0 left-0 h-full w-full bg-white dark:bg-gray-800 shadow-lg transition-transform duration-300 z-50"
-            class:translate-x-0={showDrawer}
-            class:translate-x-full={!showDrawer}>
-            <HStack className="flex-1 h-full overflow-hidden m-2.5">
-                <VStack className="w-1/5">
-                    <button onclick={toggleDrawer} class="cursor-pointer">
-                        <Close />
-                    </button>
-                </VStack>
-                <BCoachDetails selectedCoach={selectedCoach.id} />
-            </HStack>
-        </div>
+        <BCoachDetails selectedCoach={selectedCoach.id} age={selectedCoach.age} />
     {/if}
 </HStack>
 

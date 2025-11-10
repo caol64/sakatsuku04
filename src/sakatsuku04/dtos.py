@@ -301,12 +301,15 @@ class ScoutDto(BaseDto):
     age: int
     offer_years: int
     rank: int
-    contract_years: int| None = None
-    salary_high: int| None = None
-    salary_low: int| None = None
-    abilities: list[int] | None = None
+    born: int | None = None
+    contract_years: int | None = None
+    salary_high: int | None = None
+    salary_low: int | None = None
+    abilities: list[int] = []
     exclusive_players: list[SearchDto] | None = None
     simi_exclusive_players: list[SearchDto] | None = None
+    nati1: int | None = None
+    nati2: int | None = None
 
     @computed_field
     @property
@@ -315,6 +318,33 @@ class ScoutDto(BaseDto):
         simi_excls = constants.scout_simi_excl_tbl.get(self.id, [])
         return len(excls) > 0 or len(simi_excls) > 0
 
+    @computed_field
+    @property
+    def hexagon(self) -> list[int]:
+        if len(self.abilities) == 0:
+            return []
+        return [
+            (self.abilities[2] + self.abilities[4]) // 2,
+            (self.abilities[3] + self.abilities[4] + self.abilities[5]) // 3,
+            (self.abilities[1] + self.abilities[3]) // 2,
+            (self.abilities[1] + self.abilities[2]) // 2,
+        ]
+
+    @computed_field
+    @property
+    def apos_eval(self) -> list[int]:
+        if len(self.abilities) == 0:
+            return []
+        return [sabil_2_apt(self.abilities[constants.epos_to_pos[constants.apos_to_epos[i]] + 0x11]) for i in range(11)]
+
+    @computed_field
+    @property
+    def eval(self) -> str:
+        plus = 2
+        if constants.scout_excl_tbl.get(self.id) is not None:
+            plus = 0
+        comment = Scout.scout_comments_list()[get_rank_to_number(self.rank) * 8 + plus]
+        return comment
 
 class CoachDto(BaseDto):
     id: int
@@ -322,15 +352,20 @@ class CoachDto(BaseDto):
     age: int
     offer_years: int
     rank: int
-    contract_years: int| None = None
-    salary_high: int| None = None
-    salary_low: int| None = None
-    abilities: list[int] | None = None
+    born: int | None = None
+    contract_years: int | None = None
+    salary_high: int | None = None
+    salary_low: int | None = None
+    abilities: list[int] = []
     enabled_abr_ids: list[int] = []
     enabled_camp_ids: list[int] = []
     sp_prac1: int | None = None
     sp_prac2: int | None = None
     coach_type: int | None = None
+    activate_plan: int | None = None
+    training_plan: int | None = None
+    training_strength: int | None = None
+    styles: list[int] | None = None
 
     @computed_field
     @property
@@ -359,6 +394,37 @@ class CoachDto(BaseDto):
     @property
     def sp_skill(self) -> int | None:
         return constants.mcoach_skill.get(self.id - 20000)
+
+    @computed_field
+    @property
+    def hexagon(self) -> list[int]:
+        if len(self.abilities) == 0:
+            return []
+        tac_sum = self.abilities[25] + self.abilities[26] + self.abilities[27]
+        tac_max = max([self.abilities[25], self.abilities[26], self.abilities[27]])
+        tac_avg = (tac_sum - tac_max) // 27
+        return [
+            self.abilities[10],
+            self.abilities[11],
+            ((self.abilities[28] + self.abilities[29]) * 250 + (tac_max * 6 + tac_avg * 4) * 50) // 1000,
+            calc_mhex_sys(self.abilities),
+            (self.abilities[1] + self.abilities[2] + self.abilities[3]) // 3,
+            (self.abilities[0] + self.abilities[2]) // 2,
+        ]
+
+    @computed_field
+    @property
+    def eval(self) -> str:
+        if len(self.abilities) == 0:
+            return ""
+        rank = get_rank_to_number(self.rank)
+        skill = constants.mcoach_skill.get(self.id - 20000)
+        if skill is not None:
+            return Coach.mcoach_comments_list()[rank * 10 + skill]
+        eval_tuple = mcoach_eval(self.abilities)
+        index = constants.mcoach_eval_rank_abil_mapping.get(rank)[eval_tuple[1]][eval_tuple[0]]
+        comment = Coach.mcoach_comments_list()[index - 700]
+        return comment
 
 
 class AbroadCond(BaseDto):

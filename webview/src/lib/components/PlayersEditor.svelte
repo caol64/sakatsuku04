@@ -2,7 +2,7 @@
     import VStack from "./Stack/VStack.svelte";
     import DropDown from "$lib/icons/DropDown.svelte";
     import type { MyPlayer, MyPlayerAbility } from "$lib/models";
-    import { fromHex, sortedAbilities, sortedCooperationType, sortedGrowType, sortedPosition, sortedRegion, sortedStyle, sortedToneType, toHex } from "$lib/utils";
+    import { fromHex, getAbilityData, sortedCooperationType, sortedGrowType, sortedPosition, sortedRegion, sortedStyle, sortedToneType, toHex } from "$lib/utils";
     import HStack from "./Stack/HStack.svelte";
     import Tooltip from "./Tooltip.svelte";
     import comp from "$locales/comp_zh.json";
@@ -278,7 +278,7 @@
         <div class="label">能力</div>
         <div class="input">
             <select bind:value={selectedAbilityIndex} onchange={selectAbility} class="select">
-                {#each sortedAbilities as value, index}
+                {#each getAbilityData() as value, index}
                     <option value={index}>{value}</option>
                 {/each}
             </select>

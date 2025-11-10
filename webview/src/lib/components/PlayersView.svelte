@@ -8,7 +8,7 @@
     import Tooltip from "./Tooltip.svelte";
     import Modal from "./Modal.svelte";
     import PlayersEditor from "./PlayersEditor.svelte";
-    import { getCooperationType, getGrowType, getPlayerColor, getPosition, getRank, getRegion, getStyle, getToneType, getFoot, sortedAbilities, getGrowEval, getAbilEvalData } from "$lib/utils";
+    import { getCooperationType, getGrowType, getPlayerColor, getPosition, getRank, getRegion, getStyle, getToneType, getFoot, getGrowEval, getAbilEvalData, getAbilityData } from "$lib/utils";
     import { getRefreshFlag, getSelectedTab, setIsLoading, setRefreshFlag } from "$lib/globalState.svelte";
     import AbilityBar from "./AbilityBar.svelte";
     import Football from "$lib/icons/Football.svelte";
@@ -25,7 +25,7 @@
     let selectedTeam = $state(0);
 
     let abilityPairs = $derived(
-        sortedAbilities.map((label, i) => ({
+        getAbilityData().map((label, i) => ({
             label,
             value: myPlayer.abilities[i]
         }))
@@ -269,7 +269,7 @@
         <VStack className="grow h-full overflow-auto ml-1 pl-1 pb-12">
             {#each abilityPairs as { label, value }}
                 <HStack className="items-center">
-                    <span class="w-24 text-sm">{label}</span>
+                    <span class="w-46 text-sm">{label}</span>
                     {#if value}
                         {@const tooltipText = `当前: ${value.current}<br>潜力: ${value.currentMax}<br>上限: ${value.max}`}
                         <Tooltip text={tooltipText} className="w-full">

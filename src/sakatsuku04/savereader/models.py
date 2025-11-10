@@ -265,6 +265,7 @@ class MyScout:
     id: IntBitField
     age: IntBitField
     offer_years: IntBitField
+    born: IntBitField | None = None
     saved_name: StrBitField | None = None
     rank: IntBitField | None = None
     abilities: list[IntBitField] | None = None
@@ -278,6 +279,7 @@ class MyScout:
         return ScoutDto(
             id=self.id.value,
             name=self.saved_name.value if self.saved_name else "",
+            born=self.born.value if self.born else None,
             age=self.age.value,
             contract_years=self.contract_years.value if self.contract_years else 0,
             offer_years=self.offer_years.value,
@@ -285,6 +287,8 @@ class MyScout:
             salary_low=self.salary.value * 100 % 10000 if self.salary else 0,
             rank=self.rank.value if self.rank else -1,
             abilities=abilities,
+            nati1=self.area1.value if self.area1 else None,
+            nati2=self.area2.value if self.area2 else None,
         )
 
     def to_dto_with_name(self, id: int) -> ScoutDto:
@@ -311,9 +315,15 @@ class MyCoach:
     sp_prac1: IntBitField | None = None
     sp_prac2: IntBitField | None = None
     coach_type: IntBitField | None = None
+    born: IntBitField | None = None
+    activate_plan: IntBitField | None = None
+    training_plan: IntBitField | None = None
+    training_strength: IntBitField | None = None
+    styles: list[IntBitField] | None = None
 
     def to_dto(self) -> CoachDto:
         abilities = [a.value for a in self.abilities] if self.abilities else []
+        styles = [a.value for a in self.styles] if self.styles else []
         return CoachDto(
             id=self.id.value,
             name=self.saved_name.value if self.saved_name else "",
@@ -327,6 +337,11 @@ class MyCoach:
             sp_prac1=self.sp_prac1.value if self.sp_prac1 else None,
             sp_prac2=self.sp_prac2.value if self.sp_prac2 else None,
             coach_type=self.coach_type.value if self.coach_type else None,
+            born=self.born.value if self.born else None,
+            activate_plan=self.activate_plan.value if self.activate_plan else None,
+            training_plan=self.training_plan.value if self.training_plan else None,
+            training_strength=self.training_strength.value if self.training_strength else None,
+            styles=styles,
         )
 
     def to_dto_with_name(self, id: int) -> CoachDto:

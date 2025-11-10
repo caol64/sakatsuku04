@@ -155,7 +155,7 @@
                     <th>年龄</th>
                     <th>位置</th>
                     <th>等级</th>
-                    <th class="w-36">风格</th>
+                    <th class="w-40">风格</th>
                     <th>连携</th>
                     <th class="w-24">性格</th>
                     <th class="w-16">身体</th>

@@ -1,8 +1,7 @@
 <script lang="ts">
     import type { TeamPlayer } from "$lib/models";
-    import { getPlayerColor, sortedPosition, sortedRegion, getCooperationType, getGrowType, getPosition, getRank, getToneType, fromHex, sortedRank, sortedCooperationType, sortedToneType, sortedStyle, getStyle } from "$lib/utils";
+    import { getPlayerColor, sortedPosition, sortedRegion, getCooperationType, getGrowType, getPosition, getRank, getToneType, fromHex, sortedRank, sortedCooperationType, sortedToneType, sortedStyle, getStyle, getTeamData } from "$lib/utils";
     import VStack from "./Stack/VStack.svelte";
-    import teamsData from "$locales/teams_zh.json";
     import DropDown from "$lib/icons/DropDown.svelte";
     import { setIsLoading, getGameYear } from "$lib/globalState.svelte";
     import HStack from "./Stack/HStack.svelte";
@@ -33,7 +32,7 @@
     let placeholderStyle = "不指定";
     let placeholderScoutAction = "不指定";
 
-    const scoutActions = ["球探搜索", "自由球员", "优先新人", "新人轮选", "青训选拔"];
+    const scoutActions = ["搜索结果", "自由球员", "优先新人", "新人轮选", "青训选拔"];
 
     let showDrawer = $state(false);
     let playerId = $state(0);
@@ -99,7 +98,7 @@
     }
 
     function getTeamByIndex(index: number) {
-        return index !== -1 ? teamsData[index] : "";
+        return index !== -1 ? getTeamData()[index] : "";
     }
 
     function reset() {

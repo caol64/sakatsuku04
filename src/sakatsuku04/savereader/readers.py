@@ -247,7 +247,7 @@ class TeamReader(BaseReader):
                 self.bit_stream.unpack_bits([0x10, 0x10, 3, 8], 6)
             self.bit_stream.unpack_bits([0xE, 4, 5, 3], 6)
             self.bit_stream.unpack_bits([8, 8, 4, 3, 0xB, 8, 0x10, 0xB, 0xB, 0xB, 0xB, 0xB], 20)
-            my_scout = MyScout(id, age, offer_years)
+            my_scout = MyScout(id, age, offer_years, born=born)
             my_scout.saved_name = name
             my_scout.abilities = abilities
             my_scout.area1 = area1
@@ -271,20 +271,26 @@ class TeamReader(BaseReader):
             coach_name = self.bit_stream.unpack_str(0xD)  # 0x712a8a 0xd986
             # 0x712a97 0xd993
             a = self.bit_stream.unpack_bits([8, 4, 3, 8, 7, 0x10, 4, 4, 4, 4], 11)
+            coach_born = a[0]  # 0x712a97 0xd993
             coach_rank = a[1]  # 0x712a98 0xd994
             coach_type = a[2]  # 0x712a99 0xd995
             coach_age = a[3]  # 0x712a9a 0xd996
             # 0x712aa2 0xd99e
             a = self.bit_stream.unpack_bits([7, 7, 7, 1, 0x10, 3, 3, 3, 3, 2, 3, 4, 8, 4, 4, 3, 2], 18)
             salary = a[4]  # 0x712aa6 0xd9a2
-            coach_abilities = self.bit_stream.unpack_bits([7] * 0x35, 0x35)
+            activate_plan = a[13]  # 0x712ab0 0xd9ac
+            training_plan = a[15]  # 0x712ab2 0xd9ae
+            training_strength = a[16]  # 0x712ab3 0xd9af
+            coach_abilities = self.bit_stream.unpack_bits([7] * 0x35, 0x35) # 0x712ab4 0xd9b0
             # 0x712ae9 0xd9e5
-            a = self.bit_stream.unpack_bits([8, 8, 5, 5, 5, 5, 5, 5, 3, 0x10, 3, 3, 3], 14)
+            a = self.bit_stream.unpack_bits([8, 8])
             sp_prac1 = a[0]  # 0x712ae9 0xd9e5
             sp_prac2 = a[1]  # 0x712aea 0xd9e6
-            coach_id = a[9]  # 0x712af2 0xd9ee(2)
-            contract_years = a[10]  # 0x712af4 0xd9f0(1)
-            offer_years = a[11]  # 0x712af5 0xd9f1(1)
+            styles = self.bit_stream.unpack_bits([5, 5, 5, 5, 5, 5], 6)
+            a = self.bit_stream.unpack_bits([3, 0x10, 3, 3, 3], 6)
+            coach_id = a[1]  # 0x712af2 0xd9ee(2)
+            contract_years = a[2]  # 0x712af4 0xd9f0(1)
+            offer_years = a[3]  # 0x712af5 0xd9f1(1)
             self.bit_stream.unpack_bits([0x10] * 9, 20)
             self.bit_stream.unpack_bits(1, 1)
             # 0x712b0c 0xda08
@@ -298,6 +304,11 @@ class TeamReader(BaseReader):
                 coach.sp_prac1 = sp_prac1
                 coach.sp_prac2 = sp_prac2
                 coach.coach_type = coach_type
+                coach.born = coach_born
+                coach.styles = styles
+                coach.activate_plan = activate_plan
+                coach.training_plan = training_plan
+                coach.training_strength = training_strength
                 team.my_coaches.append(coach)
         # 0x712c98 0xdb94
         for _ in range(50):
@@ -624,15 +635,20 @@ class TeamReader(BaseReader):
         # 0x3dec
         a = self.bit_stream.unpack_bits([-0x10, 3, 3, 3, 3, 2, 3, 4, 8, 4, 4, 3, 2], 14)
         salary = a[0]  # 0x3dec
+        activate_plan = a[9]  # 0x3df6
+        training_plan = a[11]  # 0x3df8
+        training_strength = a[12]  # 0x3df9
         # 708FBA 0x3dfa
         coach_abilities = self.bit_stream.unpack_bits([7] * 0x35, 0x35)
         # 0x3e2f
-        a = self.bit_stream.unpack_bits([8, 8, 5, 5, 5, 5, 5, 5, 3, 0x10, 3, 3, 3], 15)
+        a = self.bit_stream.unpack_bits([8, 8])
         sp_prac1 = a[0]  # 0x3e2f
         sp_prac2 = a[1]  # 0x3e30
-        coach_id = a[9]  # 0x3e38(2)
-        contract_years = a[10]  # 0x3e3a(1)
-        offer_years = a[11]  # 0x3e3b(1)
+        styles = self.bit_stream.unpack_bits([5, 5, 5, 5, 5, 5], 6) # 0x3e31
+        a = self.bit_stream.unpack_bits([3, 0x10, 3, 3, 3], 7)
+        coach_id = a[1]  # 0x3e38(2)
+        contract_years = a[2]  # 0x3e3a(1)
+        offer_years = a[3]  # 0x3e3b(1)
         self.bit_stream.unpack_bits([0x10] * 9)
         self.bit_stream.unpack_bits(1, 2)
         # 0x3e52
@@ -651,6 +667,7 @@ class TeamReader(BaseReader):
                 self.bit_stream.unpack_bits([8] * 0xA)
         self.bit_stream.unpack_bits(8)
         master_coach = MyCoach(id=coach_id, age=coach_age, offer_years=offer_years)
+        master_coach.born = coach_born
         master_coach.saved_name = coach_name
         master_coach.rank = coach_rank
         master_coach.abilities = coach_abilities
@@ -659,6 +676,10 @@ class TeamReader(BaseReader):
         master_coach.sp_prac1 = sp_prac1
         master_coach.sp_prac2 = sp_prac2
         master_coach.coach_type = coach_type
+        master_coach.styles = styles
+        master_coach.activate_plan = activate_plan
+        master_coach.training_plan = training_plan
+        master_coach.training_strength = training_strength
         return players, master_coach
 
 

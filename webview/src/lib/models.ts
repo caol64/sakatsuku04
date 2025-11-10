@@ -133,6 +133,7 @@ export interface MyTown {
 export interface Scout {
     id: number;
     name: string;
+    born?: number;
     age?: number;
     offerYears?: number;
     contractYears?: number;
@@ -143,6 +144,11 @@ export interface Scout {
     simiExclusivePlayers?: Search[];
     abilities: number[];
     hasExclusive: boolean;
+    hexagon?: number[];
+    aposEval?: number[];
+    nati1?: number;
+    nati2?: number;
+    eval?: string;
 }
 
 export interface Search {
@@ -215,6 +221,7 @@ export interface BPlayer {
 export interface Coach {
     id: number;
     name: string;
+    born?: number;
     age?: number;
     offerYears?: number;
     contractYears?: number;
@@ -228,6 +235,12 @@ export interface Coach {
     spSkill?: number;
     isBringAbroad?: boolean;
     isTopRank?: boolean;
+    eval?: string;
+    hexagon?: number[];
+    activatePlan?: number;
+    trainingPlan?: number;
+    trainingStrength?: number;
+    styles?: number[];
 }
 
 export interface BScout {

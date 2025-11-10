@@ -277,6 +277,7 @@ class Pcsx2DataReader(DataReader):
         scout_list = []
         for i in range(3):
             name = self._read_str_byte(start + i * 156 + 2, 0xD)
+            born = self._read_int_byte(start + i * 156 + 0xf, 0x1)
             id = self._read_int_byte(start + i * 156 + 0x36, 2)
             age = self._read_int_byte(start + i * 156 + 0x10, 1)
             rank = self._read_int_byte(start + i * 156 + 0x11, 1)
@@ -284,16 +285,16 @@ class Pcsx2DataReader(DataReader):
             for j in range(21):
                 ability = self._read_int_byte(start + i * 156 + 0x1E + j, 1)
                 abilities.append(ability)
-            # area1 = self._read_int_byte(start + i * 156 + 0x34, 1)
-            # area2 = self._read_int_byte(start + i * 156 + 0x35, 1)
+            area1 = self._read_int_byte(start + i * 156 + 0x34, 1)
+            area2 = self._read_int_byte(start + i * 156 + 0x35, 1)
             salary = self._read_int_byte(start + i * 156 + 0x14, 2)
             contract_years = self._read_int_byte(start + i * 156 + 0x38, 1)
             offer_years = self._read_int_byte(start + i * 156 + 0x39, 1)
-            my_scout = MyScout(id, age, offer_years)
+            my_scout = MyScout(id, age, offer_years, born=born)
             my_scout.saved_name = name
             my_scout.abilities = abilities
-            # my_scout.area1 = area1
-            # my_scout.area2 = area2
+            my_scout.area1 = area1
+            my_scout.area2 = area2
             my_scout.rank = rank
             my_scout.salary = salary
             my_scout.contract_years = contract_years
@@ -375,7 +376,8 @@ class Pcsx2DataReader(DataReader):
             coach_id = self._read_int_byte(offset + i * 0x84 + 0x6a, 2)  # 0x3e38(2)
             if coach_id.value == 0 or coach_id.value == 0xFFFF:
                 continue
-            coach_name = self._read_str_byte(offset + i * 0x84 + 2, 0xD)  # 0x3dd0
+            coach_name = self._read_str_byte(offset + i * 0x84 + 2, 0xD)
+            coach_born = self._read_int_byte(offset + i * 0x84 + 0xf, 0x1)  # 0x3dd0
             coach_rank = self._read_int_byte(offset + i * 0x84 + 0x10, 1)  # 0x3dd1
             coach_type = self._read_int_byte(offset + i * 0x84 + 0x11, 1)  # 0x3dd2
             coach_age = self._read_int_byte(offset + i * 0x84 + 0x12, 1)  # 0x3dd3
@@ -388,6 +390,13 @@ class Pcsx2DataReader(DataReader):
             salary = self._read_int_byte(offset + i * 0x84 + 0x1e, 2)  # 0x3dec
             sp_prac1 = self._read_int_byte(offset + i * 0x84 + 0x61, 1)  # 0x3e2f
             sp_prac2 = self._read_int_byte(offset + i * 0x84 + 0x62, 1)  # 0x3e30
+            activate_plan = self._read_int_byte(offset + i * 0x84 + 0x28, 1)
+            training_plan = self._read_int_byte(offset + i * 0x84 + 0x2a, 1)
+            training_strength = self._read_int_byte(offset + i * 0x84 + 0x2b, 1)
+            styles = []
+            for j in range(6):
+                style = self._read_int_byte(offset + i * 0x84 + 0x63 + j, 1)
+                styles.append(style)
             coach = MyCoach(id=coach_id, age=coach_age, offer_years=offer_years)
             coach.saved_name = coach_name
             coach.rank = coach_rank
@@ -397,6 +406,11 @@ class Pcsx2DataReader(DataReader):
             coach.sp_prac1 = sp_prac1
             coach.sp_prac2 = sp_prac2
             coach.coach_type = coach_type
+            coach.born = coach_born
+            coach.styles = styles
+            coach.activate_plan = activate_plan
+            coach.training_plan = training_plan
+            coach.training_strength = training_strength
             result.append(coach)
         return result
 

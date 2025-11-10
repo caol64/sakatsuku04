@@ -1,6 +1,5 @@
 <script lang="ts">
     import type { BScout } from "$lib/models";
-    import { onMount } from "svelte";
     import HStack from "./Stack/HStack.svelte";
     import VStack from "./Stack/VStack.svelte";
     import { getRegion, getRank, toHex } from "$lib/utils";
@@ -10,8 +9,9 @@
     import PositionGrid from "./PositionGrid.svelte";
     import Tooltip from "./Tooltip.svelte";
     import WorldMap from "./WorldMap.svelte";
+    import Avatar from "$lib/icons/Avatar.svelte";
 
-    let { selectedScout = 0 } = $props();
+    let { selectedScout = 0, age }: { selectedScout: number; age?: number } = $props();
 
     let bScout: BScout = $state({abilities: [], hexagon: []});
     let stats = $state(Array(4).fill(0));
@@ -24,17 +24,18 @@
     );
 
     async function fetchBScout() {
-        if (window.pywebview?.api?.get_bscout) {
-            bScout = await window.pywebview.api.get_bscout(selectedScout);
-            stats = bScout.hexagon;
-        } else {
-            alert('API 未加载');
+        if (selectedScout >= 20000) {
+            if (window.pywebview?.api?.get_bscout) {
+                bScout = await window.pywebview.api.get_bscout(selectedScout);
+                stats = bScout.hexagon;
+                if (age !== undefined && age > 0) {
+                    bScout.age = age;
+                }
+            } else {
+                alert('API 未加载');
+            }
         }
     }
-
-    onMount(async () => {
-        // fetchBScout();
-	});
 
     $effect(() => {
         if(selectedScout) {
@@ -92,7 +93,10 @@
             <div><span>毅力</span><span class="pl-3">{bScout?.persistence}</span></div>
         </div>
         {#if bScout?.exclusivePlayers && bScout.exclusivePlayers.length > 0}
-            <p>专有球员</p>
+            <div class="flex items-center gap-x-2">
+                <p>专有球员</p>
+                <Avatar />
+            </div>
             <div class="pl-4 text-sm text-left">
                 {#each bScout?.exclusivePlayers as item}
                     <div>{item}</div>
@@ -100,7 +104,10 @@
             </div>
         {/if}
         {#if bScout?.simiExclusivePlayers && bScout.simiExclusivePlayers.length > 0}
-            <p>半专有球员</p>
+            <div class="flex items-center gap-x-2">
+                <p>半专有球员</p>
+                <Avatar />
+            </div>
             <div class="pl-4 text-sm text-left">
                 {#each bScout.simiExclusivePlayers as item}
                     <div>{item}</div>
@@ -121,7 +128,7 @@
 <VStack className="grow h-full overflow-auto ml-1 pl-1 pb-12">
     {#each abilityPairs as { label, value }}
         <HStack className="items-center">
-            <span class="w-24 text-sm">{label}</span>
+            <span class="w-46 text-sm">{label}</span>
             {#if value}
                 {@const tooltipText = `${value[2]}`}
                 <Tooltip text={tooltipText} className="w-full">

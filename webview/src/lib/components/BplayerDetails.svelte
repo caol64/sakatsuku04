@@ -6,7 +6,7 @@
     import StatusBars from "./StatusBars.svelte";
     import VStack from "./Stack/VStack.svelte";
     import Tooltip from "./Tooltip.svelte";
-    import { sortedPosition, getCooperationType, getGrowType, getRank, getRegion, getStyle, getToneType, getFoot, sortedAbilities, getGrowEval, toHex, getAbilEvalData } from "$lib/utils";
+    import { sortedPosition, getCooperationType, getGrowType, getRank, getRegion, getStyle, getToneType, getFoot, getGrowEval, toHex, getAbilEvalData, getAbilityData } from "$lib/utils";
     import AbilityBar from "./AbilityBar.svelte";
     import Skull from "$lib/icons/Skull.svelte";
     import Waveform from "./Waveform.svelte";
@@ -20,7 +20,7 @@
     let bars = $state([0, 0, 0]);
 
     let abilityPairs = $derived(
-        sortedAbilities.map((label, i) => ({
+        getAbilityData().map((label, i) => ({
             label,
             value: [0, 0, bPlayer.abilities[i]]
         }))
@@ -174,7 +174,7 @@
 <VStack className="grow h-full overflow-auto ml-1 pl-1 pb-12">
     {#each abilityPairs as { label, value }}
         <HStack className="items-center">
-            <span class="w-24 text-sm">{label}</span>
+            <span class="w-46 text-sm">{label}</span>
             {#if value}
                 {@const tooltipText = `上限: ${value[2]}`}
                 <Tooltip text={tooltipText} className="w-full">

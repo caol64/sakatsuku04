@@ -1,17 +1,20 @@
 <script lang="ts">
-    import { setModeState } from "$lib/globalState.svelte";
+    import { setGameVersion, setModeState } from "$lib/globalState.svelte";
     import Forward from "$lib/icons/Forward.svelte";
 
     async function gotoPlayerDB() {
         setModeState("bPlayerView");
+        setGameVersion(1);
     }
 
     async function gotoCoachDB() {
         setModeState("bCoachView");
+        setGameVersion(1);
     }
 
     async function gotoScoutDB() {
         setModeState("bScoutView");
+        setGameVersion(1);
     }
 </script>
 

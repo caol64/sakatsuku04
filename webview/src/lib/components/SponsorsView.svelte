@@ -78,13 +78,13 @@
                             {getSponsorData()[item.id]}
                             <HStack>
                                 <div class="mr-2 w-3.5 h-3.5 flex items-center justify-center">
-                                    {#if item.combo && item.combo.length > 0}
-                                        <Branch />
+                                    {#if item.bringAbroads && item.bringAbroads.length > 0}
+                                        <Airplane />
                                     {/if}
                                 </div>
                                 <div class="mr-2 w-3.5 h-3.5 flex items-center justify-center">
-                                    {#if item.bringAbroads && item.bringAbroads.length > 0}
-                                        <Airplane />
+                                    {#if item.combo && item.combo.length > 0}
+                                        <Branch />
                                     {/if}
                                 </div>
                             </HStack>
@@ -117,7 +117,10 @@
                     </span>
                 </p>
                 {#if selectedSponsor?.bringAbroads && selectedSponsor?.bringAbroads.length > 0}
-                    <p class="font-medium">留学/集训地</p>
+                    <div class="flex items-center gap-x-2">
+                        <p class="font-medium">留学/集训地</p>
+                        <Airplane />
+                    </div>
                     {#each selectedSponsor.bringAbroads as abr}
                         <p class="font-medium pl-8">
                             {`${getTeamData()[abr.id - 255]}${abr.type === 1 ? " [集训地]" : " [留学地]"}${abr.isEnabled ? "  (已获得)" : "  (未获得)"}`}
@@ -125,7 +128,10 @@
                     {/each}
                 {/if}
                 {#if selectedSponsor?.combo && selectedSponsor.combo.length > 0}
-                    <p class="font-medium">合并/业务扩大</p>
+                    <div class="flex items-center gap-x-2">
+                        <p class="font-medium">合并/业务扩大</p>
+                        <Branch />
+                    </div>
                     {#each selectedSponsor.combo as combo}
                         {@const subsidiaries = combo.subsidiaryIds
                             .map(i => {
