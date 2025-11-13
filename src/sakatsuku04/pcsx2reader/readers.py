@@ -58,6 +58,7 @@ class Pcsx2DataReader(DataReader):
         self.libipc.pine_getgameversion.argtypes = [c_void_p, c_bool]
         self.libipc.pine_getgameversion.restype = c_char_p
         self.ipc = self.libipc.pine_pcsx2_new()
+        self.destroyed = False
         self._read_funcs = {
             1: self._read_8bit,
             2: self._read_16bit,
@@ -506,7 +507,6 @@ class Pcsx2DataReader(DataReader):
         return self._read_candidate_sponsors(0x0061D2F0, 0x0061D2F4)
 
     def check_connect(self) -> bool:
-        is_connected = False
         try:
             status = self._get_emu_status()
             is_connected = status in [1, 0]
@@ -514,12 +514,13 @@ class Pcsx2DataReader(DataReader):
                 ver = self.game_ver()
                 CnVer.set_ver(ver)
                 Reseter.reset()
-            return is_connected
+                return True
+            self.reset()
+            return False
         except Exception as e:
             print(f"Error getting emulator status: {e}")
-            is_connected = False
             self.reset()
-            return is_connected
+            return False
 
     @override
     def games(self) -> list[str]:
@@ -856,7 +857,11 @@ class Pcsx2DataReader(DataReader):
 
     @override
     def reset(self):
-        self.libipc.pine_pcsx2_delete(self.ipc)
+        if not self.destroyed:
+            try:
+                self.libipc.pine_pcsx2_delete(self.ipc)
+            finally:
+                self.destroyed = True
 
     @override
     def game_ver(self) -> int:
