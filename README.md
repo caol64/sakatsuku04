@@ -1,7 +1,8 @@
 # Sakatsuku04 Editor
 
-[![Download](https://img.shields.io/github/v/release/caol64/sakatsuku04?label=Download&color=brightgreen&style=flat)](https://yuzhi.tech/docs/saka04/download)
-[![Guides](https://img.shields.io/badge/Getting_Started-fe7d37?logo=gitbook&logoColor=fff)](https://yuzhi.tech/docs/saka04)
+[![ownload](https://img.shields.io/github/v/release/caol64/sakatsuku04?label=download&color=brightgreen&style=flat)](https://yuzhi.tech/docs/saka04/download)
+[![Platforms](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-lightgrey)]([./docs/INSTALL.md](https://yuzhi.tech/docs/saka04/download))
+[![Guides](https://img.shields.io/badge/docs-Getting_Started-fe7d37)](https://yuzhi.tech/docs/saka04)
 [![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Fcaol64%2Fsakatsuku04%2Fmain%2Fpyproject.toml)](https://github.com/caol64/sakatsuku04)
 [![License](https://img.shields.io/github/license/caol64/sakatsuku04)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/caol64/sakatsuku04?style=social)](https://github.com/caol64/sakatsuku04)

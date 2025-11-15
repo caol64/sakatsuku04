@@ -511,12 +511,12 @@ class TeamReader(BaseReader):
             players[i].persistence = a[3]  # 0x70538F 1af
             un = a[4]  # 0x705390
             players[i].tone_type = a[5]  # 0x705391 1b1
-            un = a[6]  # 0x705392
+            complex = a[6]  # 0x705392 1b2
             un = a[7]  # 0x705393
             un = a[8]  # 0x705394
             un = a[9]  # 0x705395
             un = a[10]  # 0x705396
-            un = a[11]  # 0x705397 1b7
+            seriousness = a[11]  # 0x705397 1b7
             players[i].patient = a[12]  # 0x705398 1b8
             un = a[13]  # 00705399
             players[i].cooperation_type = a[14]  # 0x70539A 1ba
