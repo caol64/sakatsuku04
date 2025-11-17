@@ -1,7 +1,7 @@
 # Sakatsuku04 Editor
 
 [![ownload](https://img.shields.io/github/v/release/caol64/sakatsuku04?label=download&color=brightgreen&style=flat)](https://yuzhi.tech/docs/saka04/download)
-[![Platforms](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-lightgrey)]([./docs/INSTALL.md](https://yuzhi.tech/docs/saka04/download))
+[![Platforms](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-lightgrey)](https://yuzhi.tech/docs/saka04/download)
 [![Guides](https://img.shields.io/badge/docs-Getting_Started-fe7d37)](https://yuzhi.tech/docs/saka04)
 [![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Fcaol64%2Fsakatsuku04%2Fmain%2Fpyproject.toml)](https://github.com/caol64/sakatsuku04)
 [![License](https://img.shields.io/github/license/caol64/sakatsuku04)](LICENSE)
@@ -13,17 +13,23 @@ An open-source game and save editor for **J.League Pro Soccer Club o Tsukurou! 0
 
 ## 🚀 Quick Start
 
-The recommended way to run `Saka04Editor` is by using [`uv`](https://github.com/astral-sh/uv) to create and manage a virtual environment:
+### 📥 Recommended: Download Prebuilt Releases
+
+The **fastest and simplest** way to start using `Saka04Editor` is by downloading the latest prebuilt installer or package directly from the official website.
+
+👉 **Official Download Site:** [https://yuzhi.tech/docs/saka04/download](https://yuzhi.tech/docs/saka04/download)
+
+### 💻 Advanced Method: Installation via `uv` and `pnpm` (Recommended for Developers)
+
+If you prefer using **Python environment management** tools and need to set up the **Node.js dependencies** for development, the recommended way to run `Saka04Editor` is by using [`uv`](https://www.google.com/search?q=%5Bhttps://github.com/astral-sh/uv%5D\(https://github.com/astral-sh/uv\)) and **`pnpm`** to manage the project dependencies:
+
 
 ```bash
 uv venv --python python3.13
-uv pip install Saka04Editor
-uv run Saka04Editor
+uv sync
+pnpm install
+pnpm run desktop:prod
 ```
-
-Alternatively, you can download the latest prebuilt releases from the official site:
-
-👉 [https://yuzhi.tech/docs/saka04/download](https://yuzhi.tech/docs/saka04/download)
 
 ## ✨ Features
 

@@ -447,14 +447,20 @@ class Pcsx2DataReader(DataReader):
         month = self._read_int_byte(0x703D52)
         date = self._read_int_byte(0x703D53)
         if month.value == 1 and date.value <= 15 and date.value > 1:
-            start = 0x69E434
+            start = 0x008CB8B0
+            pid_offsets = []
+            while len(pid_offsets) < 40:
+                pid = self._read_int_byte(start, 4)
+                if pid.value == 0:
+                    break
+                pid_offsets.append(pid.value)
+                start += 4
             players = []
-            for i in range(40):
-                pid = self._read_int_byte(start + i * 0x328, 2)
-                if pid.value != 0 and pid.value != 0xFFFF:
-                    age = self._read_int_byte(start + i * 0x328 + 3, 1)
-                    player = OtherPlayer(pid, age)
-                    players.append(player)
+            for i in pid_offsets:
+                pid = self._read_int_byte(i, 2)
+                age = self._read_int_byte(i + 3, 1)
+                player = OtherPlayer(pid, age)
+                players.append(player)
             return players
         return []
 
