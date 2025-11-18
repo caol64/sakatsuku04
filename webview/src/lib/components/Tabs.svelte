@@ -60,7 +60,7 @@
         <span class="sr-only">Back</span>
     </button>
 
-    <ul class="flex-1 flex space-x-4 mx-2">
+    <ul class="flex-1 flex space-x-1 mx-2">
         {#each allTabs as item}
             <li>
                 <button onclick={() => changeTab(item)} class={ getSelectedTab() === item ? "activate" : "" }>{ item }</button>
@@ -99,9 +99,6 @@
     }
     li button {
         @apply inline-block py-4 px-3 rounded-t-lg cursor-pointer hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 dark:hover:text-gray-300;
-    }
-    li {
-        @apply me-2;
     }
     .activate {
         @apply text-gray-600 bg-gray-100 dark:bg-gray-800 dark:text-gray-300;

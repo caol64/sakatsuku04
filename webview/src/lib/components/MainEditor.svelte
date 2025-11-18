@@ -12,6 +12,7 @@
     import AbroadView from "./AbroadView.svelte";
     import CoachesView from "./CoachesView.svelte";
     import SponsorsView from "./SponsorsView.svelte";
+    import TrophyShelfView from "./TrophyShelfView.svelte";
 </script>
 
 <VStack className="px-2 flex-1 h-screen">
@@ -36,6 +37,8 @@
         <AlbumView />
     {:else if getSelectedTab() === "Abroad"}
         <AbroadView />
+    {:else if getSelectedTab() === "Trophy"}
+        <TrophyShelfView />
     {/if}
     {#if getIsLoading()}
         <div class="absolute inset-0 bg-black/50 flex items-center justify-center z-50">

@@ -115,7 +115,6 @@ export interface MyPlayerAbility {
     max: number;
 }
 
-
 export interface MyTown {
     living?: number;
     economy?: number;
@@ -128,7 +127,6 @@ export interface MyTown {
     soccerLevel?: number;
     townType?: number;
 }
-
 
 export interface Scout {
     id: number;
@@ -291,13 +289,11 @@ export interface BCoach {
     bringAbroads?: AbrStatus[];
 }
 
-
 export interface AbrStatus {
     id: number;
     type: number;
     isEnabled: boolean;
 }
-
 
 export interface Sponsors {
     id: number;
@@ -309,9 +305,14 @@ export interface Sponsors {
     combo?: SponsorCombo[];
 }
 
-
 export interface SponsorCombo {
     parentId: number;
     subsidiaryIds: number[];
     type: number;
+}
+
+export interface Trophy {
+    winTimes: number;
+    entryTimes: number;
+    index?: number;
 }

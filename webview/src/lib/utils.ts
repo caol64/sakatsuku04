@@ -28,6 +28,8 @@ import footZh from "$locales/foot_zh.json";
 import footJp from "$locales/foot_jp.json";
 import mcoachSkillZh from "$locales/mcoach_skill_zh.json";
 import mcoachSkillJp from "$locales/mcoach_skill_jp.json";
+import trophyZh from "$locales/trophy_zh.json";
+import trophyJp from "$locales/trophy_jp.json";
 
 export function toHex(num: number | undefined, range: number = 2): string {
     return num !== undefined ? num.toString(16).padStart(range, '0').toUpperCase() : "";
@@ -141,4 +143,8 @@ export function getFootData(): Record<string, string> {
 
 export function getMcoachSkillData(): string[] {
     return gameVersion === "zh" ? mcoachSkillZh : mcoachSkillJp;
+}
+
+export function getTrophyData(): string[] {
+    return gameVersion === "zh" ? trophyZh : trophyJp;
 }

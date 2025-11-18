@@ -82,7 +82,8 @@ export const allTabs = [
     "Sponsors",
     "Town",
     "Album",
-    "Abroad"
+    "Abroad",
+    "Trophy",
 ] as const;
 
 export type Tab = typeof allTabs[number];

@@ -346,6 +346,7 @@ class ScoutDto(BaseDto):
         comment = Scout.scout_comments_list()[get_rank_to_number(self.rank) * 8 + plus]
         return comment
 
+
 class CoachDto(BaseDto):
     id: int
     name: str
@@ -787,6 +788,7 @@ class SponsorCombo(BaseDto):
     subsidiary_ids: list[int]
     type: int
 
+
 class SponsorDto(BaseDto):
     id: int
     contract_years: int
@@ -803,9 +805,13 @@ class SponsorDto(BaseDto):
         camp_dict = camp_sponsor_dict()
         abroad_ids = []
         if self.id in abr_dict:
-            abroad_ids.append(AbrStatusDto(id=abr_dict[self.id], type=0, is_enabled=abr_dict[self.id] in self.enabled_abr_ids))
+            abroad_ids.append(
+                AbrStatusDto(id=abr_dict[self.id], type=0, is_enabled=abr_dict[self.id] in self.enabled_abr_ids)
+            )
         if self.id in camp_dict:
-            abroad_ids.append(AbrStatusDto(id=camp_dict[self.id], type=1, is_enabled=camp_dict[self.id] in self.enabled_camp_ids))
+            abroad_ids.append(
+                AbrStatusDto(id=camp_dict[self.id], type=1, is_enabled=camp_dict[self.id] in self.enabled_camp_ids)
+            )
         return abroad_ids
 
     @computed_field
@@ -818,12 +824,18 @@ class SponsorDto(BaseDto):
         return result
 
 
+class TrophyDto(BaseDto):
+    win_times: int
+    entry_times: int
+
+
 _abroad_sponsor_dict: dict | None = None
 _abroad_coach_dict: dict | None = None
 _abroad_player_dict: dict | None = None
 _camp_sponsor_dict: dict | None = None
 _camp_coach_dict: dict | None = None
 _camp_player_dict: dict | None = None
+
 
 def _build_abroad_dict(cache: dict | None, base_data: list[tuple], cond_type: int) -> dict[int, int]:
     if cache is None:
@@ -836,6 +848,7 @@ def _build_abroad_dict(cache: dict | None, base_data: list[tuple], cond_type: in
                 for cv in cond_val:
                     cache[cv] = id
     return cache
+
 
 def abroad_coach_dict() -> dict[int, int]:
     global _abroad_coach_dict

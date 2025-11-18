@@ -70,7 +70,7 @@
 <div class="p-6 w-full mx-auto overflow-y-auto">
     <!-- 顶部统计 -->
     <div class="text-center mb-6">
-        <h2 class="text-2xl font-bold text-gray-800 dark:text-white">
+        <h2 class="text-2xl font-bold">
             名鉴球员收集进度
         </h2>
         <p class="text-sm text-gray-500 dark:text-gray-300 mt-1">

@@ -1,6 +1,16 @@
 from dataclasses import dataclass
 
-from ..dtos import ClubDto, CoachDto, MyPlayerDto, OtherTeamPlayerDto, PlayerAbilityDto, ScoutDto, SponsorDto, TownDto
+from ..dtos import (
+    ClubDto,
+    CoachDto,
+    MyPlayerDto,
+    OtherTeamPlayerDto,
+    PlayerAbilityDto,
+    ScoutDto,
+    SponsorDto,
+    TownDto,
+    TrophyDto,
+)
 from ..io import IntBitField, IntByteField, StrBitField, StrByteField
 from ..objs import Coach, Player, Scout
 
@@ -402,3 +412,19 @@ class Town:
 class Sche:
     abroad_list: list[IntBitField]
     camp_list: list[IntBitField]
+
+
+@dataclass
+class Trophy:
+    win_times: IntBitField
+    entry_times: IntBitField
+
+    def to_dto(self):
+        return TrophyDto(
+            win_times=self.win_times.value,
+            entry_times=self.entry_times.value,
+        )
+
+
+class Record:
+    trophies: list[Trophy]

@@ -11,6 +11,7 @@ from .dtos import (
     SearchDto,
     SponsorDto,
     TownDto,
+    TrophyDto,
 )
 
 
@@ -60,6 +61,8 @@ class DataReader(Protocol):
     def save_town(self, data: TownDto) -> bool: ...
 
     def read_sponsors(self, type: int) -> list[SponsorDto]: ...
+
+    def read_trophies(self) -> list[TrophyDto]: ...
 
     def reset(self): ...
 

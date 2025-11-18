@@ -179,6 +179,7 @@ class MainApp:
             self.fetch_my_sponsors,
             self.fetch_scout,
             self.fetch_coach,
+            self.fetch_my_trophies,
         )
 
     def get_version(self) -> str:
@@ -488,6 +489,8 @@ class MainApp:
     def fetch_my_sponsors(self, type: int) -> list:
         return [f.model_dump(by_alias=True) for f in self.data_reader.read_sponsors(type)]
 
+    def fetch_my_trophies(self) -> list:
+        return [f.model_dump(by_alias=True) for f in self.data_reader.read_trophies()]
 
 def main():
     app = MainApp()

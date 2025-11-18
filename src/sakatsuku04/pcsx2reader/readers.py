@@ -18,6 +18,7 @@ from ..dtos import (
     SearchDto,
     SponsorDto,
     TownDto,
+    TrophyDto,
 )
 from ..io import CnVer, IntByteField, StrByteField
 from ..objs import Player, Reseter
@@ -512,6 +513,15 @@ class Pcsx2DataReader(DataReader):
     def _read_sub_candidate_sponsors(self) -> list[SponsorDto]:
         return self._read_candidate_sponsors(0x0061D2F0, 0x0061D2F4)
 
+    def _read_my_trophies(self) -> list[TrophyDto]:
+        trophies = []
+        start = 0x73566c
+        for i in range(0x36):
+            win_times = self._read_int_byte(start + i * 18 + 2, 2).value
+            entry_times = self._read_int_byte(start + i * 18 + 4, 2).value
+            trophies.append(TrophyDto(win_times=win_times, entry_times=entry_times))
+        return trophies
+
     def check_connect(self) -> bool:
         try:
             status = self._get_emu_status()
@@ -860,6 +870,10 @@ class Pcsx2DataReader(DataReader):
             sponsor.enabled_abr_ids = my_abroads
             sponsor.enabled_camp_ids = my_camps
         return sponsors
+
+    @override
+    def read_trophies(self) -> list[TrophyDto]:
+        return self._read_my_trophies()
 
     @override
     def reset(self):

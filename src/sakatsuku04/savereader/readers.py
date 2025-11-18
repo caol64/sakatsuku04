@@ -14,6 +14,7 @@ from ..dtos import (
     SearchDto,
     SponsorDto,
     TownDto,
+    TrophyDto,
 )
 from ..io import CnVer, InputBitStream, IntBitField, OutputBitStream, StrBitField
 from ..objs import Player, Reseter
@@ -30,8 +31,10 @@ from .models import (
     MyTeam,
     OtherPlayer,
     OtherTeam,
+    Record,
     Sche,
     Town,
+    Trophy,
 )
 
 
@@ -801,17 +804,27 @@ class RecordReader(BaseReader):
     consume_bytes = 0x41B1F
     consume_bits = 0x20D8F6
     remain_mask = 0x2
+    tail_padding = b"\x14\x0a\xeb\xf5" * 4
 
-    def read(self):
-        self.bit_stream.unpack_bits([0x10, 0x10])
+    def read(self) -> Record:
+        record = Record()
+        record.trophies = []
+        # 0x73566c
+        for _ in range(0x36):
+            a = self.bit_stream.unpack_bits([0x10, 0x10, 0x10])
+            self.bit_stream.unpack_bits(6, 2)
+            self.bit_stream.unpack_bits([0xb, 0xb, 0xe], 6)
+            self.bit_stream.unpack_bits([4, 5, 3], 4)
+            record.trophies.append(Trophy(win_times=a[1], entry_times=a[2]))
         self.bit_stream.skip(
             RecordReader.consume_bits,
             RecordReader.total_size - self.bit_stream.unpacked_bytes_length,
         )
+        return record
 
 
 class ScheReader(BaseReader):
-    start = RecordReader.start + RecordReader.size
+    start = RecordReader.start + RecordReader.size  # 0x76397c
     size = 0xA14
     total_size = RecordReader.total_size + size
     consume_bytes = 0x4221F
@@ -922,6 +935,7 @@ class SaveDataReader(DataReader):
         self.my_team: MyTeam
         self.other_teams: list[OtherTeam]
         self.town: Town
+        self.record: Record
         self.sche: Sche
 
     @override
@@ -949,7 +963,7 @@ class SaveDataReader(DataReader):
         town_reader = TownReader(in_bit_stream)
         self.town = town_reader.read()
         record_reader = RecordReader(in_bit_stream)
-        record_reader.read()
+        self.record = record_reader.read()
         sche_reader = ScheReader(in_bit_stream)
         self.sche = sche_reader.read()
         game_ver = self.game_ver()
@@ -1287,6 +1301,10 @@ class SaveDataReader(DataReader):
             sponsor.enabled_abr_ids = my_abroads
             sponsor.enabled_camp_ids = my_camps
         return sponsors
+
+    @override
+    def read_trophies(self) -> list[TrophyDto]:
+        return [f.to_dto() for f in self.record.trophies]
 
     @override
     def reset(self): ...

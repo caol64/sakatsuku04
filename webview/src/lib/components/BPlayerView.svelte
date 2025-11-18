@@ -15,7 +15,7 @@
 
     let page = $state(1);
     let total = $state(1);
-    let bPlayers: MyTeamPlayer[] = $derived([]);
+    let bPlayers: MyTeamPlayer[] = $state([]);
     let keyword = $state("");
     let inputPage = $derived(page.toString());
 
