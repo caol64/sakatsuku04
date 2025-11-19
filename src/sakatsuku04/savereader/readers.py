@@ -918,8 +918,7 @@ class MailReader(BaseReader):
     remain_mask = 0
 
     def read(self):
-        elements = [0x10, 0x10, 7, 8]
-        self.bit_stream.batch_read(elements)
+        self.bit_stream.unpack_bits([0x10, 0x10])
 
 
 class SaveDataReader(DataReader):
