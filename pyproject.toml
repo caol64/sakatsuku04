@@ -32,9 +32,6 @@ dev = [
     "build==1.2.2"
 ]
 
-[project.scripts]
-Saka04Editor = "sakatsuku04.main:main"
-
 [project.urls]
 Homepage = "https://github.com/caol64/sakatsuku04"
 
